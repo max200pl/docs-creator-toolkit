@@ -128,4 +128,4 @@ Example:
 
 ## Pattern Reuse
 
-This subagent is the worked example for the fan-out pattern documented in [.claude/docs/subagent-fanout-pattern.md](../.claude/docs/subagent-fanout-pattern.md). Future subagents that fan out per-unit work (for example, per-frontend-layer analysis in the planned M8 `analyze-frontend` skill) should inherit the same structural conventions: clear input contract, structured output with `## Summary Row` + `## Content` split, size budgets, trivial-case short-circuit.
+This subagent is the worked example for the fan-out pattern documented in [docs/reference-subagent-fanout-pattern.md](../docs/reference-subagent-fanout-pattern.md). Future subagents that fan out per-unit work (for example, per-frontend-layer analysis in the planned M8 `analyze-frontend` skill) should inherit the same structural conventions: clear input contract, structured output with `## Summary Row` + `## Content` split, size budgets, trivial-case short-circuit.

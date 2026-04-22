@@ -16,7 +16,7 @@ argument-hint: "[frontend-path] [--only <area>]"
 >
 > Primary-output format: `rules/component-creation-template-format.md` — spec for `component-creation-template.md`
 > Subagent specs: `agents/frontend-detector.md`, `agents/tech-stack-profiler.md`, `agents/design-system-scanner.md`, `agents/component-inventory.md`, `agents/data-flow-mapper.md`, `agents/architecture-analyzer.md`, `agents/framework-idiom-extractor.md`
-> Fan-out pattern: `.claude/docs/subagent-fanout-pattern.md` — decision heuristic, return-shape contract
+> Fan-out pattern: `docs/reference-subagent-fanout-pattern.md` — decision heuristic, return-shape contract
 > Reference: read `docs/how-to-create-docs.md`
 > Style rules: read `rules/markdown-style.md`, `rules/mermaid-style.md`
 > Output rules: read `rules/output-format.md`

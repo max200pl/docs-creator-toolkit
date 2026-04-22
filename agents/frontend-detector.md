@@ -152,4 +152,4 @@ Append `## Notes` only if worth surfacing:
 
 ## Pattern Reuse
 
-This subagent is part of the M8 fan-out pattern worked-example set, together with the 5 specialist subagents that consume its output. See [.claude/docs/subagent-fanout-pattern.md](../.claude/docs/subagent-fanout-pattern.md) for the generic fan-out contract. Differs from `module-documenter` (M2) in one respect: `frontend-detector` runs **before** the fan-out (its output defines the units); `module-documenter` IS one of the fan-out workers (per-unit).
+This subagent is part of the M8 fan-out pattern worked-example set, together with the 5 specialist subagents that consume its output. See [docs/reference-subagent-fanout-pattern.md](../docs/reference-subagent-fanout-pattern.md) for the generic fan-out contract. Differs from `module-documenter` (M2) in one respect: `frontend-detector` runs **before** the fan-out (its output defines the units); `module-documenter` IS one of the fan-out workers (per-unit).

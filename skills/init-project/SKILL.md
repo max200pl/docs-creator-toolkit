@@ -322,7 +322,7 @@ Use `@path` imports to reference existing docs instead of duplicating content:
 
 > Reference: read `docs/research-claude-md-rules.md` — rules for effective CLAUDE.md content
 > Subagent definition: `agents/module-documenter.md` — per-module worker that this phase delegates to
-> Fan-out pattern: `.claude/docs/subagent-fanout-pattern.md` — decision heuristic and fan-in contract
+> Fan-out pattern: `docs/reference-subagent-fanout-pattern.md` — decision heuristic and fan-in contract
 
 Create `CLAUDE.md` inside each non-trivial module directory. Content is **purely additive** — never repeat root CLAUDE.md.
 

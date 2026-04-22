@@ -43,6 +43,16 @@ File moves: `skills/create-{mermaid,tutorial}/` + `skills/research/` → `.claud
 - **`.claude/docs/milestones.md`** — M8 closed with all three shipment checklists; Current Baseline refreshed (16 total skills: 10 public + 6 internal; 12 subagents: 9 public + 3 internal; rules to 13+).
 - **`README.md`** — public skills table reflects 10 public skills (9 api + 1 shared); "What's Inside" block updated (9 subagents, 6 internal skills); maintainer-only list now names all 6 internal skills.
 
+### Changed — doc placement cleanup
+
+Three docs promoted from `.claude/docs/` (internal) to `docs/` (public) to enforce the rule "public artefacts reference only public artefacts":
+
+- `.claude/docs/subagent-fanout-pattern.md` → `docs/reference-subagent-fanout-pattern.md` — previously internal but referenced from 5 public artefacts (`agents/module-documenter.md`, `agents/frontend-detector.md`, `rules/report-format.md`, `skills/analyze-frontend/SKILL.md`, `skills/init-project/SKILL.md`) — those refs were broken for end users whose plugin install has no `.claude/docs/`. Audience line broadened to cover plugin users, not just toolkit maintainers.
+- `.claude/docs/reference-keybindings.md` → `docs/reference-keybindings.md` — user-facing `~/.claude/keybindings.json` recommendations belong with other end-user reference docs.
+- `.claude/docs/project-docs-review.md` → `docs/checklist-project-docs-review.md` — end-user review checklist after `/init-project` belongs in public `docs/` with the `checklist-` prefix per `rules/docs-folder-structure.md`.
+
+Cross-refs updated in `agents/module-documenter.md`, `agents/frontend-detector.md`, `rules/report-format.md`, `skills/analyze-frontend/SKILL.md`, `skills/init-project/SKILL.md`, `.claude/agents/skill-architect.md`, `.claude/skills/sleep/SKILL.md`, `.claude/skills/menu/SKILL.md`, `.claude/docs/two-claude-workflow.md`, `.claude/docs/milestones.md`, `.claude/rules/two-layer-architecture.md`. Historical M2-checklist bullets in `milestones.md` left as-is (they describe the path at that time).
+
 ### Deprecated
 
 - `/update-docs --refresh frontend[:area]` — now prints a deprecation notice and delegates to `/update-frontend-docs <area>` via skill chain. Will be removed in 1.0.

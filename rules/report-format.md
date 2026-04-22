@@ -145,7 +145,7 @@ Skills capture wall-clock via `Bash: date +%s` at the start of phase 1 and at th
 
 For `ts` (ISO 8601 UTC), skills run `Bash: date -u +%Y-%m-%dT%H:%M:%SZ` once at skill start.
 
-Skills SHOULD NOT rely on a hook to generate timestamps — the skill owns its own report. See [.claude/docs/subagent-fanout-pattern.md](../.claude/docs/subagent-fanout-pattern.md) and the rationale in M2 of `.claude/docs/milestones.md` for why reporting is in-skill rather than hook-driven.
+Skills SHOULD NOT rely on a hook to generate timestamps — the skill owns its own report. See [docs/reference-subagent-fanout-pattern.md](../docs/reference-subagent-fanout-pattern.md) for the rationale on why reporting is in-skill rather than hook-driven.
 
 ## Retention
 
