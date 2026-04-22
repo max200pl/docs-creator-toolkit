@@ -2,6 +2,54 @@
 
 All notable changes to the `claude-docs-creator` plugin. Format loosely follows [Keep a Changelog](https://keepachangelog.com) and [Semantic Versioning](https://semver.org).
 
+## 0.12.0 — 2026-04-21
+
+M8 v2 pivot — `/analyze-frontend` reframed as **context envelope for downstream component-creation agents**, not as generic frontend documentation.
+
+### The pivot
+
+Previous framing: `/analyze-frontend` produces 5 independent artefacts (design system, inventory, architecture, data flow, components rule) — a downstream agent would have to read all of them and reconstruct a recipe for creating new components.
+
+New framing: `/analyze-frontend` produces **one primary file** — `.claude/docs/component-creation-template.md` — a prescriptive, framework-idiomatic recipe that a component-creation agent reads first. The 4 previous artefacts are supporting reference data cross-linked from the template.
+
+### Added
+
+- **`rules/component-creation-template-format.md`** — public-layer rule specifying the primary output's shape: required sections (File layout, Imports, Props, Styling model, Class naming, State wiring, Events, A11y, Tests, Design tokens, Framework idioms, Canonical skeleton, Anti-patterns, Cross-references), size target (150-300 lines), concrete-skeleton requirement (must include 20-50 lines of copy-pasteable code). `/sleep` can enforce shape once the enforcement section is implemented.
+- **`agents/framework-idiom-extractor.md`** — new 7th subagent. Critically uses **pattern-first detection**, not framework whitelist. Works on BOTH industry frameworks (Next, Vue, SvelteKit, Angular, Remix, Astro, Solid, Qwik, etc.) AND custom in-house frameworks (like Sciter-JS `AssetBaseComponent` patterns). Classifies as `industry` / `custom` / `vanilla`; emits prescriptive framework-specific rules for new-component creation.
+
+### Changed
+
+- **`skills/analyze-frontend/SKILL.md`** — execution reframed as **two-wave fan-out**:
+  - **Wave 1 (serial gate per frontend)**: `tech-stack-profiler` establishes `stack_profile` including `framework`, `rendering_mode`, `styling_model`, `class_naming`, `state_libs[]`.
+  - **Wave 2 (parallel, stack-informed)**: 6 specialists (5 old + new `framework-idiom-extractor`) receive `stack_profile` so their scans narrow. `design-system-scanner` skips `styled-components` lookup when Wave 1 says Tailwind. `component-inventory` globs `.vue` vs `.tsx` based on framework. Etc.
+  - **Assembly**: orchestrator builds `component-creation-template.md` from Wave 1 + Wave 2 per the new rule.
+
+- **`agents/tech-stack-profiler.md`** — return shape now includes explicit `styling_model` (enum: `tailwind-utilities-inline` / `css-modules` / `css-in-js-styled-components` / `shadcn-copy-with-cva` / `framework-scoped-sfc` / `sciter-scss-local` / etc.) and `class_naming` (enum: `none-tailwind-only` / `bem` / `css-modules-auto` / `styled-var-name` / `cva-variants` / `cn-helper-composition` / `custom-prefix` / `auto-scoped` / etc.). These fields drive the primary template's Styling and Class-naming sections — the downstream agent uses them to know whether custom class names exist in this project at all.
+
+- **`sequences/analyze-frontend/analyze-frontend.mmd`** — reflects the two-wave flow: serial Wave 1 participant (TSP), parallel Wave 2 participant (Wave2 group), primary-template assembly phase before supporting references.
+
+### Primary deliverable for downstream agents
+
+`.claude/docs/component-creation-template.md` — reads like a recipe:
+
+1. WHERE new component files go (framework-specific path convention)
+2. HOW to import (path aliases, barrel files)
+3. Props declaration pattern (interface vs type, naming, forwardRef convention)
+4. **Styling model** (Tailwind utilities inline / CSS Modules / etc.)
+5. **Class naming** (including "are classes even used?" definitively answered)
+6. State and data wiring (where useState is OK, where global state goes, how fetching is done)
+7. Event handling conventions
+8. Framework-specific idioms (industry OR custom, extracted from code)
+9. **Canonical skeleton** — 20-50 lines of real code from the project, copy-pasteable
+10. Anti-patterns to avoid
+11. Cross-references to supporting files (tokens, architecture, inventory, data-flow)
+
+Downstream agent reads this ONE file, gets complete actionable context. No reconstruction, no guessing.
+
+### Why custom-framework support matters
+
+Many real projects have proprietary or in-house component frameworks (custom React wrappers, Sciter-JS AssetBaseComponent patterns, internal Angular CLI extensions, etc.). A whitelist approach to framework detection would classify all of these as `unknown` and skip framework-specific guidance — exactly when prescriptive guidance is most needed. Pattern-first detection reads the code, classifies `industry | custom | vanilla`, and extracts idioms from the base class / factory definition directly for custom cases.
+
 ## 0.11.2 — 2026-04-21
 
 Auto-patch-bump in the publish GitHub Action — removes the "forgot-to-bump" mistake class.

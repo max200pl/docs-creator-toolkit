@@ -7,8 +7,9 @@ sequenceDiagram
     participant Claude
     participant FS as File System
     participant Glob as Glob Tool
-    participant FD as frontend-detector<br/>subagent
-    participant Specs as 5 specialist subagents<br/>(parallel fan-out per frontend):<br/>tech-stack-profiler,<br/>design-system-scanner,<br/>component-inventory,<br/>data-flow-mapper,<br/>architecture-analyzer
+    participant FD as frontend-detector<br/>subagent (gating)
+    participant TSP as tech-stack-profiler<br/>subagent (Wave 1)
+    participant Wave2 as Wave 2 — 5 specialist<br/>subagents (parallel,<br/>stack-informed):<br/>framework-idiom-extractor,<br/>design-system-scanner,<br/>component-inventory,<br/>data-flow-mapper,<br/>architecture-analyzer
 
     User->>Claude: /analyze-frontend [frontend-path] [--only <area>]
 
@@ -41,18 +42,32 @@ sequenceDiagram
     Claude->>User: Found N frontend(s):<br/>- path (framework)<br/>...<br/>Analyze all? Skip any? Add missed?
     User-->>Claude: Confirmed roots[]<br/>+ optional --only <area> filter
 
-    note over Claude,Specs: Phase: Parallel deep analysis (fan-out)
-    Note right of Claude: Inner loop: for each confirmed frontend.<br/>Outer: for each specialist subagent type.<br/>All 5 × N invocations issued in<br/>a single message (concurrent).
+    note over Claude,TSP: Phase: Wave 1 — Stack profile (per frontend, serial before Wave 2)
+    Note right of Claude: Wave 1 establishes the stack profile<br/>that informs Wave 2 specialists. Cheap<br/>and fast — reads package.json, config<br/>files, top-level styling signals.
 
-    par For each {frontend_root, specialist} pair — concurrent
-        Claude->>Specs: Invoke one specialist with<br/>{frontend_root, project_root,<br/>framework_hint, entry_points,<br/>style_rules_path}
-        Note right of Specs: Subagent reads only its area-<br/>specific files. Deep reads stay<br/>in subagent context.
-        Specs-->>Claude: {summary_row (YAML),<br/>artefact_body (markdown)}<br/>or sentinel SKIP if N/A
+    par For each confirmed frontend root
+        Claude->>TSP: Invoke tech-stack-profiler with<br/>{frontend_root, project_root,<br/>framework_hint, entry_points}
+        TSP-->>Claude: {stack_profile: framework+version,<br/>bundler, language, ts_strictness,<br/>styling_model, class_naming,<br/>state_libs[], routing, data_fetching,<br/>rendering_mode}
     end
 
-    note over Claude,FS: Phase: Collect and write artefacts
-    Claude->>Claude: Aggregate per-frontend results<br/>→ if N_frontends == 1: plain filenames<br/>→ if N_frontends > 1: suffix with root name
+    note over Claude,Wave2: Phase: Wave 2 — Deep per-axis analysis (parallel, stack-informed)
+    Note right of Claude: Wave 2 specialists receive Wave 1's<br/>stack_profile — can do narrower,<br/>more accurate scans. 5 specialists ×<br/>N frontends issued concurrently.
 
+    par For each {frontend_root, specialist} pair — concurrent
+        Claude->>Wave2: Invoke one specialist with<br/>{frontend_root, project_root,<br/>stack_profile (from Wave 1),<br/>entry_points, style_rules_path,<br/>target_file_shape}
+        Note right of Wave2: Subagent reads ONLY its area-<br/>specific files using stack context<br/>(e.g. design-system-scanner skips<br/>looking for styled-components<br/>when stack_profile says Tailwind).
+        Wave2-->>Claude: {summary_row (YAML),<br/>artefact_body (markdown)}<br/>or sentinel SKIP if N/A
+    end
+
+    note over Claude,FS: Phase: Assemble primary template + supporting references
+    Note right of Claude: Orchestrator assembles the primary<br/>component-creation-template.md from<br/>Wave 1 + Wave 2 outputs. This is THE<br/>downstream agent's context envelope.
+
+    Claude->>Claude: Assemble component-creation-template.md from:<br/>- Wave 1 stack_profile (Stack, Styling, Class naming)<br/>- framework-idiom-extractor (Framework idioms section)<br/>- design-system-scanner (Design-token usage examples)<br/>- component-inventory (Canonical skeleton, File layout)<br/>- data-flow-mapper (State and data wiring)<br/>- architecture-analyzer (File layout, imports)<br/>— per rules/component-creation-template-format.md
+
+    Claude->>FS: Write .claude/docs/component-creation-template[-<root>].md<br/>(PRIMARY — for component-creation agents)
+    FS-->>Claude: OK
+
+    note over Claude,FS: Supporting reference files — cross-linked FROM template
     opt design-system-scanner produced content
         Claude->>FS: Write .claude/rules/frontend-design-system[-<root>].md<br/>(with paths: scoped to theme/token files)
         FS-->>Claude: OK

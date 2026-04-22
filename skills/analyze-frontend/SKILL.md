@@ -9,14 +9,21 @@ argument-hint: "[frontend-path] [--only <area>]"
 # Analyze Frontend
 
 > **Flow:** read all files in `sequences/analyze-frontend/` — the sequence diagram is the source of truth for execution order
-> Subagent specs: `agents/frontend-detector.md`, `agents/tech-stack-profiler.md`, `agents/design-system-scanner.md`, `agents/component-inventory.md`, `agents/data-flow-mapper.md`, `agents/architecture-analyzer.md`
+> Primary-output format: `rules/component-creation-template-format.md` — spec for `component-creation-template.md`
+> Subagent specs: `agents/frontend-detector.md`, `agents/tech-stack-profiler.md`, `agents/design-system-scanner.md`, `agents/component-inventory.md`, `agents/data-flow-mapper.md`, `agents/architecture-analyzer.md`, `agents/framework-idiom-extractor.md`
 > Fan-out pattern: `.claude/docs/subagent-fanout-pattern.md` — decision heuristic, return-shape contract
 > Reference: read `docs/how-to-create-docs.md`
 > Style rules: read `rules/markdown-style.md`
 > Output rules: read `rules/output-format.md`
 > Report rules: read `rules/report-format.md`
 
-Orchestrator. Detects frontend root(s) in the project, confirms with the user, fans out to five specialist subagents per frontend in parallel, collects their outputs, and writes scoped `.claude/` artefacts. Updates the root `CLAUDE.md` Architecture section with `@` imports for the new files.
+Orchestrator. Detects frontend root(s) in the project and produces a **compact context envelope for a downstream component-creation agent**. The primary output is `component-creation-template.md` — a prescriptive, framework-idiomatic recipe for creating new components in THIS specific project. Everything else (design-system rule, component inventory, data-flow diagram, architecture doc) is **supporting reference data** cross-linked from the primary template.
+
+Execution pattern: **two-wave fan-out** with stack-informed Wave 2.
+
+- **Wave 1 — Stack profile**: `tech-stack-profiler` runs alone (serial gate), establishing `framework`, `rendering_mode`, `styling_model`, `class_naming`, `state_libs[]`, etc.
+- **Wave 2 — Deep per-axis analysis (parallel)**: 5 specialists + `framework-idiom-extractor` run concurrently, each consuming Wave 1's `stack_profile` so their scans are narrower and more accurate (e.g., `design-system-scanner` skips `styled-components` lookups when stack says Tailwind).
+- **Assembly**: orchestrator assembles `component-creation-template.md` from Wave 1 + Wave 2 outputs per `rules/component-creation-template-format.md`, then writes the supporting reference files.
 
 Runs in two modes:
 
@@ -27,15 +34,24 @@ If `.claude/` is missing, the skill stops and directs the user to `/init-project
 
 ## What this skill creates
 
-Artefacts land in the target project's `.claude/` — never in the plugin. Filenames use a root-specific suffix when multiple frontends are detected, plain names otherwise.
+All artefacts land in the target project's `.claude/` — never in the plugin. Filenames use a root-specific suffix when multiple frontends are detected, plain names otherwise.
+
+**Primary — for the downstream component-creation agent:**
+
+- `.claude/docs/component-creation-template.md` — prescriptive recipe: WHERE new component files go, HOW to import, WHAT styling model to use, WHETHER custom class names even exist in this project, HOW state/data wiring works, a framework-idiomatic skeleton. Per `rules/component-creation-template-format.md`. **This is the file a component-creation agent reads first.**
+
+**Supporting references — cross-linked FROM the template:**
 
 - `.claude/rules/frontend-design-system.md` — design tokens, CSS variables, theme configuration, with `paths:` scoped to theme/token files
 - `.claude/rules/frontend-components.md` — component conventions (naming, prop shapes, class structure), with `paths:` scoped to components folders
-- `.claude/docs/architecture-frontend.md` — architecture overview + rendering mode (SSR/SPA/SSG) + folder-boundary map
+- `.claude/docs/architecture-frontend.md` — architecture overview + rendering mode + folder-boundary map
 - `.claude/docs/component-inventory.md` — table of notable components with purpose and location
 - `.claude/sequences/frontend-data-flow.mmd` — state + API data-flow diagram
+
+**Operational:**
+
 - `.claude/state/reports/analyze-frontend-<ts>.md` — run report per [rules/report-format.md](../../rules/report-format.md) (gitignored)
-- `CLAUDE.md` — Architecture section updated with `@` imports to the above (surgical edit; other sections untouched)
+- `CLAUDE.md` — Architecture section updated with `@` imports to all of the above (surgical edit; other sections untouched)
 
 ## What this skill does NOT create
 
@@ -75,18 +91,22 @@ The skill runs as a guided wizard with user checkpoints — not a silent batch.
 
 ## Composition
 
-This skill is a pipeline: one detection subagent + five specialist subagents (fan-out) + orchestrator-side aggregation and writes.
+This skill is a **two-wave fan-out pipeline** — one detection subagent (gating) + one stack-profile subagent (Wave 1) + six specialist subagents (Wave 2) + orchestrator-side assembly of the primary template.
 
 | Phase | Owner | Responsibility |
 | ---- | ---- | ---- |
 | Preflight | **this skill** | Confirm `.claude/` exists; capture `START_TS` |
 | Detect frontends | `frontend-detector` subagent | Enumerate frontend roots; return list with framework + entry points |
 | Confirm scope | **this skill** | User checkpoint — accept/modify root list |
-| Deep analysis | 5 specialist subagents (parallel fan-out per frontend) | Each returns `{summary_row, artefact_body}` or `SKIP` for its area |
-| Collect + write | **this skill** | Aggregate results; write artefacts; update root `CLAUDE.md` Architecture section surgically |
+| **Wave 1 — Stack profile** | `tech-stack-profiler` subagent (per frontend) | Return full `stack_profile`: framework, rendering mode, `styling_model`, `class_naming`, state libs, bundler, etc. Wave 2 depends on this. |
+| **Wave 2 — Deep analysis (parallel)** | 6 specialists (per frontend, concurrent): `framework-idiom-extractor`, `design-system-scanner`, `component-inventory`, `data-flow-mapper`, `architecture-analyzer` | Each consumes Wave 1's `stack_profile` for narrower scans. Returns `{summary_row, artefact_body}` or `SKIP` |
+| **Assemble primary template** | **this skill** | Build `.claude/docs/component-creation-template.md` per `rules/component-creation-template-format.md` from Wave 1 + Wave 2 outputs |
+| Write supporting references | **this skill** | Write the 4 reference files, update root `CLAUDE.md` Architecture section surgically |
 | Report | **this skill** | Persist run report per `rules/report-format.md` |
 
-**Naming rule:** when N frontends > 1, artefact filenames gain a root-derived suffix (`frontend-design-system-web-app.md`). When N == 1, filenames stay plain (`frontend-design-system.md`).
+**Naming rule:** when N frontends > 1, artefact filenames gain a root-derived suffix (`component-creation-template-web-app.md`, `frontend-design-system-web-app.md`). When N == 1, filenames stay plain.
+
+**Why two waves, not one parallel fan-out:** Wave 2 specialists benefit significantly from knowing the stack. `design-system-scanner` skips `styled-components` lookup when Wave 1 says Tailwind. `component-inventory` globs `.vue` files vs `.tsx` based on framework. `framework-idiom-extractor` selects framework-specific deep-dive branch from `framework_classification`. Running everything in one parallel wave wastes Wave-2 scans on wrong file patterns.
 
 ## Reference
 
@@ -119,38 +139,91 @@ It returns a flat list: `[{path, framework, entry_points, confidence}]`. Zero re
 
 Show the list to the user. Accept: confirm as-is / remove specific entries / add a missed path. Also capture any `--only <area>` filter.
 
-### Phase: Deep analysis (fan-out)
+### Phase: Wave 1 — Stack profile (per frontend)
 
-For each confirmed frontend root, invoke all five specialist subagents **in parallel** — i.e., fire all `N_frontends × 5` invocations in a single message. If `--only` was specified, only invoke matching specialists.
+For each confirmed frontend root, invoke `tech-stack-profiler` SERIALLY before Wave 2 starts. If there are multiple frontends, they can run in parallel with each other (but each independently before its own Wave 2).
 
-Each invocation prompt MUST include:
+Invocation prompt includes:
 
 | Field | Value |
 | ---- | ---- |
 | `frontend_root` | Absolute path to the frontend directory |
-| `project_root` | Absolute cwd — anchor for relative paths in output |
+| `project_root` | Absolute cwd |
 | `framework_hint` | Framework name from `frontend-detector` output |
 | `entry_points` | List of entry-point file paths from `frontend-detector` |
 | `style_rules_path` | Relative path to `rules/markdown-style.md` in the loaded plugin |
-| `target_file_shape` | Brief reminder of the expected return format (see below) |
 
-The subagent specs are source of truth for each specialist's scan depth and return content. SKILL.md does not duplicate them.
+Wait for the return before starting Wave 2. Preserve the full `stack_profile` return:
+
+- `framework`, `framework_version`, `rendering_mode`
+- `language`, `ts_strictness`
+- `bundler`, `package_manager`
+- **`styling_model`** and **`class_naming`** — these are critical for the primary template's Styling/Classes sections (see `agents/tech-stack-profiler.md` for the enum values)
+- `state_management[]`, `routing`, `data_fetching[]`, `ui_library[]`, `testing[]`, `linting[]`
+
+### Phase: Wave 2 — Deep analysis (parallel, stack-informed)
+
+Once Wave 1 has returned for ALL confirmed frontend roots, fire Wave 2: **6 specialists × N frontends invocations in a single message** (concurrent).
+
+Specialists in Wave 2:
+
+1. `framework-idiom-extractor` — pattern-first framework classification (industry / custom / vanilla); idiomatic rules for new components
+2. `design-system-scanner` — tokens, theme config, dark-mode strategy
+3. `component-inventory` — existing components tree + conventions + canonical skeleton pick
+4. `data-flow-mapper` — state + API + auth + forms; emits Mermaid data-flow diagram
+5. `architecture-analyzer` — folder layout, routing, SSR boundaries
+
+If `--only <area>` was specified, invoke only the matching specialists.
+
+Each Wave 2 invocation prompt MUST include:
+
+| Field | Value |
+| ---- | ---- |
+| `frontend_root` | Absolute path to the frontend directory |
+| `project_root` | Absolute cwd |
+| `stack_profile` | **The full Wave 1 return** — specialists consume this to narrow scans |
+| `entry_points` | Entry-point file paths |
+| `style_rules_path` | Relative path to `rules/markdown-style.md` in the loaded plugin |
+| `target_file_shape` | Brief reminder of the expected return format |
 
 **Fan-in contract** — every specialist returns two sections:
 
 1. `## Summary Row` — a YAML block specific to that specialist (see each subagent spec for fields).
-2. `## <Artefact>` — the full markdown content for the artefact this specialist writes (or the sentinel literal `SKIP` if nothing applies — e.g., a static Astro site has no data-flow).
+2. `## <Artefact>` — the full markdown content for the artefact this specialist writes or contributes (or the sentinel literal `SKIP` if nothing applies — e.g., a static Astro site has no data-flow; `framework-idiom-extractor` returns SKIP for `vanilla`).
 
 Orchestrator parses by heading. Failures are logged to the run report's `Notes`, not escalated to abort.
 
-### Phase: Collect and write artefacts
+### Phase: Assemble primary template
 
-Aggregate per-frontend results. File naming:
+After Wave 2 returns for all frontends, the orchestrator assembles `.claude/docs/component-creation-template.md` per [rules/component-creation-template-format.md](../../rules/component-creation-template-format.md). Required sections of the template are populated from Wave 1 + Wave 2 outputs as follows:
 
-- If `frontend_roots.length == 1` → plain filenames (`frontend-design-system.md`, `architecture-frontend.md`, `component-inventory.md`, `frontend-components.md`, `frontend-data-flow.mmd`)
-- If `frontend_roots.length > 1` → suffix with a slug derived from the root's basename (`frontend-design-system-web-app.md`, etc.)
+| Template section | Fed by |
+| ---- | ---- |
+| File layout | `architecture-analyzer` (folder structure) + `component-inventory` (co-located files) |
+| Imports block | `component-inventory` (from the canonical skeleton's imports) + `architecture-analyzer` (path aliases) |
+| Props declaration | `component-inventory` (conventions observed in existing components) |
+| Styling model | Wave 1 `stack_profile.styling_model` — map to the prescriptive paragraph |
+| Class naming | Wave 1 `stack_profile.class_naming` — including the "are classes even used?" answer |
+| State and data wiring | `data-flow-mapper` (state + API + forms + auth) |
+| Event handling | `component-inventory` (observed patterns) |
+| Accessibility patterns | `component-inventory` Notes section if any a11y observations |
+| Test and story conventions | `component-inventory` (`test_colocation`, `storybook_present`) |
+| Design-token usage | `design-system-scanner` (primary mechanism + 1-2 concrete examples) |
+| Framework-specific idioms | `framework-idiom-extractor` verbatim (handles both industry and custom) |
+| Canonical skeleton | `component-inventory.component_skeleton_excerpt` (if provided) OR synthesized from its other fields |
+| Anti-patterns | Union of all specialists' Notes that flagged anti-patterns |
+| Cross-references | Auto-generated: `@`-links to the other 4 reference files written by this skill |
 
-Skip writing any artefact whose specialist returned `SKIP`. Every skipped artefact is still noted in the run report.
+If a subagent returned SKIP for its area, the corresponding section in the template is reduced to a single-line explanation (not omitted entirely — the agent reading the template needs to know "no design-system observed" as explicit info).
+
+### Phase: Write supporting references + update CLAUDE.md
+
+Write the 5 supporting files (one primary + 4 references) to the target project. File naming:
+
+- If `frontend_roots.length == 1` → plain filenames
+- If `frontend_roots.length > 1` → suffix with a slug derived from the root's basename
+
+Skip writing any reference whose specialist returned `SKIP`. Every skipped artefact is still noted in the run report.
 
 **Paths-scoping for generated rules** — two rule files get `paths:` frontmatter so they auto-load only when Claude edits matching files:
 

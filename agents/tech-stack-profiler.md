@@ -75,7 +75,10 @@ bundler: <one value>
 package_manager: <one value>
 rendering_mode: <one value>
 ts_strictness: strict | loose | off | n/a
-styling_approach: <one or comma-list>
+styling_model: tailwind-utilities-inline | tailwind-cn-composition | css-modules | css-in-js-styled-components | css-in-js-emotion | vanilla-css-bem | vanilla-scss-modules | shadcn-copy-with-cva | framework-scoped-sfc | sciter-scss-local | mixed | none
+class_naming: none-tailwind-only | bem | css-modules-auto | styled-var-name | cva-variants | cn-helper-composition | custom-prefix | auto-scoped | none
+custom_class_prefix: <empty unless class_naming == custom-prefix — e.g., "app-", "sciter-">
+styling_approach_detail: <legacy field for prose — "Tailwind with custom config in tailwind.config.ts">
 state_management: [<libs>]
 routing: <one value>
 data_fetching: [<libs>]
@@ -83,6 +86,41 @@ ui_library: [<libs>]
 testing: [<libs>]
 linting: [<tools>]
 ```
+
+**Critical for component-creation-template.md — the downstream agent reads `styling_model` and `class_naming` to know whether new components create CSS files at all, whether custom class names are allowed, and how to reference design tokens.**
+
+### Styling-model detection matrix
+
+| Signal | Value |
+| ---- | ---- |
+| `tailwind.config.*` present + `className="..."` inline in >50% of components + no `.module.css` | `tailwind-utilities-inline` |
+| Same + `cn("base", cond && "extra")` helper used | `tailwind-cn-composition` |
+| `.module.css` / `.module.scss` files co-located with components + `import styles from ...` | `css-modules` |
+| `styled-components` dep + `styled.x\`...\`` or `styled.x.attrs(...)\`\`` usage | `css-in-js-styled-components` |
+| `@emotion/*` dep + `css\`\`` or `sx={{...}}` prop usage | `css-in-js-emotion` |
+| Global CSS file + `.component__part--state` BEM class patterns | `vanilla-css-bem` |
+| SCSS partials `_*.scss` + `@import` + scoped via build (no modules) | `vanilla-scss-modules` |
+| `components/ui/*.tsx` with `cva(...)` calls + `cn()` helper | `shadcn-copy-with-cva` |
+| Vue `<style scoped>` / Svelte `<style>` blocks | `framework-scoped-sfc` |
+| Sciter `ui/` with co-located `.scss` + `@import` from `common/resources/` | `sciter-scss-local` |
+| Multiple of the above coexisting in different areas | `mixed` — describe per-area in `styling_approach_detail` |
+| No clear styling model (very small / static project) | `none` |
+
+### Class-naming detection matrix
+
+| Signal | Value |
+| ---- | ---- |
+| Tailwind utilities only, no custom class names anywhere | `none-tailwind-only` |
+| BEM pattern `.block__element--modifier` in CSS | `bem` |
+| CSS modules — names are local-scoped, camelCase in `.module.css` | `css-modules-auto` |
+| `const StyledButton = styled.button\`\`` pattern | `styled-var-name` |
+| `class-variance-authority` (`cva`) variants + base class composition | `cva-variants` |
+| `cn("base", cond && "conditional")` inline string composition | `cn-helper-composition` |
+| All custom classes share a prefix like `app-`, `myproject-`, `sciter-` | `custom-prefix` — also fill `custom_class_prefix` |
+| Framework auto-scopes (Vue scoped, Svelte component-scoped, Angular ViewEncapsulation) | `auto-scoped` |
+| No consistent convention / classes not used | `none` |
+
+These two fields drive the "Styling model" and "Class naming" sections of `component-creation-template.md`. The answer to **"are classes even used?"** must be definitive — do not leave ambiguous.
 
 ## architecture-frontend.md (Stack section)
 
