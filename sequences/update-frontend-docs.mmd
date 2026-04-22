@@ -1,0 +1,107 @@
+---
+title: "update-frontend-docs — Refresh a single area of the frontend analysis + regenerate affected .claude/ artefacts"
+---
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    actor User
+    participant Claude
+    participant SA as Subagent(s)
+    participant FS as File System
+
+    User->>Claude: /update-frontend-docs <area> [--all-frontends]
+
+    note over Claude,FS: Phase: Preflight
+    Claude->>Claude: START_TS = date +%s
+    Claude->>FS: Read .claude/state/frontend-analysis.json
+    FS-->>Claude: JSON / not found
+
+    alt JSON not found
+        Claude->>User: No frontend analysis found.<br/>Run /analyze-frontend first<br/>(then /create-frontend-docs).
+        break Skill aborts
+            Claude->>User: Aborted
+        end
+    end
+
+    alt schema_version mismatch
+        Claude->>User: Schema mismatch.<br/>Re-run /analyze-frontend to regenerate.
+        break Skill aborts
+            Claude->>User: Aborted
+        end
+    end
+
+    alt <area> missing or invalid
+        Claude->>User: Unknown area. Valid values:<br/>design-system, components,<br/>data-flow, architecture,<br/>framework-idioms, template
+        break Skill aborts
+            Claude->>User: Aborted
+        end
+    end
+
+    note over Claude,User: Scope resolution
+    opt frontend_roots.length > 1
+        alt --all-frontends flag set
+            Claude->>Claude: Scope = all frontend_roots
+        else no flag
+            Claude->>User: N frontends detected.<br/>Which to target? [list]
+            User-->>Claude: selection
+        end
+    end
+
+    alt area == "template"
+        note over Claude,SA: Skip subagent phase — template-only refresh
+    else area != "template"
+        note over Claude,SA: Phase: Re-invoke subagent(s)
+        loop For each in-scope frontend
+            Claude->>SA: Invoke subagent(s) for <area><br/>with fresh stack_profile +<br/>entry_points + style_rules_path
+            Note right of SA: design-system → design-system-scanner<br/>components → component-inventory<br/>data-flow → data-flow-mapper<br/>architecture → tech-stack-profiler +<br/>  architecture-analyzer<br/>framework-idioms → framework-idiom-extractor
+            SA-->>Claude: ## Summary Row +<br/>## <Artefact>
+        end
+        Claude->>User: Per-frontend diff preview<br/>(old JSON section vs new).<br/>Accept / skip?
+        User-->>Claude: choice
+
+        note over Claude,FS: Phase: Update JSON
+        Claude->>FS: Read current frontend-analysis.json
+        FS-->>Claude: content
+        Claude->>Claude: Replace frontend_roots[i].<area-key><br/>with fresh subagent output.<br/>For area=architecture: update<br/>both tech_stack + architecture.<br/>Update generated.ts to now.<br/>Leave generated.only_filter empty.
+        Claude->>FS: Atomic write (temp + rename)<br/>.claude/state/frontend-analysis.json
+        FS-->>Claude: OK
+    end
+
+    note over Claude,FS: Phase: Regenerate artefact
+    Claude->>User: Line count + diff against existing .md.<br/>Write / skip?
+    User-->>Claude: choice
+
+    alt area == "design-system"
+        Claude->>FS: Write .claude/rules/frontend-design-system.md<br/>(with paths: scoping)
+        FS-->>Claude: OK
+    else area == "components"
+        Claude->>FS: Write .claude/rules/frontend-components.md<br/>+ .claude/docs/component-inventory.md
+        FS-->>Claude: OK
+    else area == "data-flow"
+        Claude->>FS: Write .claude/sequences/frontend-data-flow.mmd
+        FS-->>Claude: OK
+    else area == "architecture"
+        Claude->>FS: Write .claude/docs/architecture-frontend.md<br/>+ .claude/docs/component-creation-template.md<br/>(Stack section depends on fresh tech_stack)
+        FS-->>Claude: OK
+    else area == "framework-idioms"
+        Claude->>FS: Write .claude/docs/component-creation-template.md<br/>(framework idioms feed a section of it)
+        FS-->>Claude: OK
+    else area == "template"
+        Claude->>FS: Write .claude/docs/component-creation-template.md<br/>(re-assembled from current JSON)
+        FS-->>Claude: OK
+    end
+
+    note over Claude,FS: Phase: Update CLAUDE.md (conditional)
+    opt area in {architecture, framework-idioms, template}
+        Claude->>FS: Read root CLAUDE.md
+        FS-->>Claude: content
+        Claude->>Claude: Locate ### Frontend subsection<br/>under ## Architecture.<br/>Refresh Stack line + cross-refs.
+        Claude->>FS: Write updated CLAUDE.md
+        FS-->>Claude: OK
+    end
+
+    note over Claude,FS: Phase: Report
+    Claude->>Claude: END_TS = date +%s<br/>wall_clock_sec = END_TS - START_TS
+    Claude->>FS: Write .claude/state/reports/<br/>update-frontend-docs-DISPLAY_TS.md<br/>(per rules/report-format.md)
+    FS-->>Claude: OK
+
+    Claude->>User: Dashboard:<br/>- Area refreshed: <area><br/>- Frontends scoped: N<br/>- Artefacts regenerated: M<br/>- JSON diff: <keys changed><br/>- Duration: S seconds<br/>- Report path<br/>Next: re-read template if<br/>area ∈ {architecture,<br/>framework-idioms}

@@ -22,67 +22,61 @@ argument-hint: "[frontend-path] [--only <area>]"
 > Output rules: read `rules/output-format.md`
 > Report rules: read `rules/report-format.md`
 
-Orchestrator. Detects frontend root(s) in the project and produces a **compact context envelope for a downstream component-creation agent**. The primary output is `component-creation-template.md` — a prescriptive, framework-idiomatic recipe for creating new components in THIS specific project. Everything else (design-system rule, component inventory, data-flow diagram, architecture doc) is **supporting reference data** cross-linked from the primary template.
+**Read-only analyzer.** Detects frontend root(s), runs a two-wave subagent pipeline, and persists structured analysis to `.claude/state/frontend-analysis.json` (gitignored). **Writes NO user-facing documentation.**
+
+To materialize the analysis as human-readable docs (`.claude/docs/component-creation-template.md` + references + `CLAUDE.md` update), run `/create-frontend-docs` AFTER this skill. To refresh a specific area after code drift, run `/update-frontend-docs <area>`.
+
+This split (analyze → create → update) mirrors the toolkit's existing `init-project` / `create-docs` / `update-docs` pattern.
 
 Execution pattern: **two-wave fan-out** with stack-informed Wave 2.
 
 - **Wave 1 — Stack profile**: `tech-stack-profiler` runs alone (serial gate), establishing `framework`, `rendering_mode`, `styling_model`, `class_naming`, `state_libs[]`, etc.
-- **Wave 2 — Deep per-axis analysis (parallel)**: 5 specialists + `framework-idiom-extractor` run concurrently, each consuming Wave 1's `stack_profile` so their scans are narrower and more accurate (e.g., `design-system-scanner` skips `styled-components` lookups when stack says Tailwind).
-- **Assembly**: orchestrator assembles `component-creation-template.md` from Wave 1 + Wave 2 outputs per `rules/component-creation-template-format.md`, then writes the supporting reference files.
+- **Wave 2 — Deep per-axis analysis (parallel)**: 5 specialists + `framework-idiom-extractor` run concurrently, each consuming Wave 1's `stack_profile` so their scans narrow (e.g., `design-system-scanner` skips `styled-components` lookups when stack says Tailwind).
+- **Persist**: orchestrator serializes Wave 1 + Wave 2 outputs into a structured JSON and writes it to `.claude/state/frontend-analysis.json`.
 
 Runs in two modes:
 
 - **Auto-suggested** after `/init-project` when a frontend is detected (user accepts "run now?" checkpoint).
-- **Standalone** on any project that already has a `.claude/` directory — retrofit or refresh.
+- **Standalone** on any project that already has a `.claude/` directory.
 
 If `.claude/` is missing, the skill stops and directs the user to `/init-project`.
 
 ## What this skill creates
 
-All artefacts land in the target project's `.claude/` — never in the plugin. Filenames use a root-specific suffix when multiple frontends are detected, plain names otherwise.
-
-**Primary — for the downstream component-creation agent:**
-
-- `.claude/docs/component-creation-template.md` — prescriptive recipe: WHERE new component files go, HOW to import, WHAT styling model to use, WHETHER custom class names even exist in this project, HOW state/data wiring works, a framework-idiomatic skeleton. Per `rules/component-creation-template-format.md`. **This is the file a component-creation agent reads first.**
-
-**Supporting references — cross-linked FROM the template:**
-
-- `.claude/rules/frontend-design-system.md` — design tokens, CSS variables, theme configuration, with `paths:` scoped to theme/token files
-- `.claude/rules/frontend-components.md` — component conventions (naming, prop shapes, class structure), with `paths:` scoped to components folders
-- `.claude/docs/architecture-frontend.md` — architecture overview + rendering mode + folder-boundary map
-- `.claude/docs/component-inventory.md` — table of notable components with purpose and location
-- `.claude/sequences/frontend-data-flow.mmd` — state + API data-flow diagram
-
-**Operational:**
-
+- `.claude/state/frontend-analysis.json` — **structured analysis result (gitignored)**. Machine-readable format readable by downstream component-creation agents directly, and consumed by `/create-frontend-docs` + `/update-frontend-docs`.
 - `.claude/state/reports/analyze-frontend-<ts>.md` — run report per [rules/report-format.md](../../rules/report-format.md) (gitignored)
-- `CLAUDE.md` — Architecture section updated with `@` imports to all of the above (surgical edit; other sections untouched)
 
 ## What this skill does NOT create
 
-- New modules under `projects/` or `src/` — it only describes what exists
-- Tests or CI configuration
-- Project-specific skills or custom rules beyond the ones listed above
-- Any artefact outside the target project's `.claude/` or root `CLAUDE.md`
+- **No** `.claude/rules/frontend-*.md` (that is `/create-frontend-docs`)
+- **No** `.claude/docs/component-creation-template.md` (that is `/create-frontend-docs`)
+- **No** `.claude/docs/architecture-frontend.md` / `component-inventory.md` (that is `/create-frontend-docs`)
+- **No** `.claude/sequences/frontend-data-flow.mmd` (that is `/create-frontend-docs`)
+- **No** edits to root `CLAUDE.md` (that is `/create-frontend-docs`)
+- New modules, tests, CI configuration, custom rules — out of scope
+- Anything outside `.claude/state/`
 
 ## Usage
 
 ```text
 /analyze-frontend                            # auto-detect frontend roots in cwd
 /analyze-frontend apps/web                   # analyze a specific sub-directory
-/analyze-frontend --only design-system       # skip components/data-flow/architecture
+/analyze-frontend --only design-system       # skip other specialists in Wave 2
 /analyze-frontend apps/web --only components # combined
 ```
 
-Filters accepted after `--only`:
+Filters accepted after `--only` (restrict Wave 2 specialists):
 
-| Filter | Runs | Writes |
+| Filter | Runs (in Wave 2) | JSON sections populated |
 | ---- | ---- | ---- |
-| `design-system` | design-system-scanner | `frontend-design-system.md` |
-| `components` | component-inventory | `frontend-components.md` + `component-inventory.md` |
-| `data-flow` | data-flow-mapper | `frontend-data-flow.mmd` |
-| `architecture` | tech-stack-profiler + architecture-analyzer | `architecture-frontend.md` |
-| `all` (default) | all 5 specialists | everything |
+| `design-system` | design-system-scanner | `design_system` |
+| `components` | component-inventory | `component_inventory` |
+| `data-flow` | data-flow-mapper | `data_flow` |
+| `architecture` | tech-stack-profiler + architecture-analyzer | `tech_stack` + `architecture` |
+| `framework-idioms` | framework-idiom-extractor | `framework_idioms` |
+| `all` (default) | all 6 specialists | all sections |
+
+Filtered runs write a PARTIAL JSON — unpopulated sections retain last-known values (if `.claude/state/frontend-analysis.json` exists) or are marked `null`.
 
 ## Interactive Wizard
 
@@ -91,12 +85,12 @@ The skill runs as a guided wizard with user checkpoints — not a silent batch.
 | After phase | What to show | What to ask |
 | ---- | ---- | ---- |
 | Detect frontends | List of detected roots with framework + entry point | Correct? Add/remove any? Specific area to focus on? |
-| Deep analysis complete | Per-frontend summary table (stack, token count, component count, data-flow style) | Write all artefacts? Any to skip? |
-| Report | Dashboard + `@` imports added to CLAUDE.md | Anything to regenerate? |
+| Deep analysis complete | Per-frontend summary (stack, token count, component count, data-flow style) | Confirm persist to JSON? (Default yes) |
+| Report | Dashboard + path to analysis JSON + suggestion to run `/create-frontend-docs` | — |
 
 ## Composition
 
-This skill is a **two-wave fan-out pipeline** — one detection subagent (gating) + one stack-profile subagent (Wave 1) + six specialist subagents (Wave 2) + orchestrator-side assembly of the primary template.
+This skill is a **two-wave fan-out pipeline** producing a structured JSON result — one detection subagent (gating) + one stack-profile subagent (Wave 1) + six specialist subagents (Wave 2) + orchestrator-side JSON serialization.
 
 | Phase | Owner | Responsibility |
 | ---- | ---- | ---- |
@@ -105,11 +99,10 @@ This skill is a **two-wave fan-out pipeline** — one detection subagent (gating
 | Confirm scope | **this skill** | User checkpoint — accept/modify root list |
 | **Wave 1 — Stack profile** | `tech-stack-profiler` subagent (per frontend) | Return full `stack_profile`: framework, rendering mode, `styling_model`, `class_naming`, state libs, bundler, etc. Wave 2 depends on this. |
 | **Wave 2 — Deep analysis (parallel)** | 6 specialists (per frontend, concurrent): `framework-idiom-extractor`, `design-system-scanner`, `component-inventory`, `data-flow-mapper`, `architecture-analyzer` | Each consumes Wave 1's `stack_profile` for narrower scans. Returns `{summary_row, artefact_body}` or `SKIP` |
-| **Assemble primary template** | **this skill** | Build `.claude/docs/component-creation-template.md` per `rules/component-creation-template-format.md` from Wave 1 + Wave 2 outputs |
-| Write supporting references | **this skill** | Write the 4 reference files, update root `CLAUDE.md` Architecture section surgically |
-| Report | **this skill** | Persist run report per `rules/report-format.md` |
+| **Persist analysis** | **this skill** | Merge Wave 1 + Wave 2 results into structured JSON; write to `.claude/state/frontend-analysis.json`. If file exists and `--only` filter was used, preserve sections not in the filter (merge, don't overwrite) |
+| Report | **this skill** | Persist run report per `rules/report-format.md`; dashboard on-screen points at JSON and suggests `/create-frontend-docs` |
 
-**Naming rule:** when N frontends > 1, artefact filenames gain a root-derived suffix (`component-creation-template-web-app.md`, `frontend-design-system-web-app.md`). When N == 1, filenames stay plain.
+**Why this skill is read-only:** Separating analysis from writing is what enables `/create-frontend-docs` and `/update-frontend-docs` to exist as distinct composable skills. It also makes the JSON directly consumable by downstream component-creation agents who want programmatic access without a parse-MD step.
 
 **Why two waves, not one parallel fan-out:** Wave 2 specialists benefit significantly from knowing the stack. `design-system-scanner` skips `styled-components` lookup when Wave 1 says Tailwind. `component-inventory` globs `.vue` files vs `.tsx` based on framework. `framework-idiom-extractor` selects framework-specific deep-dive branch from `framework_classification`. Running everything in one parallel wave wastes Wave-2 scans on wrong file patterns.
 
@@ -198,61 +191,53 @@ Each Wave 2 invocation prompt MUST include:
 
 Orchestrator parses by heading. Failures are logged to the run report's `Notes`, not escalated to abort.
 
-### Phase: Assemble primary template
+### Phase: Persist structured analysis
 
-After Wave 2 returns for all frontends, the orchestrator assembles `.claude/docs/component-creation-template.md` per [rules/component-creation-template-format.md](../../rules/component-creation-template-format.md). Required sections of the template are populated from Wave 1 + Wave 2 outputs as follows:
+After Wave 2 returns for all frontends, the orchestrator serializes the combined Wave 1 + Wave 2 outputs into a structured JSON and writes it to `.claude/state/frontend-analysis.json` in the target project. This file is gitignored (`.claude/state/` is in the toolkit's standard gitignore block).
 
-| Template section | Fed by |
-| ---- | ---- |
-| File layout | `architecture-analyzer` (folder structure) + `component-inventory` (co-located files) |
-| Imports block | `component-inventory` (from the canonical skeleton's imports) + `architecture-analyzer` (path aliases) |
-| Props declaration | `component-inventory` (conventions observed in existing components) |
-| Styling model | Wave 1 `stack_profile.styling_model` — map to the prescriptive paragraph |
-| Class naming | Wave 1 `stack_profile.class_naming` — including the "are classes even used?" answer |
-| State and data wiring | `data-flow-mapper` (state + API + forms + auth) |
-| Event handling | `component-inventory` (observed patterns) |
-| Accessibility patterns | `component-inventory` Notes section if any a11y observations |
-| Test and story conventions | `component-inventory` (`test_colocation`, `storybook_present`) |
-| Design-token usage | `design-system-scanner` (primary mechanism + 1-2 concrete examples) |
-| Framework-specific idioms | `framework-idiom-extractor` verbatim (handles both industry and custom) |
-| Canonical skeleton | `component-inventory.component_skeleton_excerpt` (if provided) OR synthesized from its other fields |
-| Anti-patterns | Union of all specialists' Notes that flagged anti-patterns |
-| Cross-references | Auto-generated: `@`-links to the other 4 reference files written by this skill |
+JSON schema:
 
-If a subagent returned SKIP for its area, the corresponding section in the template is reduced to a single-line explanation (not omitted entirely — the agent reading the template needs to know "no design-system observed" as explicit info).
-
-### Phase: Write supporting references + update CLAUDE.md
-
-Write the 5 supporting files (one primary + 4 references) to the target project. File naming:
-
-- If `frontend_roots.length == 1` → plain filenames
-- If `frontend_roots.length > 1` → suffix with a slug derived from the root's basename
-
-Skip writing any reference whose specialist returned `SKIP`. Every skipped artefact is still noted in the run report.
-
-**Paths-scoping for generated rules** — two rule files get `paths:` frontmatter so they auto-load only when Claude edits matching files:
-
-- `frontend-design-system.md` → `paths: ["<frontend_root>/**/*.{css,scss,sass}", "<frontend_root>/*tailwind*.{js,ts,cjs}", "<frontend_root>/**/*token*", "<frontend_root>/**/theme*.*"]`
-- `frontend-components.md` → `paths: ["<frontend_root>/src/components/**", "<frontend_root>/components/**", "<frontend_root>/src/ui/**"]`
-
-The subagents produce the markdown body; the orchestrator prepends the frontmatter block based on detected paths.
-
-### Phase: Update root CLAUDE.md Architecture section
-
-Surgical edit — read CLAUDE.md, locate the `## Architecture` heading, append `@`-style import references for each newly-created file at the end of that section. Do NOT touch other sections (Build & Run, Project Structure, Code Conventions, Git Conventions, etc.).
-
-Example addendum (inserted before next `##` heading):
-
-```markdown
-### Frontend
-
-- See [.claude/docs/architecture-frontend.md](.claude/docs/architecture-frontend.md) for the frontend architecture overview.
-- Design system tokens: `@.claude/rules/frontend-design-system.md`
-- Component conventions: `@.claude/rules/frontend-components.md`
-- Data flow diagram: `.claude/sequences/frontend-data-flow.mmd`
+```json
+{
+  "schema_version": "1.0",
+  "generated": {
+    "plugin_version": "<e.g. 0.13.0>",
+    "skill": "analyze-frontend",
+    "ts": "<ISO-8601 UTC>",
+    "wall_clock_sec": <int>,
+    "frontends_analyzed": <int>,
+    "only_filter": "<null | design-system | components | data-flow | architecture | framework-idioms | all>"
+  },
+  "frontend_roots": [
+    {
+      "path": "<absolute>",
+      "relative": "<project-relative>",
+      "detector": {
+        "framework": "<from frontend-detector>",
+        "framework_version": "<major.minor>",
+        "entry_points": [...],
+        "confidence": "high|medium|low",
+        "package_manager": "pnpm|yarn|npm|bun"
+      },
+      "tech_stack": { /* full stack_profile from Wave 1 */ },
+      "framework_idioms": { /* framework-idiom-extractor Summary Row + body */ },
+      "design_system": { /* design-system-scanner Summary Row + body */ },
+      "component_inventory": { /* component-inventory Summary Row + body + canonical_skeleton_excerpt */ },
+      "data_flow": { /* data-flow-mapper Summary Row + Mermaid diagram string */ },
+      "architecture": { /* architecture-analyzer Summary Row + body */ }
+    }
+  ]
+}
 ```
 
-If the Architecture section already contains a `### Frontend` subsection (from a previous run), replace it in place — do not duplicate.
+Each subagent's `## Summary Row` YAML block is parsed into the corresponding JSON object; the `## <Artefact>` markdown body is stored as a string in a `body_markdown` field so `/create-frontend-docs` can emit it to disk without regeneration.
+
+**Merge behavior** — if `.claude/state/frontend-analysis.json` already exists:
+
+- If this run has no `--only` filter (default, full run) → **overwrite** the entire file.
+- If `--only <area>` was passed → **merge**: preserve sections of `frontend_roots[*]` that were NOT in the filter, replace only the filtered sections. Update `generated.ts` and `generated.only_filter` accordingly.
+
+This enables incremental refresh without losing unrelated analysis data.
 
 ### Phase: Report
 
@@ -278,38 +263,37 @@ Bash: PHASE_<NAME>_START=$(date +%s)
 Bash: PHASE_<NAME>_END=$(date +%s); PHASE_<NAME>_SEC=$((PHASE_<NAME>_END - PHASE_<NAME>_START))
 ```
 
-Phases to time: `PREFLIGHT`, `DETECT`, `CONFIRM`, `DEEP_ANALYSIS` (the parallel fan-out), `WRITE`, `UPDATE_CLAUDE_MD`, `REPORT`. Missing timings go to `## Notes` as `timing_missing=<phase>`, never estimated.
+Phases to time: `PREFLIGHT`, `DETECT`, `CONFIRM`, `WAVE_1_STACK`, `WAVE_2_ANALYSIS` (the parallel fan-out), `PERSIST_JSON`, `REPORT`. Missing timings go to `## Notes` as `timing_missing=<phase>`, never estimated.
 
 See [rules/report-format.md](../../rules/report-format.md) as source of truth.
 
 Body sections:
 
-- `## Summary` — frontends analyzed, stacks found, duration, artefacts written
-- `## Phase Timings` — Preflight, Detect, Confirm, Deep analysis, Write, Report
-- `## Per-frontend findings` — per-root table: stack profile, design-system characterization, component count, data-flow style, architecture mode
-- `## Artefacts` — path / lines / category
-- `## Next-step Recommendations` — optional follow-up skills (`/create-docs rule` for project-specific patterns, `/create-mermaid` for additional flows, `/update-docs --refresh frontend:<area>` once code drifts)
+- `## Summary` — frontends analyzed, stacks found, duration, analysis JSON path
+- `## Phase Timings` — per-phase durations
+- `## Per-frontend findings` — per-root table: stack profile, design-system characterization, component count, data-flow style, framework classification
+- `## Artefacts` — just the JSON file and the report (this skill writes no other artefacts)
+- `## Next-step Recommendations` — always suggest `/create-frontend-docs` (to materialize the analysis as human-readable docs) and mention `/update-frontend-docs <area>` for targeted refreshes later
 - `## Notes` (optional) — subagent failures, surprises, cleanup candidates
 
-End-of-run dashboard on screen: frontends, stacks, duration, `Report ✓ .claude/state/reports/analyze-frontend-<ts>.md`.
+End-of-run dashboard on screen: frontends, stacks, duration, `JSON ✓ .claude/state/frontend-analysis.json`, `Report ✓ .claude/state/reports/analyze-frontend-<ts>.md`, and a prominent "**Next: run `/create-frontend-docs` to materialize docs**" call-to-action.
 
 ## Retrofit Behavior
 
-When run on a project whose `/init-project` did NOT detect frontends (pre-M8 run, or frontend added later):
+When run on a project that already has a `.claude/state/frontend-analysis.json`:
 
-- Adds all new artefacts without touching existing module `CLAUDE.md` files
-- Updates root `CLAUDE.md` only in the Architecture section
-- Does not re-run stack detection at project level — uses `frontend-detector` which is narrower
+- Full run (no `--only`) → overwrite JSON entirely
+- Partial run (`--only <area>`) → merge JSON: preserve sections outside the filter, replace only filtered sections. Update `generated.ts` to reflect the latest partial run.
 
-When run on a project that already has previous-run artefacts (re-run scenario):
+When run on a project that has `.claude/docs/component-creation-template.md` or other frontend-* artefacts from a previous `/create-frontend-docs` run:
 
-- Overwrites `.claude/rules/frontend-*.md` and `.claude/docs/*frontend*.md` with fresh content
-- Preserves any hand-edits? No — rewrites from scratch. Users who want to preserve overrides should instead use `/update-docs --refresh frontend:<area>` once it lands.
+- This skill does NOT touch those files. It only writes the JSON. The user runs `/create-frontend-docs` separately to update the MDs.
 
 ## What This Skill Does NOT Do
 
 - Scaffold `.claude/` — use `/init-project` first
-- Analyze backend code — this is frontend-specific
-- Create per-component `CLAUDE.md` files — only the aggregate inventory in `.claude/docs/component-inventory.md`
+- Analyze backend code — frontend-specific
+- Write `.claude/docs/` or `.claude/rules/` artefacts — that's `/create-frontend-docs`
+- Update root `CLAUDE.md` Architecture section — that's `/create-frontend-docs`
 - Configure linters, formatters, or CI — pure read + describe
-- Invent patterns not observed in the code — subagents must surface only what they find, same discipline as `module-documenter`
+- Invent patterns not observed in the code — subagents surface only what they find, same discipline as `module-documenter`

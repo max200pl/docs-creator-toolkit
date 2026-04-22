@@ -47,21 +47,22 @@ claude --add-dir ~/Projects/claude-docs-creator
 | `/update-docs <path> [mode]` | API | Detect drift, refresh docs, move misplaced content |
 | `/validate-claude-docs <path> [fix]` | API | Audit `.claude/` structure + auto-fix trivial issues |
 | `/status <path>` | API | Health dashboard (coverage, staleness, stats) |
-| `/create-mermaid <type>` | Shared | Theme-agnostic Mermaid diagram |
-| `/research <topic>` | Shared | Web research → structured report in `docs/research-*.md` |
+| `/analyze-frontend [path]` | API | Read-only — detect frontends + two-wave fan-out analysis; writes `.claude/state/frontend-analysis.json` |
+| `/create-frontend-docs` | API | Materialize frontend-analysis JSON as `component-creation-template.md` + supporting references + CLAUDE.md update |
+| `/update-frontend-docs <area>` | API | Targeted refresh of one area (design-system / components / data-flow / architecture / framework-idioms / template) |
+| `/create-sequences <name>` | API | Mermaid sequence diagram in target `.claude/sequences/` |
 | `/create-steps <topic>` | Shared | Step-by-step runbook with rollback |
-| `/create-tutorial <topic>` | Shared | ELI5 tutorial (beginner / intermediate / reference) |
 
 Invocation after install: `/claude-docs-creator:<command>` (plugin namespace).
 
-Maintainer-only skills — not shipped with the plugin, live in `.claude/skills/` of this repo: `/sleep` (lint toolkit), `/distill` (session retrospective), `/menu` (command index).
+Maintainer-only skills — not shipped with the plugin, live in `.claude/skills/` of this repo: `/sleep` (lint toolkit), `/distill` (session retrospective), `/menu` (command index), `/create-mermaid` (author any Mermaid diagram inside the toolkit repo), `/research` (web research for toolkit rules/roadmap), `/create-tutorial` (ELI5 tutorials for toolkit onboarding).
 
 ## What's Inside
 
 ```text
 .claude-plugin/plugin.json       ← plugin manifest
-skills/<name>/SKILL.md           ← 9 public skills (api + shared)
-agents/<name>.md                 ← 3 specialist subagents
+skills/<name>/SKILL.md           ← 10 public skills (9 api + 1 shared)
+agents/<name>.md                 ← 9 specialist subagents
 rules/<name>.md                  ← style + process rules (paths:-scoped)
 hooks/hooks.json + *.sh          ← Pre/Post-tool-use + Stop hooks
 docs/*.md + .mmd                 ← how-tos, tutorials, references, research
@@ -70,7 +71,7 @@ output-styles/toolkit-concise.md
 agents-sdk/doc-validator/        ← headless CI validator via Agent SDK
 CLAUDE.md                        ← toolkit's own project instructions
 
-.claude/skills/<name>/SKILL.md   ← 3 internal skills — maintainer-only,
+.claude/skills/<name>/SKILL.md   ← 6 internal skills — maintainer-only,
                                    not packaged with the plugin
 .claude/state/                   ← local session state (gitignored)
 ```

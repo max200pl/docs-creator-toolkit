@@ -2,6 +2,56 @@
 
 All notable changes to the `claude-docs-creator` plugin. Format loosely follows [Keep a Changelog](https://keepachangelog.com) and [Semantic Versioning](https://semver.org).
 
+## 0.13.0 — 2026-04-22
+
+M8 closeout — **frontend suite split into three composable skills** + scope reclassification of toolkit-dev skills.
+
+### Frontend skill split (analyze → create → update)
+
+`/analyze-frontend` used to detect + analyze + write all `.claude/` artefacts in a single run. That made targeted refresh awkward and mixed the read-only "analyze" step with the write-heavy "materialize" step. 0.13.0 separates concerns along the toolkit's existing `init-project` / `create-docs` / `update-docs` pattern:
+
+- **`/analyze-frontend`** — now **read-only**. Runs the two-wave fan-out (stack profile → 6 parallel specialists) and persists structured results to `.claude/state/frontend-analysis.json` (gitignored). Writes **no** user-facing `.md` or `.mmd`. Downstream component-creation agents can consume the JSON directly without parsing markdown.
+- **`/create-frontend-docs`** — NEW. Reads `frontend-analysis.json` and materializes it as human-readable artefacts: `component-creation-template.md` (primary envelope) + 4 supporting references (`frontend-design-system.md`, `frontend-components.md`, `architecture-frontend.md`, `component-inventory.md`, `frontend-data-flow.mmd`) + surgical update to root `CLAUDE.md` Architecture section.
+- **`/update-frontend-docs <area>`** — NEW. Targeted refresh. Re-invokes the subagent matching `<area>` (valid values: `design-system`, `components`, `data-flow`, `architecture`, `framework-idioms`, `template`), merges fresh data into JSON, regenerates only the affected `.md` / `.mmd`. Replaces the deprecated `/update-docs --refresh frontend[:area]` flag (still works as a thin delegation wrapper for back-compat).
+
+### Added
+
+- **`skills/create-frontend-docs/SKILL.md`** + **`sequences/create-frontend-docs.mmd`** — JSON → artefacts materializer. Preflight validates `frontend-analysis.json` exists + matching `schema_version`; stale JSON (>30 days) prompts before proceeding.
+- **`skills/update-frontend-docs/SKILL.md`** + **`sequences/update-frontend-docs.mmd`** — area-scoped refresh. Special `template` area re-assembles `component-creation-template.md` from current JSON without re-running any subagent — useful when `rules/component-creation-template-format.md` changes.
+- **`skills/create-sequences/SKILL.md`** + **`sequences/create-sequences.mmd`** — new api skill for users authoring sequence diagrams in their own project's `.claude/sequences/`. Purpose-built wrapper delegating diagram-authoring logic to the internal `/create-mermaid`. Mermaid style rules remain shared via `rules/mermaid-style.md`.
+
+### Changed — scope reclassification
+
+Three previously-shared skills moved from `scope: shared` (public, packaged with plugin) to `scope: internal` (toolkit-dev only, not distributed):
+
+- `/create-mermaid` — was shared; now internal. Reasoning: target-project users need `/create-sequences` (purpose-built for sequence diagrams in `.claude/sequences/`), not a generic Mermaid authoring tool. The generic multi-type authoring is only useful for toolkit-repo maintenance.
+- `/research` — was shared; now internal. Toolkit maintainers use this to author research reports informing toolkit rules/roadmap. End users on target projects have no equivalent use case.
+- `/create-tutorial` — was shared; now internal. Generates ELI5 tutorials for toolkit onboarding into the toolkit's own `docs/`. Not relevant to target-project work.
+
+File moves: `skills/create-{mermaid,tutorial}/` + `skills/research/` → `.claude/skills/...`. Sequences: `sequences/create-{mermaid,tutorial}.mmd` + `sequences/research.mmd` → `.claude/sequences/...`. Frontmatter now has `scope: internal` + `disable-model-invocation: true` (belt-and-suspenders — physical location already prevents plugin distribution; flag prevents accidental invocation if the dir is attached via `--add-dir`).
+
+### Changed — analyze-frontend refocused
+
+- **`skills/analyze-frontend/SKILL.md`** — reframed as read-only analyzer. Replaces the Assemble-primary-template + Write-supporting-references + Update-CLAUDE.md phases with a single Persist-analysis phase that serializes Wave 1 + Wave 2 outputs to JSON. Merge behavior: full run overwrites JSON; `--only <area>` partial run merges (preserves sections outside the filter).
+
+### Changed — manifests
+
+- **`.claude-plugin/plugin.json`** — description enumerates the 9 api skills (including the three new ones) + 1 shared; calls out the internal skills that stay in the private dev repo; adds `doc-reviewer` to the subagent list (was missing).
+- **`.claude/rules/skill-scopes.md`** + **`.claude/rules/two-layer-architecture.md`** — manifest tables reflect the reclassification and the new api skills.
+- **`.claude/skills/menu/SKILL.md`** — stale `/update-docs ... --refresh frontend[:area]` row removed; new api skills (`/analyze-frontend` refocused, `/create-frontend-docs`, `/update-frontend-docs`, `/create-sequences`) added to the commands table.
+- **`.claude/docs/architecture-overview.mmd`** — nodes for the three new api skills + JSON state node (`frontend-analysis.json`) + wiring edges (analyze → JSON, create reads JSON → writes artefacts, update merges JSON area + regenerates affected artefact).
+- **`.claude/docs/milestones.md`** — M8 closed with all three shipment checklists; Current Baseline refreshed (16 total skills: 10 public + 6 internal; 12 subagents: 9 public + 3 internal; rules to 13+).
+- **`README.md`** — public skills table reflects 10 public skills (9 api + 1 shared); "What's Inside" block updated (9 subagents, 6 internal skills); maintainer-only list now names all 6 internal skills.
+
+### Deprecated
+
+- `/update-docs --refresh frontend[:area]` — now prints a deprecation notice and delegates to `/update-frontend-docs <area>` via skill chain. Will be removed in 1.0.
+
+### Migration notes
+
+- **Existing target projects with generated frontend artefacts**: no action required. Running `/update-frontend-docs <area>` after a field-observed drift will refresh only what changed. Full regeneration: `/analyze-frontend` + `/create-frontend-docs`.
+- **Toolkit contributors**: `/create-mermaid`, `/research`, `/create-tutorial` still work but only inside the toolkit repo via `.claude/skills/`. They are NOT available on target projects where the plugin is installed — by design.
+
 ## 0.12.0 — 2026-04-21
 
 M8 v2 pivot — `/analyze-frontend` reframed as **context envelope for downstream component-creation agents**, not as generic frontend documentation.

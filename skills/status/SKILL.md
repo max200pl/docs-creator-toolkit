@@ -92,10 +92,9 @@ Check that each skill with ordered phases has a companion sequence diagram:
   │                                                           │
   │  init-project      ✓  sequences/init-project/             │
   │  create-docs       ✓  sequences/create-docs.mmd          │
-  │  create-mermaid    ✓  sequences/create-mermaid.mmd        │
+  │  create-sequences  ✓  sequences/create-sequences.mmd      │
+  │  analyze-frontend  ✓  sequences/analyze-frontend/         │
   │  validate-docs     —  checklist (no sequence needed)      │
-  │  sleep             —  checklist (no sequence needed)      │
-  │  menu              —  single output (no sequence needed)  │
   │  status            —  single output (no sequence needed)  │
   │                                                           │
   └───────────────────────────────────────────────────────────┘

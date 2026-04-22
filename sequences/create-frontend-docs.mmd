@@ -1,0 +1,77 @@
+---
+title: "create-frontend-docs — Materialize .claude/state/frontend-analysis.json as human-readable docs"
+---
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    actor User
+    participant Claude
+    participant FS as File System
+
+    User->>Claude: /create-frontend-docs [--force-rerun] [--only <area>]
+
+    note over Claude,FS: Preflight
+    Claude->>Claude: START_TS = date +%s
+    Claude->>FS: Check .claude/ exists
+    FS-->>Claude: ok / missing
+    Claude->>FS: Read .claude/state/frontend-analysis.json
+    FS-->>Claude: JSON / not found
+
+    alt JSON not found
+        Claude->>User: No analysis JSON found.<br/>Run /analyze-frontend first.
+        break Skill aborts
+            Claude->>User: Aborted
+        end
+    end
+
+    alt schema_version mismatch
+        Claude->>User: Schema mismatch.<br/>Re-run /analyze-frontend to regenerate.
+        break Skill aborts
+            Claude->>User: Aborted
+        end
+    end
+
+    opt JSON older than 30 days
+        Claude->>User: Analysis is stale (generated X days ago).<br/>Continue with stale data? [y/n]<br/>(--force-rerun bypasses this)
+        User-->>Claude: Choice
+    end
+
+    note over Claude,User: Phase: Assemble primary template
+    Claude->>Claude: Build component-creation-template.md<br/>from JSON per rules/component-creation-<br/>template-format.md.<br/>Section map:<br/>- Styling/Class naming ← tech_stack<br/>- State/Data ← data_flow<br/>- Skeleton ← component_inventory<br/>- Framework idioms ← framework_idioms<br/>- Design tokens ← design_system<br/>- Architecture ← architecture
+    Claude->>User: Draft template preview<br/>(line count + per-frontend summary)<br/>Write all artefacts?
+    User-->>Claude: Approve / skip list
+
+    note over Claude,FS: Phase: Write artefacts
+    Claude->>FS: Write .claude/docs/component-creation-template.md<br/>(PRIMARY — for component-creation agent)
+    FS-->>Claude: OK
+    opt design_system section non-null
+        Claude->>FS: Write .claude/rules/frontend-design-system.md<br/>(with paths: scoped to theme/token files)
+        FS-->>Claude: OK
+    end
+    opt component_inventory section non-null
+        Claude->>FS: Write .claude/rules/frontend-components.md<br/>(paths: scoped to components/) +<br/>.claude/docs/component-inventory.md
+        FS-->>Claude: OK
+    end
+    opt architecture + tech_stack non-null
+        Claude->>FS: Write .claude/docs/architecture-frontend.md
+        FS-->>Claude: OK
+    end
+    opt data_flow.primary_flow_mermaid non-null
+        Claude->>FS: Write .claude/sequences/frontend-data-flow.mmd
+        FS-->>Claude: OK
+    end
+
+    note over Claude,FS: Phase: Update root CLAUDE.md Architecture section
+    Claude->>FS: Read root CLAUDE.md
+    FS-->>Claude: content
+    Claude->>Claude: Locate ## Architecture heading.<br/>Find/create ### Frontend subsection.<br/>Replace-in-place or append.
+    Claude->>FS: Write updated CLAUDE.md
+    FS-->>Claude: OK
+
+    note over Claude,FS: Phase: Report
+    Claude->>Claude: END_TS = date +%s<br/>wall_clock_sec = END - START
+    Claude->>FS: Collect artefact list (wc -l each)
+    FS-->>Claude: paths + line counts
+    Claude->>FS: Write .claude/state/reports/<br/>create-frontend-docs-DISPLAY_TS.md<br/>(per rules/report-format.md)
+    FS-->>Claude: OK
+
+    Claude->>User: Dashboard:<br/>- Frontends: N<br/>- Artefacts written: M<br/>- Stack: framework + styling-model<br/>- CLAUDE.md updated<br/>- Duration: S seconds<br/>- Report path<br/>Next: /update-frontend-docs <area><br/>for targeted refreshes
