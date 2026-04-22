@@ -51,6 +51,8 @@ claude --add-dir ~/Projects/claude-docs-creator
 | `/create-frontend-docs` | API | Materialize frontend-analysis JSON as `component-creation-template.md` + supporting references + CLAUDE.md update |
 | `/update-frontend-docs <area>` | API | Targeted refresh of one area (design-system / components / data-flow / architecture / framework-idioms / template) |
 | `/create-sequences <name>` | API | Mermaid sequence diagram in target `.claude/sequences/` |
+| `/check-links [path]` | API | Scan `.md`/`.mmd` for broken cross-refs (dead links, stale `@`-imports). Auto-runs as a PostToolUse hook on edited Markdown files. |
+| `/menu` | API | Discovery screen — list of available `/claude-docs-creator:*` commands + quick status |
 | `/create-steps <topic>` | Shared | Step-by-step runbook with rollback |
 
 Invocation after install: `/claude-docs-creator:<command>` (plugin namespace).
@@ -61,7 +63,7 @@ Maintainer-only skills — not shipped with the plugin, live in `.claude/skills/
 
 ```text
 .claude-plugin/plugin.json       ← plugin manifest
-skills/<name>/SKILL.md           ← 10 public skills (9 api + 1 shared)
+skills/<name>/SKILL.md           ← 12 public skills (11 api + 1 shared)
 agents/<name>.md                 ← 9 specialist subagents
 rules/<name>.md                  ← style + process rules (paths:-scoped)
 hooks/hooks.json + *.sh          ← Pre/Post-tool-use + Stop hooks

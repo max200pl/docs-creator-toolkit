@@ -53,6 +53,33 @@ Three docs promoted from `.claude/docs/` (internal) to `docs/` (public) to enfor
 
 Cross-refs updated in `agents/module-documenter.md`, `agents/frontend-detector.md`, `rules/report-format.md`, `skills/analyze-frontend/SKILL.md`, `skills/init-project/SKILL.md`, `.claude/agents/skill-architect.md`, `.claude/skills/sleep/SKILL.md`, `.claude/skills/menu/SKILL.md`, `.claude/docs/two-claude-workflow.md`, `.claude/docs/milestones.md`, `.claude/rules/two-layer-architecture.md`. Historical M2-checklist bullets in `milestones.md` left as-is (they describe the path at that time).
 
+### Added — broken-link checker (/check-links)
+
+- **`hooks/check-links.sh`** — shared bash scanner. Finds dead relative links in `.md` / `.mmd` files and stale `@`-imports in `CLAUDE.md` / `CLAUDE.local.md`. Skips fenced code blocks, inline code, placeholders (paths containing `<` or `>`), and external URLs. Auto-detects toolkit-vs-target-project context via `.claude-plugin/plugin.json` presence — enables public→internal layer-check only inside the toolkit repo.
+- **`skills/check-links/SKILL.md`** (api, new) — user-facing on-demand scanner: `/check-links [project-path]`. Single source of truth with the PostToolUse hook — same script, same rules, no drift.
+- **`hooks/hooks.json`** — registers `hooks/check-links.sh` as PostToolUse(Write|Edit). Any `.md` / `.mmd` file Claude writes or edits gets auto-scanned; warnings surface as `systemMessage`, non-blocking.
+- **`.claude/skills/check-links/SKILL.md`** (internal, new) — thin internal wrapper over the same script for toolkit-dev use, invoked by `/sleep` pipeline on future integration.
+
+### Added — public /menu (/menu)
+
+- **`skills/menu/SKILL.md`** (api, new) — end-user discovery screen listing all `/claude-docs-creator:*` commands + quick status dashboard. Shows only the public-surface commands (api + shared scopes). Toolkit maintainers' internal `/menu` stays in `.claude/skills/menu/` with the full listing including internal skills.
+
+### Changed — doc placement cleanup
+
+Three docs promoted from `.claude/docs/` (internal) to `docs/` (public) to enforce the rule "public artefacts reference only public artefacts":
+
+- `.claude/docs/subagent-fanout-pattern.md` → `docs/reference-subagent-fanout-pattern.md` — previously internal but referenced from 5 public artefacts (`agents/module-documenter.md`, `agents/frontend-detector.md`, `rules/report-format.md`, `skills/analyze-frontend/SKILL.md`, `skills/init-project/SKILL.md`) — those refs were broken for end users whose plugin install has no `.claude/docs/`. Audience line broadened to cover plugin users, not just toolkit maintainers.
+- `.claude/docs/reference-keybindings.md` → `docs/reference-keybindings.md` — user-facing `~/.claude/keybindings.json` recommendations belong with other end-user reference docs.
+- `.claude/docs/project-docs-review.md` → `docs/checklist-project-docs-review.md` — end-user review checklist after `/init-project` belongs in public `docs/` with the `checklist-` prefix per `rules/docs-folder-structure.md`.
+
+Cross-refs updated in `agents/module-documenter.md`, `agents/frontend-detector.md`, `rules/report-format.md`, `skills/analyze-frontend/SKILL.md`, `skills/init-project/SKILL.md`, `.claude/agents/skill-architect.md`, `.claude/skills/sleep/SKILL.md`, `.claude/skills/menu/SKILL.md`, `.claude/docs/two-claude-workflow.md`, `.claude/docs/milestones.md`, `.claude/rules/two-layer-architecture.md`. Historical M2-checklist bullets in `milestones.md` left as-is (they describe the path at that time).
+
+### Fixed
+
+- `skills/init-project/SKILL.md:51` — public skill referenced `.claude/rules/docs-english-only.md` (internal). Rewritten as plain prose — the referenced rule stays toolkit-internal.
+- `.claude/docs/milestones.md:437` — ref to `how-to-create-docs.md` without path prefix now resolves to `../../docs/how-to-create-docs.md`.
+- `docs/research-claude-md-rules.md:18` — "Known issue" note about subdirectory on-demand loading clarified: referenced GitHub issues (#2571, #24987) were auto-closed by github-actions-bot for inactivity, not confirmed fixed.
+
 ### Deprecated
 
 - `/update-docs --refresh frontend[:area]` — now prints a deprecation notice and delegates to `/update-frontend-docs <area>` via skill chain. Will be removed in 1.0.

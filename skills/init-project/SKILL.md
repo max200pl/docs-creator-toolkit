@@ -48,7 +48,7 @@ This skill runs as a guided wizard — not a silent batch job. At key checkpoint
 
 **Documentation language policy:**
 
-- **This toolkit's own files** (plugin code: `rules/`, `skills/**/SKILL.md`, `agents/`, `sequences/`, `docs/`, `hooks/`) — always English. Enforced by [.claude/rules/docs-english-only.md](../../.claude/rules/docs-english-only.md) inside the plugin repo.
+- **This toolkit's own files** (plugin code: `rules/`, `skills/**/SKILL.md`, `agents/`, `sequences/`, `docs/`, `hooks/`) — always English. Enforced by a toolkit-internal rule (`docs-english-only.md`) that ships only in the dev repo, not in the plugin package.
 - **Target-project generated content** (root `CLAUDE.md`, module `CLAUDE.md`, project rules and docs the skill writes into the user's project) — **English is the default and strongly recommended** (grep-ability, tool compatibility, cross-team readability, LLM instruction reliability). **May be overridden** if the user's team operates in another language — ask at the language checkpoint in that case.
 - **User-Claude conversation** — any language the user chooses, always.
 
