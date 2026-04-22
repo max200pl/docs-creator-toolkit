@@ -15,7 +15,7 @@ Loading order (official):
 
 After `/compact`, root CLAUDE.md is re-injected. Subdirectory files are NOT re-injected — they reload next time Claude reads a file in that directory.
 
-**Known issue:** subdirectory on-demand loading has reliability bugs in VS Code extension ([#2571](https://github.com/anthropics/claude-code/issues/2571), [#24987](https://github.com/anthropics/claude-code/issues/24987)). The more robust alternative is `rules/` with `paths:` frontmatter.
+**Historical issue (status: unclear as of 2026-04-22):** subdirectory on-demand loading had reliability bugs in the VS Code extension — tracking issues [#2571](https://github.com/anthropics/claude-code/issues/2571) and [#24987](https://github.com/anthropics/claude-code/issues/24987) were **auto-closed by github-actions-bot as `not planned` after inactivity** (not confirmed fixed). No release notes document a resolution. Until behavior is verified on a modern build, prefer the more robust alternative: `rules/` with `paths:` frontmatter — same effect (path-scoped context loading), deterministic, not dependent on subdirectory-walk heuristics.
 
 ## Root CLAUDE.md Rules
 
