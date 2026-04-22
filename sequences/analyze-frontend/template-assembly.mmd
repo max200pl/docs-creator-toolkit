@@ -1,0 +1,78 @@
+---
+title: "analyze-frontend — Primary Template Assembly: which subagent feeds which section"
+---
+%%{init: {'theme': 'neutral'}}%%
+flowchart LR
+    subgraph SRC["Subagent outputs (inputs to assembly)"]
+        direction TB
+        FD["frontend-detector"]
+        TSP["tech-stack-profiler<br/>(Wave 1)"]
+        FIE["framework-idiom-extractor"]
+        DSS["design-system-scanner"]
+        CI["component-inventory"]
+        DFM["data-flow-mapper"]
+        AA["architecture-analyzer"]
+    end
+
+    subgraph TMPL["component-creation-template.md<br/>(primary output — 13 sections)"]
+        direction TB
+        S1["## File layout"]
+        S2["## Imports block"]
+        S3["## Props declaration"]
+        S4["## Styling model"]
+        S5["## Class naming"]
+        S6["## State and data wiring"]
+        S7["## Event handling"]
+        S8["## Accessibility patterns"]
+        S9["## Test and story conventions"]
+        S10["## Design-token usage"]
+        S11["## Framework-specific idioms"]
+        S12["## Canonical skeleton"]
+        S13["## Anti-patterns"]
+    end
+
+    %% frontend-detector — supplies framework name for classification
+    FD -->|"framework name"| S11
+
+    %% tech-stack-profiler — styling_model + class_naming are PRIMARY drivers
+    TSP -->|"styling_model"| S4
+    TSP -->|"class_naming +<br/>custom_class_prefix"| S5
+    TSP -->|"language, ts_strictness"| S3
+    TSP -->|"data_fetching libs"| S6
+    TSP -->|"rendering_mode"| S11
+
+    %% framework-idiom-extractor — verbatim feeds Framework section
+    FIE -.->|"VERBATIM<br/>Framework Idioms body"| S11
+    FIE -->|"directive patterns"| S2
+
+    %% design-system-scanner — token examples in design-token section
+    DSS -->|"source of truth +<br/>example usages"| S10
+    DSS -->|"token references<br/>for skeleton"| S12
+
+    %% component-inventory — THE primary source for skeleton + conventions
+    CI -.->|"VERBATIM<br/>canonical skeleton<br/>(from a real component)"| S12
+    CI -->|"file naming,<br/>folder pattern,<br/>co-located files"| S1
+    CI -->|"imports pattern<br/>from skeleton"| S2
+    CI -->|"interface/type,<br/>ref-forwarding,<br/>export pattern"| S3
+    CI -->|"onX naming,<br/>typed events"| S7
+    CI -->|"a11y observations<br/>(if any)"| S8
+    CI -->|"test colocation,<br/>storybook coverage"| S9
+
+    %% data-flow-mapper — state + API + forms
+    DFM -.->|"VERBATIM<br/>State and Data section"| S6
+    DFM -->|"form handling in<br/>skeleton if relevant"| S12
+
+    %% architecture-analyzer — path aliases, folder boundaries
+    AA -->|"path aliases<br/>(@/*, ~/* etc.)"| S2
+    AA -->|"folder boundaries<br/>(features vs shared)"| S1
+
+    %% All subagents may contribute anti-patterns
+    TSP -.->|"observed<br/>anti-pattern"| S13
+    FIE -.->|"observed<br/>anti-pattern"| S13
+    DSS -.->|"observed<br/>anti-pattern"| S13
+    CI -.->|"observed<br/>anti-pattern"| S13
+    DFM -.->|"observed<br/>anti-pattern"| S13
+    AA -.->|"observed<br/>anti-pattern"| S13
+
+    %% Legend
+    LEG["Legend:<br/>solid arrow = primary feeder<br/>dashed arrow = verbatim contribution<br/>dotted arrow = optional / observed"]

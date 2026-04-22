@@ -8,12 +8,17 @@ argument-hint: "[frontend-path] [--only <area>]"
 
 # Analyze Frontend
 
-> **Flow:** read all files in `sequences/analyze-frontend/` — the sequence diagram is the source of truth for execution order
+> **Flow:** read all files in `sequences/analyze-frontend/` — the sequence diagrams are the source of truth for execution order:
+> — `analyze-frontend.mmd` — end-to-end sequence (user → detection → waves → assembly → report)
+> — `two-wave-fanout.mmd` — why Wave 2 depends on Wave 1's stack_profile; when each subagent fires
+> — `template-assembly.mmd` — which subagent output feeds which section of the primary template
+> — `framework-classification.mmd` — pattern-first decision tree inside framework-idiom-extractor (industry / custom / vanilla)
+>
 > Primary-output format: `rules/component-creation-template-format.md` — spec for `component-creation-template.md`
 > Subagent specs: `agents/frontend-detector.md`, `agents/tech-stack-profiler.md`, `agents/design-system-scanner.md`, `agents/component-inventory.md`, `agents/data-flow-mapper.md`, `agents/architecture-analyzer.md`, `agents/framework-idiom-extractor.md`
 > Fan-out pattern: `.claude/docs/subagent-fanout-pattern.md` — decision heuristic, return-shape contract
 > Reference: read `docs/how-to-create-docs.md`
-> Style rules: read `rules/markdown-style.md`
+> Style rules: read `rules/markdown-style.md`, `rules/mermaid-style.md`
 > Output rules: read `rules/output-format.md`
 > Report rules: read `rules/report-format.md`
 
