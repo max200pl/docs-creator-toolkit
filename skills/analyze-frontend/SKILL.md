@@ -15,7 +15,7 @@ argument-hint: "[frontend-path] [--only <area>]"
 > — `framework-classification.mmd` — pattern-first decision tree inside framework-idiom-extractor (industry / custom / vanilla)
 >
 > Primary-output format: `rules/component-creation-template-format.md` — spec for `reference-component-creation-template.md`
-> Subagent specs: `agents/frontend-detector.md`, `agents/tech-stack-profiler.md`, `agents/design-system-scanner.md`, `agents/reference-component-inventory.md`, `agents/data-flow-mapper.md`, `agents/architecture-analyzer.md`, `agents/framework-idiom-extractor.md`
+> Subagent specs: `agents/frontend-detector.md`, `agents/tech-stack-profiler.md`, `agents/design-system-scanner.md`, `agents/component-inventory.md`, `agents/data-flow-mapper.md`, `agents/architecture-analyzer.md`, `agents/framework-idiom-extractor.md`, `agents/feature-flow-detector.md`
 > Fan-out pattern: `docs/reference-subagent-fanout-pattern.md` — decision heuristic, return-shape contract
 > Reference: read `docs/how-to-create-docs.md`
 > Style rules: read `rules/markdown-style.md`, `rules/mermaid-style.md`
@@ -85,7 +85,7 @@ The skill runs as a guided wizard with user checkpoints — not a silent batch.
 
 | After phase | What to show | What to ask |
 | ---- | ---- | ---- |
-| Detect frontends | List of detected roots with framework + entry point | Correct? Add/remove any? Specific area to focus on? |
+| Orientation | Detected frontend(s) + existing analysis age + artefacts on disk with ages | Full rerun / `--only <area>` / skip (data is fresh)? |
 | Deep analysis complete | Per-frontend summary (stack, token count, component count, data-flow style) | Confirm persist to JSON? (Default yes) |
 | Report | Dashboard + path to analysis JSON + suggestion to run `/create-frontend-docs` | — |
 
@@ -96,8 +96,8 @@ This skill is a **two-wave fan-out pipeline** producing a structured JSON result
 | Phase | Owner | Responsibility |
 | ---- | ---- | ---- |
 | Preflight | **this skill** | Confirm `.claude/` exists; capture `START_TS` |
-| Detect frontends | `frontend-detector` subagent | Enumerate frontend roots; return list with framework + entry points |
-| Confirm scope | **this skill** | User checkpoint — accept/modify root list |
+| Detect frontends | `frontend-detector` subagent | Enumerate frontend roots — cheap glob, no user interaction |
+| **Orientation** | **this skill** | Single user checkpoint: show detected frontends + existing analysis age + artefacts on disk with ages; ask full rerun / `--only <area>` / skip |
 | **Wave 1 — Stack profile** | `tech-stack-profiler` subagent (per frontend) | Return full `stack_profile`: framework, rendering mode, `styling_model`, `class_naming`, state libs, bundler, etc. Wave 2 depends on this. |
 | **Wave 2 — Deep analysis (parallel)** | 7 specialists (per frontend, concurrent): `framework-idiom-extractor`, `design-system-scanner`, `component-inventory`, `data-flow-mapper`, `architecture-analyzer`, `feature-flow-detector` | Each consumes Wave 1's `stack_profile` for narrower scans. Returns `{summary_row, artefact_body}` or `SKIP` |
 | **Persist analysis** | **this skill** | Merge Wave 1 + Wave 2 results into structured JSON; write to `.claude/state/frontend-analysis.json`. If file exists and `--only` filter was used, preserve sections not in the filter (merge, don't overwrite) |
@@ -134,9 +134,48 @@ Invoke the `frontend-detector` subagent (see [agents/frontend-detector.md](../..
 
 It returns a flat list: `[{path, framework, entry_points, confidence}]`. Zero results → stop with a "No frontend roots found" message.
 
-### Phase: Confirm scope (interactive)
+### Phase: Orientation (single user checkpoint)
 
-Show the list to the user. Accept: confirm as-is / remove specific entries / add a missed path. Also capture any `--only <area>` filter.
+After detection completes, read existing state and present everything in one box:
+
+1. Read `.claude/state/frontend-analysis.json` if present — extract `schema_version`, `generated.ts`, `generated.plugin_version`, `generated.frontends_analyzed`, `generated.only_filter`.
+2. Glob artefacts + get age via `git log -1 --format="%cr" -- <file>` (fallback `stat` if untracked):
+   - `.claude/docs/reference-component-creation-template*.md`
+   - `.claude/rules/frontend-design-system*.md` + `frontend-components*.md`
+   - `.claude/docs/reference-architecture-frontend*.md` + `reference-component-inventory*.md`
+   - `.claude/sequences/frontend-data-flow*.mmd` + `features/*.mmd`
+3. Show one combined box:
+
+```text
+  ┌─ analyze-frontend ────────────────────────────────────────┐
+  │                                                           │
+  │  Detected:                                                │
+  │    desktop/ui/src  (Sciter JS)                            │
+  │                                                           │
+  │  Existing analysis: 5 days ago · plugin v0.13.0           │
+  │    last filter: all · 1 frontend                          │
+  │                                                           │
+  │  Artefacts on disk:                                       │
+  │    reference-component-creation-template.md   5d ✓        │
+  │    frontend-design-system.md                  5d ✓        │
+  │    frontend-components.md                     5d ✓        │
+  │    reference-architecture-frontend.md         5d ✓        │
+  │    reference-component-inventory.md           5d ✓        │
+  │    frontend-data-flow.mmd                    32d ✗        │
+  │    sequences/features/ (2 files, oldest 5d)   5d ✓        │
+  │                                                           │
+  └───────────────────────────────────────────────────────────┘
+  Run full analysis / --only data-flow / skip (most things fresh)?
+```
+
+4. Accept choice:
+   - **full** — proceed with Wave 1 + full 7-specialist Wave 2
+   - **`--only <area>`** — run only matching specialists; merge JSON
+   - **skip** — exit with "Run `/create-frontend-docs` or `/update-frontend-docs <area>`"
+
+If no prior state: show detected frontends only, no age columns, default to full run.
+
+Age thresholds: fresh < 7 days `✓`, aging 7–30 days `⚠`, stale > 30 days `✗`.
 
 ### Phase: Wave 1 — Stack profile (per frontend)
 
@@ -266,7 +305,7 @@ Bash: PHASE_<NAME>_START=$(date +%s)
 Bash: PHASE_<NAME>_END=$(date +%s); PHASE_<NAME>_SEC=$((PHASE_<NAME>_END - PHASE_<NAME>_START))
 ```
 
-Phases to time: `PREFLIGHT`, `DETECT`, `CONFIRM`, `WAVE_1_STACK`, `WAVE_2_ANALYSIS` (the parallel fan-out), `PERSIST_JSON`, `REPORT`. Missing timings go to `## Notes` as `timing_missing=<phase>`, never estimated.
+Phases to time: `PREFLIGHT`, `DETECT`, `ORIENTATION`, `WAVE_1_STACK`, `WAVE_2_ANALYSIS` (the parallel fan-out), `PERSIST_JSON`, `REPORT`. Missing timings go to `## Notes` as `timing_missing=<phase>`, never estimated.
 
 See [rules/report-format.md](../../rules/report-format.md) as source of truth.
 

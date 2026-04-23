@@ -1,49 +1,57 @@
 ---
-title: "analyze-frontend — Detect frontends + per-frontend parallel analysis + write artefacts + report"
+title: "analyze-frontend — Preflight → Detect → Orientation → two-wave analysis → persist JSON → report"
 ---
 %%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     actor User
     participant Claude
     participant FS as File System
-    participant Glob as Glob Tool
     participant FD as frontend-detector<br/>subagent (gating)
     participant TSP as tech-stack-profiler<br/>subagent (Wave 1)
     participant Wave2 as Wave 2 — 7 specialist<br/>subagents (parallel,<br/>stack-informed):<br/>framework-idiom-extractor,<br/>design-system-scanner,<br/>component-inventory,<br/>data-flow-mapper,<br/>architecture-analyzer,<br/>feature-flow-detector
 
     User->>Claude: /analyze-frontend [frontend-path] [--only <area>]
 
-    note over Claude: Capture start timestamp<br/>(used by Report phase for wall_clock_sec)
+    note over Claude: Capture start timestamp
     Claude->>Claude: START_TS = date +%s<br/>RUN_TS = date -u +%Y%m%dT%H%M%SZ<br/>DISPLAY_TS = date +%Y%m%d-%H%M%S
 
-    note over Claude,FS: Preflight
-    Claude->>FS: Check cwd for CLAUDE.md<br/>and .claude/ directory
+    note over Claude,FS: Phase: Preflight
+    Claude->>FS: Check cwd for .claude/ directory
     FS-->>Claude: present / absent
     alt .claude/ absent
-        Claude->>User: This project has no .claude/ yet.<br/>Run /init-project first<br/>(it detects frontends and suggests this)
+        Claude->>User: No .claude/ found — run /init-project first
         break Skill aborts
-            Claude->>User: Aborted — run /init-project first
+            Claude->>User: Aborted
         end
     end
 
-    note over Claude,FD: Phase: Detect frontends
-    Claude->>FD: Invoke with<br/>{project_root, user_hint_path}
-    Note right of FD: Scans for package.json + framework<br/>manifest (vite.config.*, next.config.*,<br/>angular.json, svelte.config.*,<br/>nuxt.config.*, astro.config.*, etc.).<br/>Returns flat list.
+    note over Claude,FD: Phase: Detect frontends (cheap — no user interaction)
+    Claude->>FD: Invoke with {project_root, user_hint_path}
+    Note right of FD: Scans for package.json + framework<br/>manifest (vite.config.*, next.config.*,<br/>angular.json, svelte.config.*, etc.).<br/>Returns flat list.
     FD-->>Claude: {frontend_roots: [{path, framework, entry_points}]}
-
     alt No frontends detected
-        Claude->>User: No frontend roots found.<br/>Skill aborts.
+        Claude->>User: No frontend roots found. Skill aborts.
         break Skill aborts
             Claude->>User: Nothing to analyze
         end
     end
 
-    note over Claude,User: Phase: Confirm scope
-    Claude->>User: Found N frontend(s):<br/>- path (framework)<br/>...<br/>Analyze all? Skip any? Add missed?
-    User-->>Claude: Confirmed roots[]<br/>+ optional --only <area> filter
+    note over Claude,FS: Phase: Orientation (single user checkpoint)
+    Claude->>FS: Read .claude/state/frontend-analysis.json<br/>(schema_version, generated.ts, plugin_version,<br/>frontends_analyzed, only_filter)
+    FS-->>Claude: JSON or absent
+    Claude->>FS: Glob existing artefacts + get ages:<br/>.claude/docs/reference-component-creation-template*.md<br/>.claude/rules/frontend-design-system*.md<br/>.claude/rules/frontend-components*.md<br/>.claude/docs/reference-architecture-frontend*.md<br/>.claude/docs/reference-component-inventory*.md<br/>.claude/sequences/frontend-data-flow*.mmd<br/>.claude/sequences/features/*.mmd
+    FS-->>Claude: file list + ages
 
-    note over Claude,TSP: Phase: Wave 1 — Stack profile (per frontend, serial before Wave 2)
-    Note right of Claude: Wave 1 establishes the stack profile<br/>that informs Wave 2 specialists. Cheap<br/>and fast — reads package.json, config<br/>files, top-level styling signals.
+    Claude->>User: Detected N frontend(s):<br/>  - path (framework)<br/>Existing analysis: <date> · plugin <ver> · filter: <all/area><br/>Artefacts on disk: <name> <age ✓/⚠/✗> ...<br/>Run full analysis / --only <area> / skip (data is fresh)?
+    User-->>Claude: full / --only <area> / skip
+    alt skip
+        Claude->>User: Analysis is current.<br/>Run /create-frontend-docs or /update-frontend-docs <area>.
+        break Skill aborts — nothing to do
+            Claude->>User: Aborted
+        end
+    end
+
+    note over Claude,TSP: Phase: Wave 1 — Stack profile (per frontend, serial)
 
     par For each confirmed frontend root
         Claude->>TSP: Invoke tech-stack-profiler with<br/>{frontend_root, project_root,<br/>framework_hint, entry_points}
@@ -51,56 +59,20 @@ sequenceDiagram
     end
 
     note over Claude,Wave2: Phase: Wave 2 — Deep per-axis analysis (parallel, stack-informed)
-    Note right of Claude: Wave 2 specialists receive Wave 1's<br/>stack_profile — can do narrower,<br/>more accurate scans. 5 specialists ×<br/>N frontends issued concurrently.
 
     par For each {frontend_root, specialist} pair — concurrent
         Claude->>Wave2: Invoke one specialist with<br/>{frontend_root, project_root,<br/>stack_profile (from Wave 1),<br/>entry_points, style_rules_path,<br/>target_file_shape}
-        Note right of Wave2: Subagent reads ONLY its area-<br/>specific files using stack context<br/>(e.g. design-system-scanner skips<br/>looking for styled-components<br/>when stack_profile says Tailwind).
         Wave2-->>Claude: {summary_row (YAML),<br/>artefact_body (markdown)}<br/>or sentinel SKIP if N/A
     end
 
-    note over Claude,FS: Phase: Assemble primary template + supporting references
-    Note right of Claude: Orchestrator assembles the primary<br/>reference-component-creation-template.md from<br/>Wave 1 + Wave 2 outputs. This is THE<br/>downstream agent's context envelope.
-
-    Claude->>Claude: Assemble reference-component-creation-template.md from:<br/>- Wave 1 stack_profile (Stack, Styling, Class naming)<br/>- framework-idiom-extractor (Framework idioms section)<br/>- design-system-scanner (Design-token usage examples)<br/>- component-inventory (Canonical skeleton, File layout)<br/>- data-flow-mapper (State and data wiring)<br/>- architecture-analyzer (File layout, imports)<br/>— per rules/component-creation-template-format.md
-
-    Claude->>FS: Write .claude/docs/component-creation-template[-<root>].md<br/>(PRIMARY — for component-creation agents)
+    note over Claude,FS: Phase: Persist structured analysis
+    Claude->>Claude: Merge Wave 1 + Wave 2 into JSON schema 1.1<br/>(full overwrite if no --only; merge if --only)
+    Claude->>FS: Write .claude/state/frontend-analysis.json
     FS-->>Claude: OK
 
-    note over Claude,FS: Supporting reference files — cross-linked FROM template
-    opt design-system-scanner produced content
-        Claude->>FS: Write .claude/rules/frontend-design-system[-<root>].md<br/>(with paths: scoped to theme/token files)
-        FS-->>Claude: OK
-    end
-    opt component-inventory produced content
-        Claude->>FS: Write .claude/rules/frontend-components[-<root>].md<br/>(with paths: scoped to components folders)
-        FS-->>Claude: OK
-    end
-    opt architecture-analyzer or tech-stack-profiler produced content
-        Claude->>FS: Write .claude/docs/architecture-frontend[-<root>].md
-        FS-->>Claude: OK
-    end
-    opt component-inventory produced table
-        Claude->>FS: Write .claude/docs/component-inventory[-<root>].md
-        FS-->>Claude: OK
-    end
-    opt data-flow-mapper produced diagram
-        Claude->>FS: Write .claude/sequences/frontend-data-flow[-<root>].mmd
-        FS-->>Claude: OK
-    end
-
-    note over Claude,FS: Phase: Update root CLAUDE.md Architecture section
-    Claude->>FS: Read current root CLAUDE.md
-    FS-->>Claude: existing content
-    Claude->>Claude: Surgical update of Architecture section:<br/>add `@` imports to the new artefacts<br/>— do NOT touch other sections
-    Claude->>FS: Write updated CLAUDE.md
-    FS-->>Claude: OK
-
-    note over Claude,FS: Phase: Report — write file + show dashboard
+    note over Claude,FS: Phase: Report
     Claude->>Claude: END_TS = date +%s<br/>wall_clock_sec = END_TS - START_TS
-    Claude->>FS: Collect artefact list<br/>(wc -l on each created/updated file)
-    FS-->>Claude: Paths + line counts
-    Claude->>FS: Write .claude/state/reports/<br/>analyze-frontend-DISPLAY_TS.md<br/>(per rules/report-format.md —<br/>first line machine-diff comment,<br/>body with Summary / Phase Timings /<br/>Per-frontend findings / Artefacts /<br/>Next-step recommendations)
+    Claude->>FS: Write .claude/state/reports/<br/>analyze-frontend-DISPLAY_TS.md<br/>(per rules/report-format.md)
     FS-->>Claude: Report saved
 
-    Claude->>User: Dashboard with stats<br/>(Frontends analyzed, Stack-per-root,<br/>Artefacts written, Duration,<br/>Report path)<br/>+ next steps:<br/>/create-docs rule ...<br/>/update-docs --refresh frontend
+    Claude->>User: Dashboard:<br/>Frontends analyzed · Stack per root<br/>JSON ✓ .claude/state/frontend-analysis.json<br/>Duration · Report path<br/>Next: /create-frontend-docs
