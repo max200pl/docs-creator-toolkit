@@ -59,6 +59,10 @@ sequenceDiagram
         Claude->>FS: Write .claude/sequences/frontend-data-flow.mmd
         FS-->>Claude: OK
     end
+    opt feature_flows non-null
+        Claude->>FS: Write .claude/sequences/features/<pattern>.mmd<br/>(one file per diagram_group in feature_flows)
+        FS-->>Claude: OK
+    end
 
     note over Claude,FS: Phase: Update root CLAUDE.md Architecture section
     Claude->>FS: Read root CLAUDE.md

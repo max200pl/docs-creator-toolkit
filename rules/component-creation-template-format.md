@@ -169,6 +169,24 @@ Only patterns that exist in the project's legacy code that new components MUST N
 
 If no anti-patterns detected: write "No observable anti-patterns at the component layer."
 
+### `## Feature data flows`
+
+Present only when `feature_flows` is non-null in `frontend-analysis.json`. If absent, omit the section entirely.
+
+A table of the detected feature-flow patterns and links to per-pattern sequence diagrams:
+
+```markdown
+| Feature | Pattern | Diagram |
+| ---- | ---- | ---- |
+| <FeatureName> | <pattern> | [sequences/features/<pattern>.mmd](.claude/sequences/features/<pattern>.mmd) |
+```
+
+Provide one row per feature in `feature_flows.features[]`. Group rows by pattern (all `scan-loop` rows together, then `query-display`, etc.).
+
+After the table, one sentence per detected pattern that names the key actors (e.g., "The scan-loop pattern wires `ResidualFilesView` → `ResidualFilesAsset` (C++ kernel) → events back.").
+
+If `feature_flows.trivial == true`: write "No user-facing feature boundaries detected — project is a component library or static site."
+
 ### `## Cross-references`
 
 A compact bullet list of supporting files the agent may consult for deeper context:
@@ -177,7 +195,8 @@ A compact bullet list of supporting files the agent may consult for deeper conte
 - `@.claude/rules/frontend-components.md` — component conventions rule (activates on component paths)
 - `@.claude/docs/reference-architecture-frontend.md` — full architecture + routing + SSR boundaries
 - `@.claude/docs/reference-component-inventory.md` — inventory of existing components to reuse
-- `@.claude/sequences/frontend-data-flow.mmd` — state + API data-flow diagram
+- `@.claude/sequences/frontend-data-flow.mmd` — top-level state + API data-flow diagram
+- `@.claude/sequences/features/<pattern>.mmd` — per-pattern feature flow (one file per detected pattern)
 
 ## Size Target
 

@@ -29,6 +29,7 @@ If the project needs a FULL refresh, run `/analyze-frontend` (to regenerate the 
 | `data-flow` | `data-flow-mapper` | `frontend_roots[*].data_flow` | `.claude/sequences/frontend-data-flow.mmd` |
 | `architecture` | `tech-stack-profiler` (Wave 1 refresh) + `architecture-analyzer` | `frontend_roots[*].tech_stack` + `.architecture` | `.claude/docs/reference-architecture-frontend.md` |
 | `framework-idioms` | `framework-idiom-extractor` | `frontend_roots[*].framework_idioms` | Section in `reference-component-creation-template.md` (triggers full template rewrite since idioms feed it) |
+| `feature-flows` | `feature-flow-detector` | `frontend_roots[*].feature_flows` | `.claude/sequences/features/*.mmd` + `## Feature data flows` section in template |
 | `template` | (none — re-assembles only) | no JSON change | `.claude/docs/reference-component-creation-template.md` only |
 
 `template` is useful when the rule `component-creation-template-format.md` changes and you want to re-emit the template from existing JSON without re-running any subagent.
@@ -117,6 +118,7 @@ Based on `<area>`:
 - `data-flow` → regenerate `.claude/sequences/frontend-data-flow.mmd` from `data_flow.primary_flow_mermaid`
 - `architecture` → regenerate `.claude/docs/reference-architecture-frontend.md` from `tech_stack` + `architecture`; ALSO regenerate `reference-component-creation-template.md` (because styling_model / class_naming in Stack section changed)
 - `framework-idioms` → regenerate `reference-component-creation-template.md` (framework idioms are one of its sections)
+- `feature-flows` → regenerate `.claude/sequences/features/*.mmd` from `feature_flows.diagram_groups`; ALSO update the `## Feature data flows` section in `reference-component-creation-template.md`
 - `template` → regenerate `reference-component-creation-template.md` from current JSON (no subagent ran)
 
 Use the same file-naming rules as `/create-frontend-docs` (suffix per frontend when N > 1).

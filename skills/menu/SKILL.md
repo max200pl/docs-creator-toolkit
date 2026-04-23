@@ -62,6 +62,7 @@ Display as a formatted table:
     @data-flow-mapper          State + API + auth + forms
     @architecture-analyzer     Folder layout / routing / SSR
     @framework-idiom-extractor Framework-specific idioms
+    @feature-flow-detector     User-facing feature patterns + data-flow classification
 
   Reference (in this plugin's docs/)
     reference-subagent-fanout-pattern   Fan-out pattern for orchestrators

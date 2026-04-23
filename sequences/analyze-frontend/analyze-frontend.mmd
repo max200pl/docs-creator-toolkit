@@ -9,7 +9,7 @@ sequenceDiagram
     participant Glob as Glob Tool
     participant FD as frontend-detector<br/>subagent (gating)
     participant TSP as tech-stack-profiler<br/>subagent (Wave 1)
-    participant Wave2 as Wave 2 — 5 specialist<br/>subagents (parallel,<br/>stack-informed):<br/>framework-idiom-extractor,<br/>design-system-scanner,<br/>component-inventory,<br/>data-flow-mapper,<br/>architecture-analyzer
+    participant Wave2 as Wave 2 — 7 specialist<br/>subagents (parallel,<br/>stack-informed):<br/>framework-idiom-extractor,<br/>design-system-scanner,<br/>component-inventory,<br/>data-flow-mapper,<br/>architecture-analyzer,<br/>feature-flow-detector
 
     User->>Claude: /analyze-frontend [frontend-path] [--only <area>]
 

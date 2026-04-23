@@ -33,7 +33,8 @@ All artefacts land in the target project's `.claude/` and the root `CLAUDE.md`. 
 - `.claude/rules/frontend-components.md` — component conventions rule with `paths:` scoping
 - `.claude/docs/reference-architecture-frontend.md` — Stack + Architecture sections (merged from `tech_stack` + `architecture` + `framework_idioms` in JSON)
 - `.claude/docs/reference-component-inventory.md` — notable-components reference table
-- `.claude/sequences/frontend-data-flow.mmd` — state + API flow Mermaid diagram
+- `.claude/sequences/frontend-data-flow.mmd` — state + API flow Mermaid diagram (top-level, from `data-flow-mapper`)
+- `.claude/sequences/features/<pattern>.mmd` — one diagram per detected feature-flow pattern (from `feature-flow-detector`; omitted if `feature_flows` is null in JSON)
 
 **Surgical CLAUDE.md update:**
 
@@ -51,7 +52,7 @@ All artefacts land in the target project's `.claude/` and the root `CLAUDE.md`. 
 /create-frontend-docs --only components # regenerate only frontend-components.md + reference-component-inventory.md
 ```
 
-`--only` accepts the same areas as `/analyze-frontend`: `design-system`, `components`, `data-flow`, `architecture`, `framework-idioms`, `all`. It filters WRITES — it doesn't re-run analysis. (For re-analyzing + rewriting a single area, use `/update-frontend-docs <area>`.)
+`--only` accepts the same areas as `/analyze-frontend`: `design-system`, `components`, `data-flow`, `architecture`, `framework-idioms`, `feature-flows`, `all`. It filters WRITES — it doesn't re-run analysis. (For re-analyzing + rewriting a single area, use `/update-frontend-docs <area>`.)
 
 ## Interactive Wizard
 

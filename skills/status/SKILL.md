@@ -124,7 +124,7 @@ Use `git log -1 --format="%cr" -- <file>` per file. Flag any `.claude/` file not
 
 Conditional section — only shown if the project has at least one `frontend-*` artefact. If none are present, the section is omitted entirely (don't show an empty box).
 
-Detection: glob for any of `.claude/rules/frontend-*.md`, `.claude/docs/reference-architecture-frontend*.md`, `.claude/docs/reference-component-inventory*.md`, `.claude/sequences/frontend-data-flow*.mmd`.
+Detection: glob for any of `.claude/rules/frontend-*.md`, `.claude/docs/reference-architecture-frontend*.md`, `.claude/docs/reference-component-inventory*.md`, `.claude/sequences/frontend-data-flow*.mmd`, `.claude/sequences/features/*.mmd`.
 
 ```text
   ┌─ Frontend Analysis ───────────────────────────────────────┐
@@ -146,7 +146,7 @@ Detection: glob for any of `.claude/rules/frontend-*.md`, `.claude/docs/referenc
 
 How to compute:
 
-1. Glob `.claude/rules/frontend-*.md` + `.claude/docs/reference-architecture-frontend*.md` + `.claude/docs/reference-component-inventory*.md` + `.claude/sequences/frontend-data-flow*.mmd`
+1. Glob `.claude/rules/frontend-*.md` + `.claude/docs/reference-architecture-frontend*.md` + `.claude/docs/reference-component-inventory*.md` + `.claude/sequences/frontend-data-flow*.mmd` + `.claude/sequences/features/*.mmd`
 2. For each file, get `git log -1 --format="%cr" -- <file>` (fallback to mtime if not tracked yet)
 3. Mark with ✓ if fresh (under 7 days), ⚠ if aging (7-30 days), ✗ if stale (over 30 days)
 4. Find most recent `.claude/state/reports/analyze-frontend-*.md` by mtime; show its relative path
@@ -184,5 +184,5 @@ Severity icons:
 2. **Coverage**: Glob source dirs, parse `paths:` from rules frontmatter, match
 3. **Sync**: Glob skills, grep for `> **Flow:**`, check target exists
 4. **Staleness**: `git log -1 --format="%at %cr" -- <file>` for each `.claude/` file
-5. **Frontend artefacts**: Glob `.claude/rules/frontend-*.md`, `.claude/docs/{reference-architecture-frontend,reference-component-inventory}*.md`, `.claude/sequences/frontend-data-flow*.mmd`, latest `.claude/state/reports/analyze-frontend-*.md`. Section is conditional — omit if zero matches.
+5. **Frontend artefacts**: Glob `.claude/rules/frontend-*.md`, `.claude/docs/{reference-architecture-frontend,reference-component-inventory}*.md`, `.claude/sequences/frontend-data-flow*.mmd`, `.claude/sequences/features/*.mmd`, latest `.claude/state/reports/analyze-frontend-*.md`. Section is conditional — omit if zero matches.
 6. **Issues**: Quick subset of validate checks (placeholders, missing paths matches, orphan references)

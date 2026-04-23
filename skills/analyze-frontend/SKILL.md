@@ -74,7 +74,8 @@ Filters accepted after `--only` (restrict Wave 2 specialists):
 | `data-flow` | data-flow-mapper | `data_flow` |
 | `architecture` | tech-stack-profiler + architecture-analyzer | `tech_stack` + `architecture` |
 | `framework-idioms` | framework-idiom-extractor | `framework_idioms` |
-| `all` (default) | all 6 specialists | all sections |
+| `feature-flows` | feature-flow-detector | `feature_flows` |
+| `all` (default) | all 7 specialists | all sections |
 
 Filtered runs write a PARTIAL JSON — unpopulated sections retain last-known values (if `.claude/state/frontend-analysis.json` exists) or are marked `null`.
 
@@ -98,7 +99,7 @@ This skill is a **two-wave fan-out pipeline** producing a structured JSON result
 | Detect frontends | `frontend-detector` subagent | Enumerate frontend roots; return list with framework + entry points |
 | Confirm scope | **this skill** | User checkpoint — accept/modify root list |
 | **Wave 1 — Stack profile** | `tech-stack-profiler` subagent (per frontend) | Return full `stack_profile`: framework, rendering mode, `styling_model`, `class_naming`, state libs, bundler, etc. Wave 2 depends on this. |
-| **Wave 2 — Deep analysis (parallel)** | 6 specialists (per frontend, concurrent): `framework-idiom-extractor`, `design-system-scanner`, `component-inventory`, `data-flow-mapper`, `architecture-analyzer` | Each consumes Wave 1's `stack_profile` for narrower scans. Returns `{summary_row, artefact_body}` or `SKIP` |
+| **Wave 2 — Deep analysis (parallel)** | 7 specialists (per frontend, concurrent): `framework-idiom-extractor`, `design-system-scanner`, `component-inventory`, `data-flow-mapper`, `architecture-analyzer`, `feature-flow-detector` | Each consumes Wave 1's `stack_profile` for narrower scans. Returns `{summary_row, artefact_body}` or `SKIP` |
 | **Persist analysis** | **this skill** | Merge Wave 1 + Wave 2 results into structured JSON; write to `.claude/state/frontend-analysis.json`. If file exists and `--only` filter was used, preserve sections not in the filter (merge, don't overwrite) |
 | Report | **this skill** | Persist run report per `rules/report-format.md`; dashboard on-screen points at JSON and suggests `/create-frontend-docs` |
 
@@ -161,15 +162,16 @@ Wait for the return before starting Wave 2. Preserve the full `stack_profile` re
 
 ### Phase: Wave 2 — Deep analysis (parallel, stack-informed)
 
-Once Wave 1 has returned for ALL confirmed frontend roots, fire Wave 2: **6 specialists × N frontends invocations in a single message** (concurrent).
+Once Wave 1 has returned for ALL confirmed frontend roots, fire Wave 2: **7 specialists × N frontends invocations in a single message** (concurrent).
 
 Specialists in Wave 2:
 
 1. `framework-idiom-extractor` — pattern-first framework classification (industry / custom / vanilla); idiomatic rules for new components
 2. `design-system-scanner` — tokens, theme config, dark-mode strategy
 3. `component-inventory` — existing components tree + conventions + canonical skeleton pick
-4. `data-flow-mapper` — state + API + auth + forms; emits Mermaid data-flow diagram
+4. `data-flow-mapper` — state + API + auth + forms; emits one top-level Mermaid data-flow diagram
 5. `architecture-analyzer` — folder layout, routing, SSR boundaries
+6. `feature-flow-detector` — identifies individual user-facing features and classifies each by data flow pattern (scan-loop / query-display / settings-rw / action-executor / orchestrator / dashboard); emits per-pattern Mermaid fragments and a feature registry for `.claude/sequences/features/`
 
 If `--only <area>` was specified, invoke only the matching specialists.
 
@@ -199,7 +201,7 @@ JSON schema:
 
 ```json
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "generated": {
     "plugin_version": "<e.g. 0.13.0>",
     "skill": "analyze-frontend",
@@ -224,7 +226,8 @@ JSON schema:
       "design_system": { /* design-system-scanner Summary Row + body */ },
       "component_inventory": { /* component-inventory Summary Row + body + canonical_skeleton_excerpt */ },
       "data_flow": { /* data-flow-mapper Summary Row + Mermaid diagram string */ },
-      "architecture": { /* architecture-analyzer Summary Row + body */ }
+      "architecture": { /* architecture-analyzer Summary Row + body */ },
+      "feature_flows": { /* feature-flow-detector Summary Row + per-pattern Mermaid fragments */ }
     }
   ]
 }
