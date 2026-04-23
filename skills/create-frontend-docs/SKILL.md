@@ -126,6 +126,8 @@ File-naming:
 
 **Paths-scoping for generated rules — exact frontmatter blocks to prepend:**
 
+> **REQUIRED:** Both rule files MUST have `description:` in frontmatter. Claude Code uses `description:` to display the rule in `/rules` and to explain when it applies. A rule file written without `description:` is a bug — do not skip it.
+
 `frontend-design-system.md`:
 
 ```yaml
@@ -151,9 +153,11 @@ paths:
 ---
 ```
 
-Replace `<frontend_root>` with the relative path from the project root (e.g., `projects/desktop/ui`).
+Replace `<frontend_root>` with the relative path from the project root (e.g., `apps/web`).
 Replace `<framework>` and `<relative_root>` with values from `frontend_analysis.json`.
 Write the block as the literal first lines of the file, before any `# Heading`.
+
+**Pre-write self-check:** Before calling Write for either rule file, verify the string you are about to write starts with `---` and contains `description:`. If it does not — construct the frontmatter now from the JSON values, prepend it, then write. Do not proceed without `description:`.
 
 **Mermaid pre-write validation:**
 

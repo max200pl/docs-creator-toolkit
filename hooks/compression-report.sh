@@ -8,6 +8,13 @@
 # baseline; subsequent runs show delta and update the snapshot.
 
 set -u
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$REPO_ROOT" || exit 0
+
+# Only run in projects that have been initialized with the toolkit.
+# Avoids creating .claude/state/ in uninitialized repos.
+[[ -d ".claude" ]] || exit 0
+
 STATE_DIR=".claude/state"
 SNAP="$STATE_DIR/compression-snapshot.txt"
 mkdir -p "$STATE_DIR"
@@ -63,6 +70,11 @@ if [[ -f "$SNAP" ]]; then
   fi
 fi
 
+# Skip entirely if nothing to measure — avoids creating stale zero-filled snapshots
+if [[ "$total_autoload" == "0" ]]; then
+  exit 0
+fi
+
 # Write new snapshot
 cat > "$SNAP" <<EOF
 timestamp=$(date +%s)
@@ -71,11 +83,6 @@ claude_md_lines=${claude_md_lines}
 rules_unconditional=${unconditional_rule_count}
 rules_conditional=${conditional_rule_count}
 EOF
-
-# Compose report — only emit if we have something meaningful
-if [[ "$total_autoload" == "0" ]]; then
-  exit 0
-fi
 
 msg="Auto-load cost: ${total_autoload} lines (~${est_tokens} tokens)  •  CLAUDE.md ${claude_md_lines}  •  rules ${unconditional_rule_count} uncond + ${conditional_rule_count} scoped"
 if [[ -n "$delta" ]]; then

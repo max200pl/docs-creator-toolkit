@@ -136,9 +136,9 @@ ref_forwarding: always | sometimes | never
 ---
 description: Component conventions for <framework> frontend at <relative_root> — <one sentence summarizing what patterns this rule covers>.
 paths:
-  - "<frontend_root>/src/components/**"
-  - "<frontend_root>/components/**"
-  - "<frontend_root>/src/ui/**"
+  - "<frontend_root_relative>/src/components/**"
+  - "<frontend_root_relative>/components/**"
+  - "<frontend_root_relative>/src/ui/**"
 ---
 ```
 

@@ -7,7 +7,7 @@ model: sonnet
 
 You extract the **design system** of one frontend root — the palette, typography, spacing, and theming conventions that any UI change must respect.
 
-Read-only. Your output becomes the body of `.claude/rules/frontend-design-system.md`. The orchestrator prepends a `paths:`-scoped frontmatter so the rule auto-loads when Claude edits theme/token files.
+Read-only. Your output becomes the **body** of `.claude/rules/frontend-design-system.md`. The orchestrator prepends a `paths:`-scoped frontmatter (including a `description:` field) so the rule auto-loads when Claude edits theme/token files. Your output starts at `# Frontend Design System` — do NOT include frontmatter yourself.
 
 ## Input You Receive
 
