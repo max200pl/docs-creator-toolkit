@@ -1,0 +1,35 @@
+---
+title: "framework-idiom-extractor — Classification Decision Tree (pattern-first, not whitelist)"
+---
+%%{init: {'theme': 'neutral'}}%%
+flowchart TD
+    START(["Receive stack_profile<br/>+ frontend_root"])
+
+    START --> PHASE1["Phase 1 — Generic pattern detection<br/>Read 5-10 representative component files.<br/>Probe for:<br/>• base class / inheritance<br/>• component function / factory shape<br/>• props declaration style<br/>• rendering output form<br/>• state / reactivity model<br/>• lifecycle hooks<br/>• event emission patterns<br/>• module structure<br/>• directives / special syntax<br/>• file extensions"]
+
+    PHASE1 --> Q_INDUSTRY{"Does the signature<br/>match a known<br/>industry framework?<br/><br/>(Next App Router,<br/>Pages Router, Remix,<br/>Vue 3, Angular,<br/>SvelteKit, Astro,<br/>Solid, Qwik, Vite+React,<br/>CRA, etc.)"}
+
+    Q_INDUSTRY -->|"Yes — clear signature match"| INDUSTRY["Classify:<br/><b>framework_classification: industry</b><br/><br/>Run framework-specific deep-dive<br/>from pre-defined checklist for the<br/>matched framework.<br/><br/>Example checks for Next App Router:<br/>• 'use client' boundary share<br/>• Server Actions directive<br/>• generateMetadata pattern<br/>• loading.tsx / error.tsx<br/>• app/api/*/route.ts structure"]
+
+    Q_INDUSTRY -->|"No — no industry match"| Q_CUSTOM{"Do ≥5 components<br/>share the SAME<br/>base class, factory,<br/>or decorator?<br/><br/>AND is that base<br/>defined WITHIN the<br/>project (not a public<br/>npm dep)?"}
+
+    Q_CUSTOM -->|"Yes — custom framework detected"| CUSTOM["Classify:<br/><b>framework_classification: custom</b><br/><br/>Extract from code:<br/>• Read base class file (save path + line)<br/>• List MUST-override methods<br/>• List MAY-override methods<br/>• Capture lifecycle hooks called by base<br/>• Note boilerplate every subclass shows<br/>• Note signal / event system<br/><br/>Examples of custom detected in real projects:<br/>• AssetBaseComponent (Sciter JS)<br/>• BaseComponent (proprietary wrapper)<br/>• defineAppComponent() factory<br/>• custom @MyComponent decorator"]
+
+    Q_CUSTOM -->|"No — inconsistent or absent patterns"| Q_VANILLA{"Are patterns<br/>coherent at all?"}
+
+    Q_VANILLA -->|"Yes, but not a framework (e.g. plain<br/>IIFE over innerHTML, vanilla DOM)"| VANILLA_AMBIG["Classify:<br/><b>framework_classification: vanilla</b><br/><br/>Return SKIP for Framework Idioms<br/>section. Component-creation template<br/>will omit framework-specific guidance<br/>and rely on general conventions only."]
+
+    Q_VANILLA -->|"No — inconsistent across files"| VANILLA_NONE["Classify:<br/><b>framework_classification: vanilla</b><br/><br/>Same as above — SKIP Framework<br/>Idioms. Add Notes warning the agent<br/>that conventions are inconsistent<br/>in this codebase."]
+
+    INDUSTRY --> OUTPUT["Emit:<br/>## Summary Row<br/>— framework_classification<br/>— framework_name + version<br/>— base_class_or_factory (empty for industry)<br/>— key_patterns (list)<br/>— idiom_count<br/><br/>## Framework Idioms<br/>— Classification paragraph<br/>— 3-8 MUST rules<br/>— Directives / lifecycle / boundaries<br/>— Component-file skeleton expectations<br/>— Anti-patterns specific to this framework"]
+
+    CUSTOM --> OUTPUT
+
+    VANILLA_AMBIG --> SKIP_OUT["Emit:<br/>## Summary Row<br/>— framework_classification: vanilla<br/>— applicable: false<br/>— reason: '…'<br/><br/>## Framework Idioms<br/>SKIP<br/><br/>Orchestrator omits the section<br/>from reference-component-creation-template.md"]
+
+    VANILLA_NONE --> SKIP_OUT
+
+    %% Annotation: why pattern-first
+    WHY["Why pattern-first, not whitelist:<br/>Real projects often have in-house<br/>frameworks (Sciter AssetBaseComponent,<br/>proprietary React wrappers, internal<br/>Angular schematics). A whitelist<br/>approach would classify these as<br/>'unknown' — exactly when prescriptive<br/>guidance is MOST needed.<br/><br/>Pattern-first: observe the code, then<br/>decide if industry/custom/vanilla.<br/>Custom frameworks get the SAME quality<br/>of output as industry ones."]
+
+    PHASE1 -.-> WHY
