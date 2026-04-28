@@ -2,6 +2,60 @@
 
 All notable changes to the `claude-docs-creator` plugin. Format loosely follows [Keep a Changelog](https://keepachangelog.com) and [Semantic Versioning](https://semver.org).
 
+## [Unreleased] — M5 monorepo restructure (2026-04-28)
+
+### Breaking changes
+
+- **Plugin renamed** from `claude-docs-creator` to `docs-creator`. Skills namespace changes accordingly: `/claude-docs-creator:<skill>` → `/docs-creator:<skill>`.
+- **Install path changed**: `--plugin-dir ~/Projects/claude-docs-creator` → `--plugin-dir ~/Projects/claude-docs-creator/plugins/docs-creator`.
+- **Public distribution repo renamed**: `claude-docs-creator-plugin` → `docs-creator-toolkit`. Install now: `--plugin-dir ~/clone/docs-creator-toolkit/docs-creator`.
+
+### Added
+
+- `plugins/docs-creator/` and `plugins/component-creator/` — true monorepo layout. Each plugin is independently installable and independently published.
+- `component-creator` plugin scaffold — placeholder for the upcoming component-creation agent that reads `docs-creator`'s `frontend-analysis.json`.
+- `.github/workflows/publish-plugins.yml` — dynamic matrix GHA: detects which plugin changed, syncs only that one to the shared public repo. Minor version bump triggered automatically when a milestone row transitions to `done` in `milestones.md`.
+- `.github/workflows/validate-plugins.yml` — PR lint: checks `plugin.json` required fields, semver version format, `README.md` presence, and `SKILL.md` frontmatter including valid `scope` values.
+- `scripts/migrate-paths.sh` — one-time migration helper used to rewrite root-level path references in internal `.claude/` docs to the new `plugins/docs-creator/` prefix.
+
+### Migration
+
+See `docs/migration-from-add-dir.md` for step-by-step upgrade instructions for existing users.
+
+---
+
+## 0.15.0 — 2026-04-24
+
+API contracts suite — **detect, document, and spec external communication boundaries**.
+
+### Added
+
+- **`skills/analyze-api-contracts/SKILL.md`** — read-only two-wave fan-out: Wave 1 (`protocol-detector`) discovers all external communication boundaries (HTTP, GraphQL, gRPC, WebSocket, SSE, message queues, custom RPC). Wave 2 invokes `protocol-mapper` once per boundary in parallel. Writes `.claude/state/api-contracts-analysis.json` only — no human-facing docs yet.
+- **`skills/create-api-contracts-docs/SKILL.md`** — reads `api-contracts-analysis.json` and materializes `docs/reference-api-contracts.md` (boundary table + per-endpoint details), `sequences/api-data-flow.mmd` (global flow diagram), and per-boundary sequence diagrams in `sequences/api-contracts/`. Optionally updates root `CLAUDE.md` Architecture section.
+- **`skills/update-api-contracts-docs/SKILL.md`** — targeted refresh: re-runs the `protocol-mapper` for one specific boundary (by doc name or boundary ID) and merges the result into existing docs without re-scanning the full codebase.
+- **`skills/create-api-contract/SKILL.md`** — spec-first contract wizard. Design a new HTTP / GraphQL / WebSocket / custom contract from scratch (no scanning): interactive prompt → writes `docs/contract-<name>.md` + matching sequence diagram.
+- **`agents/protocol-detector.md`** — Wave 1 gating agent. Fast first-level scan; returns a list of boundary descriptors with signals (file patterns, import patterns, config keys found) that drive the Wave 2 fan-out.
+- **`agents/protocol-mapper.md`** — generic Wave 2 agent. Invoked once per boundary descriptor; maps any protocol type (standard or custom in-house) by following the signals from the detector. Replaces the four fixed-specialist agents from the initial design (`http-mapper`, `auth-mapper`, `realtime-mapper`, `errors-mapper`).
+- **`rules/skill-naming.md`** — documents the `analyze-` / `create-` / `update-` triplet pattern, the fixed-specialist vs generic-N× agent decision rule, and agent naming conventions. Enforced by `/sleep`.
+
+### Changed
+
+- `sequences/api-contracts/` — per-boundary sequence diagrams generated alongside the main `api-data-flow.mmd`. Each boundary gets its own `.mmd` file named `<boundary-id>.mmd`.
+
+---
+
+## 0.14.0 — 2026-04-23
+
+### Added
+
+- **`agents/feature-flow-detector.md`** — 8th public subagent. Identifies individual user-facing features in a frontend root and classifies each feature's data flow into one of six universal patterns: `scan-loop`, `query-display`, `settings-rw`, `action-executor`, `orchestrator`, `dashboard`. Works across any stack (React+Redux, Vue+Pinia, Angular+NgRx, Sciter JS+C++, Rust/Tauri, Vanilla JS). Invoked as a Wave 2 specialist by `/analyze-frontend`.
+
+### Changed
+
+- Generated artefact naming convention: files produced by `create-api-contracts-docs`, `create-frontend-docs`, and similar materializer skills now use the `reference-` prefix (e.g. `reference-api-contracts.md`, `reference-component-creation-template.md`) to distinguish toolkit-generated reference material from hand-authored project docs.
+
+---
+
 ## 0.13.0 — 2026-04-22
 
 M8 closeout — **frontend suite split into three composable skills** + scope reclassification of toolkit-dev skills.
