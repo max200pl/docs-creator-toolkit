@@ -42,6 +42,20 @@ Display as a formatted table:
   │                                                           │
   └───────────────────────────────────────────────────────────┘
 
+  ┌─ API contracts (api) ─ external communication boundaries ─┐
+  │                                                           │
+  │  /analyze-api-contracts [path]   Detect HTTP/GraphQL/     │
+  │                                  WS/gRPC/queue boundaries │
+  │                                  → .claude/state/ JSON    │
+  │  /create-api-contracts-docs      JSON → reference-api-    │
+  │                                  contracts.md + diagram   │
+  │  /update-api-contracts-docs <ax> Axis-scoped refresh      │
+  │                                  (http/auth/realtime/err) │
+  │  /create-api-contract <name>     Spec-first contract      │
+  │                                  wizard (no code scan)    │
+  │                                                           │
+  └───────────────────────────────────────────────────────────┘
+
   ┌─ Authoring (api + shared) ─ helper skills ────────────────┐
   │                                                           │
   │  /create-sequences <name>   Mermaid sequence diagram in   │
@@ -63,21 +77,24 @@ Display as a formatted table:
     @architecture-analyzer     Folder layout / routing / SSR
     @framework-idiom-extractor Framework-specific idioms
     @feature-flow-detector     User-facing feature patterns + data-flow classification
+    @protocol-detector         Detect boundary types (Wave 1, api-contracts)
+    @protocol-mapper           Map one boundary in depth (Wave 2, api-contracts)
 
   Reference (in this plugin's docs/)
-    reference-subagent-fanout-pattern   Fan-out pattern for orchestrators
-    reference-context-compression       Context savings strategy
-    reference-drift-catalog             /update-docs drift taxonomy
-    reference-drift-repairs             /update-docs apply-phase mechanics
-    reference-keybindings               Recommended user shortcuts
-    checklist-project-docs-review       Review quality of generated docs
-    how-to-create-docs                  Doc authoring recipes
-    how-to-create-mermaid               Mermaid authoring guide
-    how-to-slim-claude-md               Shrink CLAUDE.md via scoped rules
-    how-to-structure-docs               Split/merge/promote files in docs/
-    tutorial-getting-started            30-min onboarding
-    tutorial-paths-scoping              `paths:` glob cheatsheet
-    tutorial-batch-remediation          Close validate-docs warnings
+    reference-subagent-fanout-pattern      Fan-out pattern for orchestrators
+    reference-context-compression          Context savings strategy
+    reference-drift-catalog                /update-docs drift taxonomy
+    reference-drift-repairs                /update-docs apply-phase mechanics
+    reference-keybindings                  Recommended user shortcuts
+    reference-analyze-api-contracts-phases /analyze-api-contracts phase details
+    checklist-project-docs-review          Review quality of generated docs
+    how-to-create-docs                     Doc authoring recipes
+    how-to-create-mermaid                  Mermaid authoring guide
+    how-to-slim-claude-md                  Shrink CLAUDE.md via scoped rules
+    how-to-structure-docs                  Split/merge/promote files in docs/
+    tutorial-getting-started               30-min onboarding
+    tutorial-paths-scoping                 `paths:` glob cheatsheet
+    tutorial-batch-remediation             Close validate-docs warnings
 
   Invocation: all commands use the `/claude-docs-creator:<skill>` form
   after plugin install (or direct `/<skill>` inside a session that has
