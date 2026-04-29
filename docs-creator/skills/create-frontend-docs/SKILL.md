@@ -40,6 +40,11 @@ All artefacts land in the target project's `.claude/` and the root `CLAUDE.md`. 
 
 - Root `CLAUDE.md` — adds a `### Frontend` subsection under `## Architecture` with `@`-imports to all new artefacts. Replaces existing `### Frontend` subsection if present; does not touch other sections.
 
+**Registry:**
+
+- `.claude/state/component-registry.json` — machine-readable component registry seeded from `component_inventory` data; schema below
+- `.claude/docs/reference-component-registry.md` — markdown table generated from the registry JSON (human-readable view)
+
 **Operational:**
 
 - `.claude/state/reports/create-frontend-docs-<ts>.md` — run report (gitignored)
@@ -167,6 +172,41 @@ Before writing `frontend-data-flow.mmd`, scan the diagram text for known invalid
 - `Note over .+:.*[;]` or arrow message text containing `;` — strip semicolons or replace with a comma / em-dash
 
 Fix in memory before the Write call — do NOT write a broken diagram and fix in a follow-up Write.
+
+### Phase: Write component-registry.json
+
+Read `component_inventory.components` list from `frontend-analysis.json`. For each component entry produce a registry record:
+
+```json
+{
+  "name": "<PascalCase component name>",
+  "type": "primitive | feature | local",
+  "layer": "<fsd layer or folder slug — e.g. shared/ui, entities, features>",
+  "path": "<relative path from project root to component file>",
+  "figma_node_id": null,
+  "figma_file_key": null,
+  "figma_connected": false,
+  "uses": [],
+  "parent": null,
+  "created_at": "<ISO-UTC timestamp of this run>",
+  "last_verified_at": null,
+  "last_figma_sync_at": null,
+  "figma_last_modified": null,
+  "ssim_score": null,
+  "status": "unverified"
+}
+```
+
+**Type classification:**
+- `type: "primitive"` — component lives in `shared/ui`, `components/ui`, `common/`, `design-system/`, or has a generic UI name (Button, Input, Modal, Badge, etc.)
+- `type: "feature"` — component lives in `features/`, `entities/`, or has a domain-specific name
+- `type: "local"` — component lives inside another component's directory (child/nested)
+
+**Output files:**
+1. Write `.claude/state/component-registry.json` as a JSON array of all records
+2. Generate `.claude/docs/reference-component-registry.md` — markdown table with columns: `Name`, `Type`, `Layer`, `Path`, `Figma Connected`, `Status`
+
+If `component-registry.json` already exists — merge: preserve existing records that have `figma_node_id` set; overwrite records that are `status: "unverified"` with fresh data from analysis. Never delete records with `figma_connected: true`.
 
 ### Phase: Update root CLAUDE.md Architecture section
 

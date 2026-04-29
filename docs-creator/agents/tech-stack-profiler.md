@@ -79,6 +79,10 @@ styling_model: tailwind-utilities-inline | tailwind-cn-composition | css-modules
 class_naming: none-tailwind-only | bem | css-modules-auto | styled-var-name | cva-variants | cn-helper-composition | custom-prefix | auto-scoped | none
 custom_class_prefix: <empty unless class_naming == custom-prefix — e.g., "app-", "sciter-">
 styling_approach_detail: <legacy field for prose — "Tailwind with custom config in tailwind.config.ts">
+styling_system:
+  type: plain-css | sass | scss | css-modules | postcss | styled-components | tailwind | inline | mixed
+  entry_file: <relative path to main CSS entry — e.g. "src/styles/main.css", "res/main.css", or "none">
+  import_syntax: "@import" | "@use" | "@forward" | "none"
 state_management: [<libs>]
 routing: <one value>
 data_fetching: [<libs>]

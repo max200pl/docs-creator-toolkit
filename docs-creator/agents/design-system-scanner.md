@@ -71,6 +71,8 @@ Keep scans light. Read ~5-10 files total, not hundreds.
 ```yaml
 frontend_root: <absolute path>
 source_of_truth: <file path relative to frontend_root>
+token_file: <relative path to CSS variables / token file — e.g. "src/styles/tokens.css", "res/shared/lib/tokens.css", or "none">
+typography_file: <relative path to typography file if separate from token_file — e.g. "src/styles/typography.css", or "none">
 mechanism: tailwind | unocss | panda | vanilla-extract | emotion | styled-components | mui-theme | chakra-theme | mantine-theme | antd-theme | css-variables | scss-variables | mixed | none
 color_palette:
   brand: [<color names or hex>]

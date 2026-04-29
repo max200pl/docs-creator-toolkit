@@ -121,6 +121,11 @@ features_count: <integer listed, not total>
 pages_count: <integer>
 providers_count: <integer>
 naming_convention: PascalCase-file | kebab-case-file | snake_case-file | mixed
+naming_conventions:
+  component_file: PascalCase | kebab-case | snake_case | mixed
+  css_file: PascalCase | kebab-case | snake_case | matches-component | n/a
+  class_name: PascalCase | camelCase | BEM | n/a
+  directory: PascalCase | kebab-case | snake_case | matches-component
 folder_structure: single-file | folder-with-index | mixed
 ui_library_integration: direct | wrapped | shadcn-copy | mixed | none
 storybook_present: <boolean>
