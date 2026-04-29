@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "docs-creator",
-      "source": "./",
+      "source": "max200pl/claude-docs-creator-plugin",
       "description": "Authoring, validation, and drift-detection for .claude/ docs in any project, plus automated frontend analysis optimized for downstream component-creation agents. Ships 15 api skills (init-project, create-docs, update-docs, validate-claude-docs, status, analyze-frontend, create-frontend-docs, update-frontend-docs, create-sequences, check-links, analyze-api-contracts, create-api-contracts-docs, update-api-contracts-docs, create-api-contract, menu), 12 agents, 10 rules, 6 hooks.",
       "version": "0.15.0",
       "author": {
