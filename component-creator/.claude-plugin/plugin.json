@@ -1,7 +1,7 @@
 {
   "name": "component-creator",
-  "description": "Create frontend components that match your project's detected conventions — reads the analysis produced by docs-creator and generates components following your design system, naming rules, and framework idioms.",
-  "version": "0.1.0",
+  "description": "Create UI components from Figma designs — Figma-to-code with visual verification (SSIM), Code Connect, and component registry management. Reads docs-creator analysis output to apply project-specific naming, styling, and design token conventions.",
+  "version": "0.0.1",
   "author": {
     "name": "Maksym Poskannyi"
   },
