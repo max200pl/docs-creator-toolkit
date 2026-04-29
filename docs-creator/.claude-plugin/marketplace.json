@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Marketplace for claude-docs-creator — the .claude/ documentation authoring + validation toolkit.",
-    "version": "0.12.0"
+    "version": "0.15.0"
   },
   "plugins": [
     {
       "name": "docs-creator",
       "source": "./",
-      "description": "Authoring, validation, and drift-detection for .claude/ docs in any project, plus automated frontend analysis optimized for downstream component-creation agents. Ships 10 public skills (init-project, create-docs, update-docs, validate-claude-docs, status, analyze-frontend, create-mermaid, research, create-steps, create-tutorial), 9 agents (doc-reviewer, module-documenter, frontend-detector, tech-stack-profiler, design-system-scanner, component-inventory, data-flow-mapper, architecture-analyzer, framework-idiom-extractor), 10 scoped rules, 6 hooks, and a set of reference docs + tutorials. /analyze-frontend uses a two-wave flow (stack profile → stack-informed specialists) and produces a prescriptive component-creation-template.md — the primary context envelope for agents that create new components.",
-      "version": "0.12.0",
+      "description": "Authoring, validation, and drift-detection for .claude/ docs in any project, plus automated frontend analysis optimized for downstream component-creation agents. Ships 15 api skills (init-project, create-docs, update-docs, validate-claude-docs, status, analyze-frontend, create-frontend-docs, update-frontend-docs, create-sequences, check-links, analyze-api-contracts, create-api-contracts-docs, update-api-contracts-docs, create-api-contract, menu), 12 agents, 10 rules, 6 hooks.",
+      "version": "0.15.0",
       "author": {
         "name": "Maksym Poskannyi"
       },
