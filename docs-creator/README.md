@@ -8,7 +8,7 @@ Claude Code plugin for authoring, validating, and maintaining `.claude/` documen
 
 ```bash
 # Marketplace (recommended)
-/plugin marketplace add github:max200pl/claude-docs-creator-plugin
+/plugin marketplace add max200pl/claude-docs-creator-plugin
 /plugin install docs-creator
 
 # Local clone (development)
