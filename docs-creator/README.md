@@ -8,15 +8,15 @@ Claude Code plugin for authoring, validating, and maintaining `.claude/` documen
 
 ```bash
 # Marketplace (recommended)
-/plugin marketplace add github:max200pl/claude-docs-creator
-/plugin install claude-docs-creator@docs-toolkit
+/plugin marketplace add github:max200pl/claude-docs-creator-plugin
+/plugin install docs-creator
 
 # Local clone (development)
 git clone https://github.com/max200pl/claude-docs-creator ~/Projects/claude-docs-creator
-claude --plugin-dir ~/Projects/claude-docs-creator
+claude --plugin-dir ~/Projects/claude-docs-creator/plugins/docs-creator
 ```
 
-After install, skills are available as `/claude-docs-creator:<skill>`.
+After install, skills are available as `/docs-creator:<skill>`.
 
 **Headless CI** — validate docs in GitHub Actions without an interactive session:
 

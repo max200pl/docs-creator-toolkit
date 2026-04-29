@@ -40,7 +40,7 @@ Action:
 
 ```bash
 cd ~/Projects/your-project
-claude --plugin-dir ~/Projects/claude-docs-creator
+claude --plugin-dir ~/Projects/claude-docs-creator/plugins/docs-creator
 ```
 
 Inside the Claude Code session, type:
@@ -195,7 +195,7 @@ Starting state: an empty git repo you can mess with — `mkdir ~/tmp/tutorial &&
 
 Do this:
 
-1. Attach the toolkit — `claude --plugin-dir ~/Projects/claude-docs-creator` from inside the repo
+1. Attach the toolkit — `claude --plugin-dir ~/Projects/claude-docs-creator/plugins/docs-creator` from inside the repo
 2. Run `/init-project`
 3. Answer the wizard's questions — pick Python as the stack when asked
 4. Run `/validate-claude-docs .` and fix any errors
