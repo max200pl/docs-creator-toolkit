@@ -85,6 +85,8 @@ Determine scope:
 
 ### Phase: Re-invoke subagent
 
+**Freshness check:** if `generated.ts` is from the current session (< 1 hour ago), skip REINVOKE and go directly to Regenerate artefact — the JSON data is already current. Do NOT skip Regenerate: always regenerate the artefact files from JSON regardless of freshness, so that any new frontmatter instructions are applied.
+
 For each in-scope frontend, invoke the subagent(s) matching `<area>`:
 
 ```text
