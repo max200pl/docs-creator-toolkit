@@ -25,7 +25,7 @@ If the project needs a FULL refresh, run `/analyze-frontend` (to regenerate the 
 | `<area>` | Re-invokes | Updates in JSON | Regenerates artefact |
 | ---- | ---- | ---- | ---- |
 | `design-system` | `design-system-scanner` | `frontend_roots[*].design_system` | `.claude/rules/frontend-design-system.md` |
-| `components` | `component-inventory` | `frontend_roots[*].component_inventory` | `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` + merge-update `component-registry.json` (if exists) |
+| `components` | `component-inventory` | `frontend_roots[*].component_inventory` | `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` + `component-registry.json` (create or merge-update) + `reference-component-registry.md` |
 | `data-flow` | `data-flow-mapper` | `frontend_roots[*].data_flow` | `.claude/sequences/frontend-data-flow.mmd` |
 | `architecture` | `tech-stack-profiler` (Wave 1 refresh) + `architecture-analyzer` | `frontend_roots[*].tech_stack` + `.architecture` | `.claude/docs/reference-architecture-frontend.md` |
 | `framework-idioms` | `framework-idiom-extractor` | `frontend_roots[*].framework_idioms` | Section in `reference-component-creation-template.md` (triggers full template rewrite since idioms feed it) |
@@ -114,7 +114,7 @@ Write JSON back atomically (temp-write + rename).
 Based on `<area>`:
 
 - `design-system` → regenerate only `.claude/rules/frontend-design-system.md` from `design_system` + new frontmatter `paths:` scoping
-- `components` → regenerate `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` from `component_inventory`; if `.claude/state/component-registry.json` already exists — merge-update it (preserve records with `figma_node_id` set, overwrite `status: "unverified"` records with fresh component data from the new `component_inventory`); also regenerate `.claude/docs/reference-component-registry.md` from the updated registry; if registry does NOT exist, skip silently (it is created by `/create-frontend-docs` — note this in the report)
+- `components` → regenerate `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` from `component_inventory`; **also always write `component-registry.json` + `reference-component-registry.md`**: if file already exists — merge (preserve records with `figma_node_id` set, overwrite `status: "unverified"` records); if file does NOT exist — create it fresh (same logic as `/create-frontend-docs`)
 - `data-flow` → regenerate `.claude/sequences/frontend-data-flow.mmd` from `data_flow.primary_flow_mermaid`
 - `architecture` → regenerate `.claude/docs/reference-architecture-frontend.md` from `tech_stack` + `architecture`; ALSO regenerate `reference-component-creation-template.md` (because styling_model / class_naming in Stack section changed)
 - `framework-idioms` → regenerate `reference-component-creation-template.md` (framework idioms are one of its sections)
@@ -160,7 +160,7 @@ Why separate skill instead of keeping the flag:
 ## What This Skill Does NOT Do
 
 - Full re-analysis — use `/analyze-frontend` + `/create-frontend-docs`
-- Write new frontend artefacts that don't exist yet — this skill refreshes EXISTING ones. Run `/create-frontend-docs` first if some files are missing.
+- Write new frontend artefacts that don't exist yet — with one exception: `components` area always writes `component-registry.json` (creates if missing, merges if present). For all other artefacts, run `/create-frontend-docs` first if files are missing.
 - Touch project source code
 - Rewrite root `CLAUDE.md` beyond the single summary line in `### Frontend`
 - Invent data — subagents re-scan the code, JSON is derived from that
