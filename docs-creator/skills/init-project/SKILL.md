@@ -25,7 +25,7 @@ Set up `.claude/` folder structure, detect the project, and create an ideal `CLA
 - `CLAUDE.local.md` — empty personal overrides (gitignored)
 - `.claude/settings.json` — stack-specific permissions
 - `.claude/settings.local.json` — empty personal settings (gitignored)
-- `.gitignore` entries — `CLAUDE.local.md`, `settings.local.json`, `agent-memory-local/`, `.claude/state/`
+- `.gitignore` entries — `CLAUDE.local.md`, `settings.local.json`, `agent-memory-local/`, `.claude/state/reports/`, `.claude/state/last-*`
 - Per-module `CLAUDE.md` — one per non-trivial module (under 60 lines each)
 - `.claude/state/reports/init-project-<ts>.md` — run report per [rules/report-format.md](../../rules/report-format.md) (gitignored)
 

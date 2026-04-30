@@ -27,7 +27,7 @@ Does NOT apply to:
 
 Where `<project-root>` is the cwd at the time the skill runs — the **target project** for public skills, the **toolkit repo** for self-dogfood runs. Skills always write relative to cwd; never to the plugin root.
 
-`.claude/state/` is gitignored by the toolkit convention (established in [rules/docs-folder-structure.md](docs-folder-structure.md) and enforced in `/init-project`'s gitignore block). Reports are per-run, ephemeral, and must never commit.
+`.claude/state/reports/` is gitignored — reports are per-run and ephemeral. Other state files (`frontend-analysis.json`, `api-contracts-analysis.json`, `component-registry.json`) are committed — they hold expensive analysis results and user-enriched data (Figma IDs). See [rules/docs-folder-structure.md](docs-folder-structure.md) for the full gitignore policy.
 
 ## Filename Convention
 

@@ -23,7 +23,7 @@ argument-hint: "[frontend-path] [--only <area>]"
 > Output rules: read `rules/output-format.md`
 > Report rules: read `rules/report-format.md`
 
-**Read-only analyzer.** Detects frontend root(s), runs a two-wave subagent pipeline, and persists structured analysis to `.claude/state/frontend-analysis.json` (gitignored). **Writes NO user-facing documentation.**
+**Read-only analyzer.** Detects frontend root(s), runs a two-wave subagent pipeline, and persists structured analysis to `.claude/state/frontend-analysis.json` (committed — teammates can run `/create-frontend-docs` without re-running the expensive analysis). **Writes NO user-facing documentation.**
 
 To materialize the analysis as human-readable docs (`.claude/docs/reference-component-creation-template.md` + references + `CLAUDE.md` update), run `/create-frontend-docs` AFTER this skill. To refresh a specific area after code drift, run `/update-frontend-docs <area>`.
 
@@ -44,7 +44,7 @@ If `.claude/` is missing, the skill stops and directs the user to `/init-project
 
 ## What this skill creates
 
-- `.claude/state/frontend-analysis.json` — **structured analysis result (gitignored)**. Machine-readable format readable by downstream component-creation agents directly, and consumed by `/create-frontend-docs` + `/update-frontend-docs`.
+- `.claude/state/frontend-analysis.json` — **structured analysis result (committed)**. Machine-readable format readable by downstream component-creation agents directly, and consumed by `/create-frontend-docs` + `/update-frontend-docs`. Committed so teammates can run `/create-frontend-docs` without re-running the expensive analysis.
 - `.claude/state/reports/analyze-frontend-<ts>.md` — run report per [rules/report-format.md](../../rules/report-format.md) (gitignored)
 
 ## What this skill does NOT create
