@@ -10,6 +10,7 @@ argument-hint: "[--force-rerun] [--only <area>]"
 
 > **Flow:** read `sequences/create-frontend-docs.mmd` — source of truth for execution order
 > Primary-output format: `rules/component-creation-template-format.md`
+> Skip policy: `rules/artefact-skip-policy.md` — when to create vs omit files on SKIP
 > Analysis source: reads `.claude/state/frontend-analysis.json` — produced by `/analyze-frontend`
 > Style rules: read `rules/markdown-style.md`, `rules/mermaid-style.md`
 > Output rules: read `rules/output-format.md`

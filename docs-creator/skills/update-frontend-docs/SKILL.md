@@ -9,6 +9,7 @@ argument-hint: "<area> [--all-frontends]"
 # Update Frontend Docs
 
 > **Flow:** read `sequences/update-frontend-docs.mmd` — source of truth for execution order
+> Skip policy: `rules/artefact-skip-policy.md` — when to create vs omit files on SKIP
 > Analysis source: reads + writes `.claude/state/frontend-analysis.json`
 > Subagent specs: re-invokes one of `agents/{design-system-scanner, component-inventory, data-flow-mapper, architecture-analyzer, framework-idiom-extractor}.md` based on `<area>`
 > Primary-output format: `rules/component-creation-template-format.md`

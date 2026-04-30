@@ -1,7 +1,7 @@
 ---
 name: menu
 scope: api
-description: "Show available /claude-docs-creator:* commands plus a quick status summary of the current project's .claude/. Discovery screen for end users who installed the plugin — lists api + shared skills only. Toolkit-internal skills (sleep, distill, create-mermaid, research, create-tutorial) are intentionally hidden."
+description: "Show available /claude-docs-creator:* commands plus a quick status summary of the current project's .claude/. Discovery screen for end users who installed the plugin — lists api + shared skills only. Toolkit-internal skills (sleep, create-mermaid, research, create-tutorial) are intentionally hidden."
 user-invocable: true
 ---
 
@@ -62,6 +62,9 @@ Display as a formatted table:
   │                             .claude/sequences/            │
   │  /create-steps <topic>      Step-by-step runbook w/       │
   │                             rollback                      │
+  │  /distill [focus]           Retrospective — propose        │
+  │                             prioritized .claude/ doc       │
+  │                             improvements from session     │
   │  /menu                      This screen                   │
   │                                                           │
   └───────────────────────────────────────────────────────────┘
@@ -152,6 +155,6 @@ Display in a box:
 
 ## What This Skill Does NOT Do
 
-- List toolkit-internal commands (`/sleep`, `/distill`, `/create-mermaid`, `/research`, `/create-tutorial`) — those live in the toolkit's private dev repo and are not exposed to end users.
+- List toolkit-internal commands (`/sleep`, `/create-mermaid`, `/research`, `/create-tutorial`) — those live in the toolkit's private dev repo and are not exposed to end users.
 - Auto-run any action — it's a passive discovery surface. Actions are the user's choice.
 - Fix things it flags in the status dashboard — flagging is informational; each fix has its own skill.

@@ -20,7 +20,8 @@
         "hooks": [
           { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/lint-md.sh" },
           { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/validate-mmd.sh" },
-          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-links.sh" }
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-links.sh" },
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/humanize-report-dates.sh" }
         ]
       }
     ],
