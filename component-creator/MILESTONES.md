@@ -22,18 +22,18 @@
 
 ### docs-creator gaps (blockers)
 
-- [ ] **Gap A** — `design-system-scanner`: add `token_file:` + `typography_file:` as frontmatter fields to generated `reference-design-system.md`
-- [ ] **Gap G** — `component-inventory`: add `naming_conventions:` structured block to `reference-component-inventory.md` (fields: `component_file`, `css_file`, `class_name`, `directory`)
-- [ ] **Gap H** — `tech-stack-profiler` / `design-system-scanner`: add `styling_system:` block to `frontend-analysis.json` (fields: `type`, `entry_file`, `import_syntax`)
-- [ ] **Gap C** — `create-frontend-docs`: produce `component-registry.json` at `.claude/state/component-registry.json`; markdown table at `.claude/docs/reference-component-registry.md`; `component-inventory` seeds from existing components
+- [x] **Gap A** — `token_file:` + `typography_file:` добавлены в JSON (`design_system.token_file/typography_file`) и в frontmatter-шаблон `frontend-design-system.md` в `create-frontend-docs` + `update-frontend-docs design-system` (shipped docs-creator v0.15.x). Требует запуска `/update-frontend-docs design-system` в целевом проекте.
+- [x] **Gap G** — `naming_conventions:` добавлен в JSON-схему `analyze-frontend` и в frontmatter-шаблон `reference-component-inventory.md` в `create-frontend-docs` + `update-frontend-docs components` (shipped docs-creator v0.15.x). Требует запуска `/update-frontend-docs components` в целевом проекте.
+- [x] **Gap H** — `styling_system:` блок добавлен в JSON-схему `analyze-frontend`; поля `type`, `entry_file`, `import_syntax` присутствуют в `frontend-analysis.json` (верифицировано на pc_cleaner 2026-04-30)
+- [x] **Gap C** — `component-registry.json` создаётся в `.claude/state/`; `reference-component-registry.md` генерируется; schema включает `name`, `type`, `layer`, `path`, `figma_node_id`, `figma_file_key`, `figma_connected`, `uses`, `parent`, `created_at`, `last_verified_at`, `last_figma_sync_at`, `figma_last_modified`, `ssim_score`, `status` (верифицировано на pc_cleaner 2026-04-30)
 
 ### Registry schema
 
-- [ ] Finalize schema fields: `name`, `type` (`primitive` | `feature` | `local`), `layer`, `path`, `figma_node_id`, `figma_file_key`, `figma_connected`, `uses`, `parent` (for `type: local`), `created_at`, `last_verified_at`, `last_figma_sync_at`, `figma_last_modified`, `ssim_score`, `status`
+- [x] Finalize schema fields: `name`, `type` (`primitive` | `feature` | `local`), `layer`, `path`, `figma_node_id`, `figma_file_key`, `figma_connected`, `uses`, `parent` (for `type: local`), `created_at`, `last_verified_at`, `last_figma_sync_at`, `figma_last_modified`, `ssim_score`, `status`
 
 ### Plugin scaffold
 
-- [ ] Create `plugins/component-creator/.claude-plugin/plugin.json` — name: `component-creator`, version: `0.0.1`, repository field
+- [x] Create `plugins/component-creator/.claude-plugin/plugin.json` — name: `component-creator`, version: `0.0.1`, repository field
 - [ ] Create `plugins/component-creator/.claude-plugin/marketplace.json`
 
 ---
