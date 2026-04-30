@@ -112,6 +112,47 @@ This skill is a **two-wave fan-out pipeline** producing a structured JSON result
 
 Phase-by-phase implementation details: [`docs/reference-analyze-frontend-detection.md`](../../docs/reference-analyze-frontend-detection.md)
 
+### JSON schema — fields to extract from subagent Summary Rows
+
+When merging Wave 1 + Wave 2 outputs into `frontend-analysis.json`, the orchestrator MUST extract all fields listed below. New or nested fields are easy to miss — use this as a checklist.
+
+**`tech_stack` section** (from `tech-stack-profiler` Summary Row):
+
+```yaml
+styling_model: <enum>
+class_naming: <enum>
+custom_class_prefix: <string or empty>
+styling_system:            # NEW — required for component-creator Gap H
+  type: <enum>
+  entry_file: <relative path or "none">
+  import_syntax: "@import" | "@use" | "@forward" | "none"
+```
+
+**`design_system` section** (from `design-system-scanner` Summary Row):
+
+```yaml
+source_of_truth: <file path>
+token_file: <relative path or "none">        # NEW — required for component-creator Gap A
+typography_file: <relative path or "none">   # NEW — required for component-creator Gap A
+mechanism: <enum>
+color_palette: { brand: [], semantic: [], neutral_steps: N }
+dark_mode: <enum>
+```
+
+**`component_inventory` section** (from `component-inventory` Summary Row):
+
+```yaml
+naming_convention: <legacy single value>
+naming_conventions:          # NEW — required for component-creator Gap G
+  component_file: <enum>
+  css_file: <enum>
+  class_name: <enum>
+  directory: <enum>
+folder_structure: <enum>
+```
+
+If a subagent does not return a field (SKIP or trivial case), store the key with value `null` — never omit the key entirely. Downstream consumers rely on key presence.
+
 ## Retrofit Behavior
 
 When run on a project that already has a `.claude/state/frontend-analysis.json`:

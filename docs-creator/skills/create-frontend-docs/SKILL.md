@@ -143,6 +143,8 @@ paths:
   - "<frontend_root>/*tailwind*.{js,ts,cjs}"
   - "<frontend_root>/**/*token*"
   - "<frontend_root>/**/theme*.*"
+token_file: <value from design_system.token_file in JSON — relative path from project root, or "none">
+typography_file: <value from design_system.typography_file in JSON — relative path from project root, or "none">
 ---
 ```
 
