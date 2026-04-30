@@ -114,8 +114,8 @@ Write JSON back atomically (temp-write + rename).
 
 Based on `<area>`:
 
-- `design-system` → regenerate only `.claude/rules/frontend-design-system.md` from `design_system` + new frontmatter `paths:` scoping
-- `components` → regenerate `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` from `component_inventory`; **also always write `component-registry.json` + `reference-component-registry.md`**: if file already exists — merge (preserve records with `figma_node_id` set, overwrite `status: "unverified"` records); if file does NOT exist — create it fresh (same logic as `/create-frontend-docs`)
+- `design-system` → regenerate only `.claude/rules/frontend-design-system.md` from `design_system` + new frontmatter `paths:` scoping; include `token_file:` and `typography_file:` in frontmatter (values from `design_system.token_file` and `design_system.typography_file` in JSON, or `"none"` if absent)
+- `components` → regenerate `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` from `component_inventory`; prepend `naming_conventions:` frontmatter block to `reference-component-inventory.md` with fields `component_file`, `css_file`, `class_name`, `directory` from `component_inventory.naming_conventions` in JSON; **also always write `component-registry.json` + `reference-component-registry.md`**: if file already exists — merge (preserve records with `figma_node_id` set, overwrite `status: "unverified"` records); if file does NOT exist — create it fresh (same logic as `/create-frontend-docs`)
 - `data-flow` → regenerate `.claude/sequences/frontend-data-flow.mmd` from `data_flow.primary_flow_mermaid`
 - `architecture` → regenerate `.claude/docs/reference-architecture-frontend.md` from `tech_stack` + `architecture`; ALSO regenerate `reference-component-creation-template.md` (because styling_model / class_naming in Stack section changed)
 - `framework-idioms` → regenerate `reference-component-creation-template.md` (framework idioms are one of its sections)

@@ -20,6 +20,7 @@ user-enriched registries. Ignore only per-run reports and local timestamps.
 # claude-docs-creator — ephemeral state only
 .claude/state/reports/
 .claude/state/last-*
+.claude/state/compression-snapshot.txt
 ```
 
 Everything else in `.claude/state/` is committed by default.
@@ -35,6 +36,7 @@ Everything else in `.claude/state/` is committed by default.
 | `state/last-distill` | **ignore** | Local timestamp sentinel. Machine-specific. |
 | `state/last-sleep` | **ignore** | Local timestamp sentinel. Machine-specific. |
 | `state/last-*` | **ignore** | Any future `last-<skill>` sentinel. |
+| `state/compression-snapshot.txt` | **ignore** | Per-session auto-load cost snapshot. Machine-local — changes every session as docs evolve. |
 
 ## Why component-registry.json Must Be Committed
 

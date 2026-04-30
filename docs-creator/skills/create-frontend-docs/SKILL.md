@@ -165,6 +165,22 @@ Replace `<frontend_root>` with the relative path from the project root (e.g., `a
 Replace `<framework>` and `<relative_root>` with values from `frontend_analysis.json`.
 Write the block as the literal first lines of the file, before any `# Heading`.
 
+**`reference-component-inventory.md` frontmatter** — prepend this block before `# Heading`:
+
+```yaml
+---
+generated-by: create-frontend-docs
+frontend-root: <relative_root>
+naming_conventions:
+  component_file: <value from component_inventory.naming_conventions.component_file>
+  css_file: <value from component_inventory.naming_conventions.css_file>
+  class_name: <value from component_inventory.naming_conventions.class_name>
+  directory: <value from component_inventory.naming_conventions.directory>
+---
+```
+
+If `component_inventory.naming_conventions` is null, omit the `naming_conventions:` key and write `naming_conventions: null` as a single line.
+
 **Pre-write self-check:** Before calling Write for either rule file, verify the string you are about to write starts with `---` and contains `description:`. If it does not — construct the frontmatter now from the JSON values, prepend it, then write. Do not proceed without `description:`.
 
 **Mermaid pre-write validation:**
