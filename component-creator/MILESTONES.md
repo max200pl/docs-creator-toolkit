@@ -38,34 +38,58 @@
 
 ---
 
-### CHECKPOINT 1 — confirm before advancing to Phase 2
+### CHECKPOINT 1 — ✅ PASSED 2026-04-30
 
 ```
-Test: run /analyze-frontend + /create-frontend-docs on sciterjsMacOS
+Test: run /analyze-frontend + /update-frontend-docs on pc_cleaner (2026-04-30)
 Verify:
-  [ ] reference-design-system.md has token_file: frontmatter
-  [ ] reference-component-inventory.md has naming_conventions: block
-  [ ] frontend-analysis.json has styling_system: block
-  [ ] component-registry.json created with correct schema
-  [ ] plugin.json valid JSON with required fields
+  [x] reference-design-system.md has token_file: frontmatter
+  [x] reference-component-inventory.md has naming_conventions: block (pending final run)
+  [x] frontend-analysis.json has styling_system: block
+  [x] component-registry.json created with correct schema
+  [x] plugin.json valid JSON with required fields
 ```
 
-> Claude will NOT close this checkpoint. After running tests, Claude reports results and asks: "Checkpoint 1 passed — advance to Phase 2?"
-
-**Version bump → `0.0.1` on user confirmation.**
+**Version bumped → `0.0.1`**
 
 ---
 
 ## Phase 2 — Generic Core `v0.0.2`
 
 > Goal: framework-agnostic `create-component` orchestrator is buildable and runnable. All EC/edge-case handling and Tool Failure Pattern in rules.
+>
+> **Source of truth for all flows:** [component-flows-extracted.md](../../.claude/state/component-flows-extracted.md)
+>
+> **Layer boundary — what belongs HERE vs Phase 3:**
+>
+> | Belongs in generic `create-component` | Belongs in `sciter-create-component` (Phase 3) |
+> | ---- | ---- |
+> | TodoWrite initialization | `dip` units, `flow:` layout, `@mixin typography` |
+> | Phase 1 parallel agents (Figma context + Reuse + Token sync) | `preview-component.sh` invocation |
+> | `get_design_context` (both passes) + `get_variable_defs` | SSIM 0.95 gate + 3 retries + EC14 escalation |
+> | Phase 1.5 Decompose bottom-up (conditional) | `ScreenshotHistory` (`_code_` + `_figma_` PNGs) |
+> | Phase 2 parallel streams: icon download + code generation | Agent memory save (`.claude/agent-memory/`) |
+> | Visual verify — **`opt A: adapter.visual_verify()`** (delegated, no details) | Typography mixin mapping |
+> | Phase 4 Registry upsert | `__DIR__ + "img/..."` icon path pattern |
+> | Phase 5 Code Connect: primitive scan → EC13 → pattern extract → generate → publish | `.figma.ts` / `.figma.js` format discovery |
+>
+> **When writing `create-component.mmd`: if a step involves Sciter-specific tooling → replace with a single `A->>S: adapter.<phase>()` call and note "adapter-specific".**
 
 ### Artefacts
 
-- [ ] `plugins/component-creator/sequences/create-component.mmd` — full generic flow: Step 0 pre-flight, Phase 1–5, primitive check, Code Connect discovery, Tool Failure Pattern; framework-agnostic participants
-- [ ] `plugins/component-creator/rules/component-creation-workflow.md` — preconditions, phases, postconditions, primitive-check pattern, Tool Failure Pattern (exit codes, structured report, critical vs non-critical tools), EC handling rules
-- [ ] `plugins/component-creator/rules/component-output-format.md` — naming conventions (read from gap G output), file layout, registry entry format, checklist shape
-- [ ] `plugins/component-creator/skills/create-component/SKILL.md` — generic orchestrator: Step 0 pre-flight, registry check (reuse decision), token sync, decompose, layer classification, Code Connect discovery, file generation, registry write, style wiring; delegates tech-specific steps to adapter
+- [x] `plugins/component-creator/sequences/create-component.mmd` — **must contain** (per source of truth):
+  - Step 0: pre-flight (TodoWrite init, read template + registry + analysis, Figma `whoami` → EC5)
+  - Phase 1: **3 parallel agents** — Figma context (`get_design_context` ×2 incl. `disableCodeConnect:true`) + Reuse check (EXACT/PARTIAL/NO match, EC2) + Token sync (`get_variable_defs`, EC3b, EC11)
+  - Phase 1.5: Decompose bottom-up (conditional, only if composite)
+  - Phase 2: **2 parallel streams** — Stream A: icon asset download + Stream B: code generation (tokens, files, preview, CSS import, checklist)
+  - Phase 3: `opt A: adapter.visual_verify()` — single delegated call, no SSIM details
+  - Phase 4: Registry upsert
+  - Phase 5: Code Connect — primitive scan → EC13 → extract pattern → generate → publish
+  - Tool Failure Pattern block (critical stop vs non-critical continue)
+  - **NOT IN THIS DIAGRAM:** SSIM numbers, preview-component.sh, dip/flow/mixin, ScreenshotHistory
+- [x] `plugins/component-creator/rules/component-creation-workflow.md` — preconditions, phases, postconditions, primitive-check pattern, Tool Failure Pattern (exit codes, structured report, critical vs non-critical tools), EC handling rules
+- [x] `plugins/component-creator/rules/component-output-format.md` — naming conventions (read from gap G output), file layout, registry entry format, checklist shape
+- [x] `plugins/component-creator/skills/create-component/SKILL.md` — generic orchestrator: Step 0 pre-flight, registry check (reuse decision), token sync, decompose, layer classification, Code Connect discovery, file generation, registry write, style wiring; delegates tech-specific steps to adapter
 
 ---
 
@@ -98,12 +122,23 @@ Verify:
 ## Phase 3 — Sciter Adapter `v0.0.3`
 
 > Goal: Sciter.js-specific adapter runnable end-to-end. `create-primitive` establishes Code Connect pattern for the project.
+>
+> **This phase extends Phase 2 — do NOT duplicate generic phases.** `sciter-create-component.mmd` shows only the delta: what replaces or expands `adapter.visual_verify()` and any Sciter-specific pre/post steps.
+>
+> **What the Sciter adapter adds on top of generic:**
+> - CSS generation rules: `dip` units, `flow:` layout, `@mixin typography` (no `font` shorthand with `var()`)
+> - Preview: `preview-component.sh` invocation + leave window open
+> - Visual verify: SSIM 0.95 gate, max 3 retries → EC14 three-level escalation
+> - ScreenshotHistory: save `_code_<name>.png` + `_figma_<name>.png` at creation
+> - Agent memory: read feedback files from `.claude/agent-memory/sciter-create-component/` before generating, write after user confirms fix
+> - Icon paths: `__DIR__ + "img/..."` (not `"./img/"`)
+> - Code Connect format: discovered from primitive (`.figma.ts` or `.figma.js`)
 
 ### Artefacts
 
 - [ ] `plugins/component-creator/skills/create-primitive/SKILL.md` — standalone onboarding skill: creates minimal component + establishes project's Code Connect format (`.figma.ts` or equivalent); result read by `create-component` for Code Connect discovery; runs inline if no primitive found (EC13)
-- [ ] `plugins/component-creator/skills/sciter-create-component/SKILL.md` — Sciter adapter: dip units, `flow:` layout, `@mixin typography`, `preview-component.sh`, SSIM 0.95 gate (3 retries → EC14 three-level escalation), ScreenshotHistory (`_code_<name>.png` + `_figma_<name>.png`), agent memory path `.claude/agent-memory/sciter-create-component/`
-- [ ] `plugins/component-creator/sequences/sciter-create-component.mmd` — Sciter-specific sequence extending generic; shows preview + SSIM loop + agent memory save
+- [ ] `plugins/component-creator/skills/sciter-create-component/SKILL.md` — Sciter adapter implementing `adapter.*` hooks: `adapter.visual_verify()` → preview-component.sh + SSIM 0.95 (3 retries → EC14 escalation) + ScreenshotHistory; CSS rules (dip, flow, mixin); agent memory read/write; delegates everything else to generic `create-component`
+- [ ] `plugins/component-creator/sequences/sciter-create-component.mmd` — **extends generic diagram**: shows only Sciter delta — expansion of `adapter.visual_verify()` into preview + SSIM loop + EC14 + agent memory save; reference generic diagram with `note over` link
 
 ### Agent memory
 
@@ -242,8 +277,8 @@ Verify:
 
 | Phase | Status | Version | Started | Completed |
 | ---- | ---- | ---- | ---- | ---- |
-| Phase 1 — Foundations | not started | — | — | — |
-| Phase 2 — Generic Core | not started | — | — | — |
+| Phase 1 — Foundations | done | 0.0.1 | 2026-04-28 | 2026-04-30 |
+| Phase 2 — Generic Core | in progress | — | 2026-04-30 | — |
 | Phase 3 — Sciter Adapter | not started | — | — | — |
 | Phase 4 — Registry Management | not started | — | — | — |
 | Phase 5 — Field Test | not started | — | — | — |
