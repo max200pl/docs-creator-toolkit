@@ -1,0 +1,49 @@
+---
+title: "File Update Strategy — Rewrite vs Merge vs Surgical"
+---
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    actor U as User
+    participant S as Skill
+    participant D as Dispatcher
+    participant FS as FileSystem
+
+    U->>S: update request (area / file target)
+
+    S->>FS: read existing file (if any)
+    FS-->>S: content or "not found"
+
+    S->>D: classify(file_type)
+
+    alt JSON state file
+        note over D: component-registry.json<br/>frontend-analysis.json
+        D-->>S: strategy = MERGE
+        S->>S: load existing records
+        S->>S: overwrite status="unverified" entries
+        S->>S: preserve figma_connected=true records
+        S->>FS: write merged JSON
+        FS-->>S: ok
+    else Derived .md artefact
+        note over D: reference-*.md<br/>rules/frontend-*.md<br/>*.mmd diagrams
+        D-->>S: strategy = FULL_REWRITE
+        S->>S: build fresh content from JSON
+        S->>FS: write (overwrite)
+        FS-->>S: ok
+    else CLAUDE.md section
+        note over D: ### Frontend subsection<br/>under ## Architecture
+        D-->>S: strategy = SURGICAL
+        S->>FS: read CLAUDE.md
+        FS-->>S: full content
+        S->>S: locate target section bounds
+        S->>S: replace section body only
+        S->>FS: write CLAUDE.md
+        FS-->>S: ok
+    else File does not exist
+        note over D: any type, first run
+        D-->>S: strategy = CREATE
+        S->>S: build full content
+        S->>FS: write new file
+        FS-->>S: ok
+    end
+
+    S-->>U: report(strategy used, path, line count)
