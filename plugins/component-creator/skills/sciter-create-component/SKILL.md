@@ -125,24 +125,41 @@ Confirm variant selection →
 
 ### adapter.visual_verify() — SSIM
 
-**Component set preview strategy:**
-When the component is a component set with multiple variants (types × states), the `preview.js` must reproduce the exact same grid layout as the Figma component set screenshot:
-- Rows = states (Default, hover, disabled)
-- Columns = types (sec, prim, with-icon)
-- Same spacing/gaps as Figma
+**Component set preview + SSIM strategy:**
 
-This way SSIM compares the full grid in one shot. Do NOT compare a partial layout against the full Figma set screenshot — SSIM will always fail due to composition mismatch.
+`preview.js` — shows all variants as a grid (for visual inspection, Space overlay).
+SSIM — runs only for **default state of each type**, in parallel.
 
-For `:hover` and `[disabled]` states that cannot be triggered programmatically, use CSS forced-state classes in preview:
-```js
-// Force hover state for preview row
-<div class="button button--sec button--preview-hover">Not Now</div>
-```
-```css
-/* preview-only forced states */
-.button--preview-hover { /* same styles as :hover */ }
-.button--preview-disabled { /* same styles as [disabled] */ }
-```
+**Why not full grid SSIM:** hover/disabled are CSS states that can't be pixel-perfectly forced in a static preview. Comparing forced states against Figma's renderer produces false SSIM failures.
+
+**Why not one canonical variant:** each type (sec, prim, with-icon) has different visual weight — all three need independent verification.
+
+**Implementation:**
+
+1. `preview.js` — full grid for human review:
+   ```js
+   // row per type, all 3 types visible
+   <Button type="sec" label="Not Now" />
+   <Button type="prim" label="Update" />
+   <Button type="with-icon" label="Not Now" />
+   // (hover/disabled states inspected manually via Space overlay)
+   ```
+
+2. SSIM — 3 parallel runs, one per type's default variant node:
+   ```bash
+   # Run all 3 in parallel — each opens its own preview window
+   tools/fetch-figma-screenshot.sh <fileKey> <sec_node_id>       /tmp/figma-sec.png
+   tools/fetch-figma-screenshot.sh <fileKey> <prim_node_id>      /tmp/figma-prim.png
+   tools/fetch-figma-screenshot.sh <fileKey> <with-icon_node_id> /tmp/figma-icon.png
+
+   tools/preview-component.sh res/.../button.preview.js Button <width> /tmp/figma-sec.png
+   tools/preview-component.sh res/.../button.preview.js Button <width> /tmp/figma-prim.png
+   tools/preview-component.sh res/.../button.preview.js Button <width> /tmp/figma-icon.png
+   ```
+   Each run opens its own window. All 3 SSIM scores must meet threshold.
+   Use a single-variant preview.js per run (not the full grid preview).
+
+3. ScreenshotHistory — save `_code_` and `_figma_` for each verified type.
 
 **Resolve adaptive threshold before running:**
 Scan agent memory `feedback_*.md` for patterns matching this component:
