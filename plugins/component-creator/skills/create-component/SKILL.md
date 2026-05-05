@@ -52,11 +52,13 @@ Output this line immediately when the skill starts, before any tool calls:
 
 **0.5 EC2 check** — if directory `<name>/` exists (even empty) and no registry entry → prompt: overwrite / register as-is / cancel.
 
-**0.6 Variant hard-block** ⚠️ — call `mcp__figma__get_code_connect_suggestions(nodeId, fileKey)`:
-- If `mainComponentNodeId ≠ nodeId` → **STOP. Do NOT continue**:
-  > "Provided node is a **variant** (◆), not a component set (◆◆).
-  > Right-click the parent component set in Figma → Copy link to selection. Paste new URL:"
-- Wait for user. Re-parse. Repeat until `mainComponentNodeId == nodeId`.
+**0.6 Variant hard-block** ⚠️ — call `mcp__figma__get_code_connect_suggestions(nodeId, fileKey)`.
+Read `mainComponentNodeId` from response. **Compare literally with nodeId:**
+- **Equal** → component set → continue
+- **Different** → variant → **STOP. No further tool calls until user provides new URL.**
+  > "Node `<nodeId>` is a variant. The component set is `<mainComponentNodeId>`.
+  > Provide URL with node-id=`<mainComponentNodeId>`."
+  Re-parse new URL. Repeat.
 
 ---
 
