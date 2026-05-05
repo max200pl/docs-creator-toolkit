@@ -1,0 +1,93 @@
+---
+title: "sciter-create-component — Sciter Adapter Delta"
+---
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    actor U as User
+    participant S as Skill
+    participant Mem as AgentMemory
+    participant F as Figma
+    participant FS as FileSystem
+    participant Preview as PreviewApp
+
+    note over S,Preview: Phases 0,1,1.5,4,5 — follow create-component.mmd
+    note over S,Preview: This diagram shows Sciter-specific overrides only
+
+    note over S: Step 0 additions
+
+    S->>F: get_code_connect_suggestions(nodeId, fileKey)
+    F-->>S: mainComponentNodeId (if variant)
+
+    alt variant detected
+        S->>F: get_design_context(mainComponentNodeId, disableCodeConnect)
+        F-->>S: all variant properties + count
+        S-->>U: show all variants — which to implement?
+        U-->>S: selected variants
+    end
+
+    S->>Mem: read .claude/agent-memory/sciter-create-component/feedback_*.md
+    Mem-->>S: known fixes (typography, icon centering, layout tips)
+
+    opt memory directory absent or empty
+        S->>Mem: seed feedback_ssim_typography.md
+    end
+
+    note over S: Phase 1 — Agent 3 Sciter override
+
+    note over S: after generic token + mixin matching:
+    S->>FS: scan @font-face / font-loader for loaded font files
+    FS-->>S: loaded weights list
+
+    opt resolved mixin uses unloaded font weight
+        S-->>U: mixin found but font file missing<br/>use fallback mixin or add font file?
+        U-->>S: choice
+    end
+
+    note over S: Phase 2 Stream B — Sciter CSS/JS rules
+    note over S: dip units 1:1 from Figma px (never px)<br/>flow: horizontal | vertical (not display: flex)<br/>width: * (not flex: 1) · overflow: none<br/>@mixin typography-name; (no font shorthand with var())<br/>no comma in @mixin values<br/>class Name extends Element · class not className<br/>__DIR__ + "img/..." icon paths · imports need .js extension
+    note over S: apply known fixes from agent memory proactively
+
+    note over S: Phase 3 — adapter.visual_verify() expansion
+
+    S->>FS: tools/fetch-figma-screenshot.sh <fileKey> <nodeId> /tmp/figma-<name>.png
+    FS-->>S: PNG at 2x scale, absolute bounds
+    S->>FS: copy → tools/ScreenshotHistory/{ts}_figma_{name}.png
+
+    loop max 3 attempts
+        S->>Preview: tools/preview-component.sh <preview.js> <Name> <width> /tmp/figma-<name>.png
+        note over Preview: internally: captures screenshot + runs find-component.py --direct
+        note over Preview: window stays open — Space toggles Figma overlay
+        Preview-->>S: SSIM score + /tmp/component-compare.png + /tmp/component-diff.png
+
+        alt SSIM >= 0.95
+            note over S: PASS — exit loop
+        else SSIM < 0.95
+            S-->>U: show diff + score + region description
+            U-->>S: explanation of discrepancy
+            S->>FS: apply targeted CSS/JS fix
+        end
+    end
+
+    alt passed (SSIM >= 0.95)
+        S->>FS: copy preview screenshot → ScreenshotHistory/{ts}_code_{name}.png
+
+        opt fix was applied during retries
+            S->>Mem: write feedback_ssim_<topic>.md
+        end
+    else EC14 — still < 0.95 after 3 attempts
+        S-->>U: Level 1 — side-by-side + SSIM progression + region delta
+        U-->>S: explanation
+
+        alt fix resolves the issue
+            S->>FS: apply fix, re-run SSIM once
+            S->>Mem: write feedback_ssim_<topic>.md
+        else systematic pattern
+            S-->>U: Level 2 — draft rule change proposal (show only — do not write)
+        end
+
+        opt tool limitation or script bug
+            S-->>U: Level 3 — structured bug report<br/>component accepted: status needs-review
+        end
+
+        S->>FS: copy preview screenshot → ScreenshotHistory/{ts}_code_{name}.png
+    end

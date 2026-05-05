@@ -1,0 +1,166 @@
+---
+title: "create-component — Generic Orchestrator Flow"
+---
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    actor U as User
+    participant S as Skill
+    participant R as Registry
+    participant F as Figma
+    participant FS as FileSystem
+    participant A as Adapter
+
+    U->>S: /create-component <name> [figma-url]
+
+    note over S: Step 0 — Pre-flight
+    S->>S: TodoWrite — init all tasks pending
+    S->>FS: read template + registry + analysis
+    note over S: extract naming_conventions<br/>+ styling_system + typography_file
+
+    critical Figma token check
+        S->>F: whoami
+        F-->>S: authenticated
+    option EC5 — token invalid
+        S-->>U: stop — fix FIGMA_ACCESS_TOKEN
+    end
+
+    S->>F: get_code_connect_suggestions(nodeId, fileKey)
+    F-->>S: mainComponentNodeId (if variant)
+
+    alt variant detected (mainComponentNodeId ≠ nodeId)
+        S->>F: get_design_context(mainComponentNodeId, disableCodeConnect)
+        F-->>S: all variant properties + count
+        S-->>U: show all variants — which to implement?
+        U-->>S: selected variants
+        note over S: use mainComponentNodeId<br/>as working node
+    end
+
+    note over S: Phase 1 — Context (3 parallel)
+
+    par Agent 1 — Figma design
+        S->>F: get_design_context(nodeId, fileKey)
+        F-->>S: layout + colors + typography
+        S->>F: get_design_context(nodeId, disableCodeConnect)
+        F-->>S: full structure + variants + icon nodes list
+    and Agent 2 — Reuse check
+        S->>R: load registry (match by figma_node_id OR name)
+        R-->>S: known components
+        note over R: EXACT / PARTIAL / NO match
+        opt EXACT match
+            S->>FS: grep component name in source
+            FS-->>S: N usages
+        end
+    and Agent 3 — Token + typography sync
+        S->>FS: read token file + typography file
+        S->>F: get_variable_defs(nodeId, fileKey)
+        F-->>S: Figma design variables
+        note over S: color/spacing: compare by value<br/>matched / missing
+        note over S: typography: match text styles<br/>by font-size + weight + line-height<br/>against existing @mixin definitions
+    end
+
+    alt EXACT MATCH + N usages > 0
+        S-->>U: already exists — reusing
+    else EXACT MATCH + 0 usages
+        S-->>U: exists but unused — add variant or update?
+        U-->>S: choice
+    else PARTIAL MATCH
+        S-->>U: extend or refactor?
+        U-->>S: choice
+    else EC2 — on disk, not in registry
+        S-->>U: overwrite / register / cancel?
+        U-->>S: choice
+    end
+
+    opt EC3b — token name mismatch
+        S-->>U: Figma name vs local name — map or skip?
+        U-->>S: confirmed
+    end
+
+    opt EC11 — no Figma tokens
+        S-->>U: proceed with empty / cancel?
+        U-->>S: choice
+    end
+
+    opt typography gap — no matching mixin
+        S-->>U: no mixin for {size}/{weight}/{lh}<br/>create new or use closest?
+        U-->>S: mixin name confirmed
+    end
+
+    opt Phase 1.5 — Composite detected
+        note over S: Decompose bottom-up
+        S->>S: build dependency tree (deepest first)
+        note over S: classify each child by layer
+        note over S: build children before parent
+    end
+
+    note over S: Phase 2 — Implement
+
+    opt EC6 — special chars in name
+        S-->>U: converted name preview
+        U-->>S: confirm / edit
+    end
+
+    par Stream A — Download assets
+        loop each icon node
+            S->>F: fetch SVG (nodeId)
+            F-->>FS: img/<kebab-name>.svg
+        end
+    and Stream B — Generate code
+        S->>FS: add missing tokens to token file
+        S->>A: generate(template, tokens, mixins,<br/>variants, layer, styling_system)
+        note over A: adapter writes CSS + JS<br/>+ preview file
+        A-->>FS: component files written
+        S->>FS: register @import in main CSS
+        S->>S: run component-done checklist
+    end
+
+    opt EC4 — no icons detected
+        note over S: log note, continue
+    end
+
+    opt EC12 — child not in registry
+        note over S: create as local — non-blocking
+    end
+
+    opt Phase 3 — Visual verify
+        S->>A: visual_verify(component, figma_ref)
+        note over A: adapter-specific<br/>(SSIM / screenshot / etc.)
+        A-->>S: pass / fail + report
+    end
+
+    note over S: Phase 4 — Registry
+    S->>R: upsert(name, type, layer,<br/>path, figma_node_id, status)
+    R-->>S: written
+
+    note over S: Phase 5 — Code Connect
+    S->>FS: scan for primitive (*.figma.ts / *.figma.js)
+
+    alt EC13 — no primitive found
+        S-->>U: no CC pattern yet — pick a simple primitive<br/>(no children) to establish it
+        U-->>S: Figma URL for primitive
+        note over S: run inline primitive creation<br/>(Phases 1–4 + CC setup)
+        note over S: then resume here
+    end
+
+    S->>FS: read primitive → extract CC pattern
+    note over S: discovers format + template + publish cmd
+
+    S->>F: get_code_connect_map(nodeId, fileKey)
+    F-->>S: existing mappings (if any)
+
+    opt existing CC mapping
+        S-->>U: show old → new — replace?
+        U-->>S: confirmed
+    end
+
+    S->>FS: write <name>.figma.{ext}
+    S->>A: cc_publish(--dry-run)
+    A-->>S: validation ok
+    S->>A: cc_publish
+    A-->>S: published
+
+    S-->>U: done — files + registry + Code Connect
+
+    note over S,A: Tool Failure Pattern
+    note over S: critical tool fails → stop + structured report
+    note over S: non-critical tool fails → log, continue
