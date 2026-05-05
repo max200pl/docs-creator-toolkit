@@ -35,7 +35,12 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 Follow `create-component` Step 0 exactly, then additionally:
 
-5. Load agent memory:
+5. **Validate node type** — after parsing Figma URL, call `mcp__figma__get_design_context(nodeId, fileKey)`:
+   - If response indicates a **variant** (has `variantProperties`, or is a child of a component set) → stop immediately:
+     > "The provided node is a variant, not a component set. In Figma, right-click the parent ◆◆ component set in the layers panel → Copy link to selection. Provide that URL."
+   - Standalone component or component set → proceed
+
+6. Load agent memory:
    - Check if `.claude/agent-memory/sciter-create-component/` exists in the target project.
    - If the directory is absent or empty → create it and seed `feedback_ssim_typography.md` with this content:
      ```
