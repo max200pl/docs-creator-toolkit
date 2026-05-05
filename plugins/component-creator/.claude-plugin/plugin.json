@@ -1,7 +1,7 @@
 {
   "name": "component-creator",
   "description": "Create frontend components following project conventions detected by docs-creator. Reads reference-component-creation-template.md and generates components matching design system, naming rules, and framework idioms.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": {
     "name": "Maksym Poskannyi"
   },
@@ -9,6 +9,8 @@
   "repository": "https://github.com/max200pl/docs-creator-toolkit",
   "license": "MIT",
   "requires": {
-    "plugins": ["docs-creator"]
+    "plugins": [
+      "docs-creator"
+    ]
   }
 }
