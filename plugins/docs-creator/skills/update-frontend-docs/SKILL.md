@@ -26,7 +26,7 @@ If the project needs a FULL refresh, run `/analyze-frontend` (to regenerate the 
 | `<area>` | Re-invokes | Updates in JSON | Regenerates artefact |
 | ---- | ---- | ---- | ---- |
 | `design-system` | `design-system-scanner` | `frontend_roots[*].design_system` | `.claude/rules/frontend-design-system.md` |
-| `components` | `component-inventory` | `frontend_roots[*].component_inventory` | `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` + `component-registry.json` (create or merge-update) + `reference-component-registry.md` |
+| `components` | `component-inventory` | `frontend_roots[*].component_inventory` | `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` + `.claude/state/component-registry.json` (create or merge-update; no markdown mirror) |
 | `data-flow` | `data-flow-mapper` | `frontend_roots[*].data_flow` | `.claude/sequences/frontend-data-flow.mmd` |
 | `architecture` | `tech-stack-profiler` (Wave 1 refresh) + `architecture-analyzer` | `frontend_roots[*].tech_stack` + `.architecture` | `.claude/docs/reference-architecture-frontend.md` |
 | `framework-idioms` | `framework-idiom-extractor` | `frontend_roots[*].framework_idioms` | Section in `reference-component-creation-template.md` (triggers full template rewrite since idioms feed it) |
@@ -117,7 +117,7 @@ Write JSON back atomically (temp-write + rename).
 Based on `<area>`:
 
 - `design-system` → regenerate only `.claude/rules/frontend-design-system.md` from `design_system` + new frontmatter `paths:` scoping; include `token_file:` and `typography_file:` in frontmatter (values from `design_system.token_file` and `design_system.typography_file` in JSON, or `"none"` if absent)
-- `components` → regenerate `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` from `component_inventory`; prepend `naming_conventions:` frontmatter block to `reference-component-inventory.md` with fields `component_file`, `css_file`, `class_name`, `directory` from `component_inventory.naming_conventions` in JSON; **also always write `component-registry.json` + `reference-component-registry.md`**: if file already exists — merge (preserve records with `figma_node_id` set, overwrite `status: "unverified"` records); if file does NOT exist — create it fresh (same logic as `/create-frontend-docs`)
+- `components` → regenerate `.claude/rules/frontend-components.md` + `.claude/docs/reference-component-inventory.md` from `component_inventory`; prepend `naming_conventions:` frontmatter block to `reference-component-inventory.md`; **also always write `.claude/state/component-registry.json`** (no markdown mirror): merge if exists (preserve `figma_node_id` records, overwrite `status: "unverified"`); create fresh if not exists
 - `data-flow` → regenerate `.claude/sequences/frontend-data-flow.mmd` from `data_flow.primary_flow_mermaid`
 - `architecture` → regenerate `.claude/docs/reference-architecture-frontend.md` from `tech_stack` + `architecture`; ALSO regenerate `reference-component-creation-template.md` (because styling_model / class_naming in Stack section changed)
 - `framework-idioms` → regenerate `reference-component-creation-template.md` (framework idioms are one of its sections)

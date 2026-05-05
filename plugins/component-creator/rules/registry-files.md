@@ -6,26 +6,21 @@ description: "Two registry files exist — one is the source of truth (JSON), on
 
 ## Rule
 
-Two files exist for the component registry. They serve different purposes and must never be confused.
+One source of truth: `.claude/state/component-registry.json`.
 
-| File | Role | Written by | Read by |
-| ---- | ---- | ---- | ---- |
-| `.claude/state/component-registry.json` | **Source of truth** — machine-readable, all queries and writes go here | Skills (Phase 4) | Skills, validate-registry, sync-registry |
-| `.claude/docs/reference-component-registry.md` | **Read-only view** — human-readable markdown table generated from the JSON | `create-frontend-docs`, `update-frontend-docs` only | Humans |
+There is no markdown mirror. `reference-component-registry.md` was removed — maintaining two sources causes drift and confusion.
 
 ## What Skills Must Do
 
-- **Read:** always load `component-registry.json` for reuse checks, registry lookups, and writes
-- **Write:** always write to `component-registry.json` — never to `reference-component-registry.md`
-- **Never** use `reference-component-registry.md` as a template for new entries — use `rules/registry-schema.md`
+- **Read:** load `.claude/state/component-registry.json` for all reuse checks and lookups
+- **Write:** write only to `.claude/state/component-registry.json` — follow `rules/registry-schema.md`
+- **Never** read any markdown file as a registry template
 
-## Why
+## Git
 
-`reference-component-registry.md` is generated from `component-registry.json` and may be stale. Skills that write to the markdown instead of the JSON will:
-1. Create entries that are invisible to `validate-registry` and `sync-registry`
-2. Produce data that will be overwritten on the next `update-frontend-docs` run
-3. Cause silent data loss
+`component-registry.json` must be committed to git — it is the only persistent link between code components and Figma nodes. Add to project `.gitignore`:
+```
+!.claude/state/component-registry.json
+```
 
-## Enforcement
-
-`/sleep` checks that no skill writes to `reference-component-registry.md` directly. Any `Write` or `Edit` on that path outside of `create-frontend-docs` / `update-frontend-docs` is flagged as a violation.
+Without this, Figma connections (`figma_node_id`, `figma_connected: true`) are lost every time `/analyze-frontend` reruns.

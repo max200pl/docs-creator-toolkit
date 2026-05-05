@@ -43,8 +43,7 @@ All artefacts land in the target project's `.claude/` and the root `CLAUDE.md`. 
 
 **Registry:**
 
-- `.claude/state/component-registry.json` — machine-readable component registry seeded from `component_inventory` data; schema below
-- `.claude/docs/reference-component-registry.md` — markdown table generated from the registry JSON (human-readable view)
+- `.claude/state/component-registry.json` — component registry; single source of truth; must be committed to git (add `!.claude/state/component-registry.json` to project `.gitignore` exceptions)
 
 **Operational:**
 
@@ -222,10 +221,11 @@ Read `component_inventory.components` list from `frontend-analysis.json`. For ea
 - `type: "local"` — component lives inside another component's directory (child/nested)
 
 **Output files:**
-1. Write `.claude/state/component-registry.json` as a JSON array of all records
-2. Generate `.claude/docs/reference-component-registry.md` — markdown table with columns: `Name`, `Type`, `Layer`, `Path`, `Figma Connected`, `Status`
+1. Write `.claude/state/component-registry.json` — single source of truth, no markdown mirror.
 
-If `component-registry.json` already exists — merge: preserve existing records that have `figma_node_id` set; overwrite records that are `status: "unverified"` with fresh data from analysis. Never delete records with `figma_connected: true`.
+Merge logic if file already exists: preserve records with `figma_node_id` set; overwrite `status: "unverified"` records with fresh data. Never delete records with `figma_connected: true`.
+
+Also ensure project `.gitignore` has exception: `!.claude/state/component-registry.json` (registry must be version-controlled to preserve Figma connections across sessions).
 
 ### Phase: Update root CLAUDE.md Architecture section
 
