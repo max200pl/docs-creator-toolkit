@@ -22,23 +22,44 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 ## Execution
 
-**First — show the full plan.** Call TodoWrite with all items as `pending` before doing any work:
+### Step 0 — Pre-flight (MANDATORY — do not skip any sub-step)
 
+**0.1 TodoWrite** — call FIRST, before any reads or Figma calls:
 ```
-☐ Step 0   — Pre-flight (docs + Figma token + variant hard-block)
-☐ Phase 0.5 — Variant analysis + implementation plan (user confirms)
-☐ Phase 1  — Context: Figma design + Reuse check + Token/typography sync
-☐ Phase 1.5 — Decompose (if composite component)
-☐ Phase 2A — Download assets (SVG icons)
-☐ Phase 2B — Generate code (CSS + JS + preview + @import)
-☐ Phase 3  — Visual verify (adapter)
-☐ Phase 4  — Registry upsert (rules/registry-schema.md)
-☐ Phase 5  — Code Connect
+☐ Step 0    — Pre-flight
+☐ Phase 0.5 — Variant analysis + plan (user confirms)
+☐ Phase 1   — Context: Figma + Reuse + Token/typography sync
+☐ Phase 1.5 — Decompose (if composite)
+☐ Phase 2A  — Download assets
+☐ Phase 2B  — Generate code
+☐ Phase 3   — Visual verify
+☐ Phase 4   — Registry upsert
+☐ Phase 5   — Code Connect
 ```
 
-Mark each item `in_progress` before starting, `completed` immediately after finishing.
+**0.2 Read docs** (parallel): `reference-component-creation-template.md`, `component-registry.json`, `frontend-analysis.json`, `frontend-design-system.md`.
 
-**Then — follow `sequences/create-component.mmd` exactly.**
+**0.3 Figma token** — `mcp__figma__whoami`. On 401 → stop (EC5).
+
+**0.4 Parse URL** — extract `fileKey` + `nodeId` (convert `-` → `:` in node-id).
+
+**0.5 EC2 check** — if directory `<name>/` exists (even empty) and no registry entry → prompt: overwrite / register as-is / cancel.
+
+**0.6 Variant hard-block** ⚠️ — call `mcp__figma__get_code_connect_suggestions(nodeId, fileKey)`:
+- If `mainComponentNodeId ≠ nodeId` → **STOP. Do NOT continue**:
+  > "Provided node is a **variant** (◆), not a component set (◆◆).
+  > Right-click the parent component set in Figma → Copy link to selection. Paste new URL:"
+- Wait for user. Re-parse. Repeat until `mainComponentNodeId == nodeId`.
+
+---
+
+### Phase 0.5 — Variant Analysis and Plan (MANDATORY — do not start Phase 1 without user confirmation)
+
+1. `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` → all variant combinations
+2. Check registry for component name or `figma_node_id`
+3. Show plan with checkboxes, wait for explicit user confirmation before Phase 1.
+
+---
 
 ## Adapter Hooks
 
