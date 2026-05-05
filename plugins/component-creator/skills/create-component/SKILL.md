@@ -22,6 +22,13 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 ## Execution
 
+### ⚙ Version check — print before anything else
+
+Output this line immediately when the skill starts, before any tool calls:
+```
+[component-creator v0.0.4 | create-component]
+```
+
 ### Step 0 — Pre-flight (MANDATORY — do not skip any sub-step)
 
 **0.1 TodoWrite** — call FIRST, before any reads or Figma calls:
