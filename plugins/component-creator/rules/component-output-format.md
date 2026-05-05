@@ -72,6 +72,7 @@ Write after Phase 4 completes. `figma_connected` updated to `true` after Phase 5
   "figma_connected": false,
   "uses": [],
   "parent": null,
+  "variants": [],
   "created_at": "<ISO-UTC>",
   "last_verified_at": null,
   "last_figma_sync_at": null,
@@ -80,6 +81,10 @@ Write after Phase 4 completes. `figma_connected` updated to `true` after Phase 5
   "status": "in-progress"
 }
 ```
+
+**`variants`** — list of variant identifiers built (e.g. `["prim", "sec", "with-icon"]`). Populated when a component has multiple visual variants. Empty `[]` for single-variant components.
+
+**`ssim_score`** — single best SSIM score for the primary variant. Do NOT add per-variant SSIM fields (e.g. `sec_icon_ssim`) — those are not part of the schema. If a variant has a known rendering ceiling (SVG icons, border-radius), document it in agent memory instead.
 
 **`type` classification:**
 

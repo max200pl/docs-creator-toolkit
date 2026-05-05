@@ -24,6 +24,13 @@ sequenceDiagram
         S-->>U: stop — fix FIGMA_ACCESS_TOKEN
     end
 
+    S->>FS: check if <name>/ directory exists (even if empty)
+
+    opt EC2 — directory exists, name not in registry
+        S-->>U: dir exists but not in registry<br/>overwrite / register as-is / cancel?
+        U-->>S: choice
+    end
+
     S->>F: get_code_connect_suggestions(nodeId, fileKey)
     F-->>S: mainComponentNodeId (if variant)
 

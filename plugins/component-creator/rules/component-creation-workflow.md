@@ -188,7 +188,7 @@ FAILED: <phase> — <tool>
 
 | Code | Trigger | Action |
 | ---- | ---- | ---- |
-| EC2 | Files on disk, name not in registry | Prompt: overwrite existing / register as-is / cancel |
+| EC2 | Directory `<name>/` exists (even if empty) OR files on disk, name not in registry | Prompt: overwrite existing / register as-is / cancel |
 | EC3b | Figma variable name ≠ local token name (same value) | Show conflict table; user picks canonical name; update token file if Figma wins |
 | EC4 | No icon nodes detected in Figma | Log note "no icons — img/ not created", continue |
 | EC5 | Figma `whoami` returns 401 | Stop — display: "Fix FIGMA_ACCESS_TOKEN in .env or shell environment" |

@@ -49,6 +49,10 @@ sequenceDiagram
 
     note over S: Phase 3 — adapter.visual_verify() expansion
 
+    note over S: resolve adaptive SSIM threshold
+    S->>Mem: scan feedback_*.md for pattern matching component traits<br/>(has SVG icons? has border-radius?)
+    Mem-->>S: matched ceiling (e.g. 0.92) or default 0.95
+
     S->>FS: tools/fetch-figma-screenshot.sh <fileKey> <nodeId> /tmp/figma-<name>.png
     FS-->>S: PNG at 2x scale, absolute bounds
     S->>FS: copy → tools/ScreenshotHistory/{ts}_figma_{name}.png
@@ -59,9 +63,9 @@ sequenceDiagram
         note over Preview: window stays open — Space toggles Figma overlay
         Preview-->>S: SSIM score + /tmp/component-compare.png + /tmp/component-diff.png
 
-        alt SSIM >= 0.95
+        alt SSIM >= threshold (0.92–0.95 from memory)
             note over S: PASS — exit loop
-        else SSIM < 0.95
+        else SSIM < threshold
             S-->>U: show diff + score + region description
             U-->>S: explanation of discrepancy
             S->>FS: apply targeted CSS/JS fix

@@ -65,10 +65,15 @@ Mark each item `in_progress` before starting, `completed` immediately after fini
 
 ### adapter.visual_verify() — SSIM
 
+**Resolve adaptive threshold before running:**
+Scan agent memory `feedback_*.md` for patterns matching this component:
+- Has SVG icons + border-radius → use threshold `0.92` (known rendering ceiling)
+- Default → `0.95`
+
 1. `tools/fetch-figma-screenshot.sh <fileKey> <nodeId> /tmp/figma-<name>.png`
    → copy to `tools/ScreenshotHistory/{ts}_figma_{name}.png`
 2. Loop max 3: `tools/preview-component.sh <preview.js> <Name> <width> /tmp/figma-<name>.png`
-   → SSIM >= 0.95 = PASS; < 0.95 = show diff, fix, retry
+   → SSIM >= threshold = PASS; < threshold = show diff, fix, retry
 3. PASS → copy preview screenshot → `tools/ScreenshotHistory/{ts}_code_{name}.png`
 4. Fix applied → write `.claude/agent-memory/sciter-create-component/feedback_ssim_<topic>.md`
 5. 3 failures → EC14 escalation (see `sequences/sciter-create-component.mmd`)
