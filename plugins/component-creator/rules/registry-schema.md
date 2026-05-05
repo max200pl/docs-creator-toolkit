@@ -21,12 +21,12 @@ description: "Strict field allowlist for component-registry.json. Any field not 
 | `figma_connected` | boolean | Phase 5 | `true` after Code Connect published |
 | `uses` | string[] | Phase 4 | Names of primitive components this component uses |
 | `parent` | string \| null | Phase 4 | Parent component name for `type: local` entries |
-| `variants` | string[] | Phase 4 | Built variant identifiers (e.g. `["prim", "sec"]`). `[]` for single-variant |
+| `variants` | string[] | Phase 4 | Built variant type identifiers (e.g. `["prim", "sec", "with-icon"]`). `[]` for single-variant |
 | `created_at` | ISO-UTC string | Phase 4 | Creation timestamp |
 | `last_verified_at` | ISO-UTC string \| null | Phase 3 | Last SSIM verification timestamp |
 | `last_figma_sync_at` | ISO-UTC string \| null | Phase 5 | Last Code Connect sync timestamp |
 | `figma_last_modified` | ISO-UTC string \| null | sync-registry | Figma's own last-modified timestamp for the node |
-| `ssim_score` | number \| null | Phase 3 | Best SSIM score for the primary variant |
+| `ssim_score` | number \| null | Phase 3 | **Minimum** SSIM score across all verified variants. For component sets with parallel SSIM runs (sec/default + prim/default + with-icon/default), store `min(all scores)`. If min passes threshold → all variants pass. If min fails → `status: needs-review`. |
 | `status` | `"in-progress" \| "done" \| "stale" \| "needs-review" \| "unverified"` | Phase 4/5 | Lifecycle state |
 
 ## Forbidden
