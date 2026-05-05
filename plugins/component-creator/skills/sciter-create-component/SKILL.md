@@ -162,6 +162,19 @@ Apply to: all components with <pattern>
 
 Load all memory files at Step 0. Apply matching fixes proactively in Phase 2 without waiting for SSIM failure.
 
+## EC13 — Inline Primitive Onboarding (Sciter)
+
+Same as `create-component` EC13, but the inline primitive creation flow uses Sciter rules:
+- Phase 2: Sciter CSS/JS generation (dip, flow:, @mixin, __DIR__)
+- Phase 3: SSIM 0.95 gate via `preview-component.sh` (same as regular Sciter flow)
+
+Show the user:
+> "No Code Connect pattern found yet — let's set it up first (one-time step).
+> Pick a **simple Sciter primitive** — something without child components (Button, Icon, Badge).
+> Paste its Figma URL (component set ◆◆, not a variant ◆):"
+
+After primitive created with SSIM PASS → return to original component Phase 5, continue from step 2.
+
 ## What This Skill Does NOT Do
 
 - Override Phase 0, 1, 1.5, 4, 5 from `create-component` — delegate unchanged

@@ -102,7 +102,7 @@ Set `status: "in-progress"`. `figma_connected` stays `false` until Phase 5.
 ### Phase 5 — Code Connect
 
 1. Scan project for primitive (`*.figma.ts`, `*.figma.js`, or equivalent)
-   - **EC13** — not found: stop → "Run `/create-primitive` first to establish Code Connect pattern"
+   - **EC13** — not found: run inline onboarding (see below), then return here
 2. Read primitive → extract: format, template, publish command
 3. `mcp__figma__get_code_connect_map(nodeId, fileKey)` — check existing mapping; prompt if found
 4. Write `<name>.figma.{ext}` following primitive pattern
@@ -128,9 +128,32 @@ Mark all TodoWrite tasks `completed`. Report:
   Duration: <Ns>
 ```
 
+## EC13 — Inline Primitive Onboarding
+
+Triggered when Phase 5 finds no `*.figma.ts` / `*.figma.js` in the project. No Code Connect pattern exists yet.
+
+Show the user:
+> "No Code Connect pattern found yet — let's set it up first (one-time step).
+> Pick a **simple primitive** component from your Figma file — something without child components (Button, Icon, Badge, Tag).
+> Paste its Figma URL (component set ◆◆, not a variant ◆):"
+
+Then run a **simplified creation flow** for that primitive:
+1. Step 0: validate node type (variant check) + parse Figma URL
+2. Phase 1: design context (no reuse check)
+3. Phase 2: generate files using adapter rules (generic or Sciter)
+4. Phase 3: visual verify (adapter-specific, same as regular flow)
+5. Phase 4: registry upsert with `type: "primitive"`
+6. **Phase 5 — establish CC pattern** (unique to first-time setup):
+   - Scan for existing `*.figma.ts` / `*.figma.js`:
+     - Found → ask: "Use same format (`<ext>`)?"
+     - Not found → prompt: "1. `.figma.ts`  2. `.figma.js`  3. Custom"
+   - Create `<name>.figma.{ext}`, validate dry-run, publish
+   - Registry: `figma_connected: true`, `status: "done"`
+
+After primitive is created → return to the original component's Phase 5 and continue from step 2 (read primitive → extract pattern).
+
 ## What This Skill Does NOT Do
 
 - Implement adapter-specific tooling (SSIM, preview, dip units, `@mixin`) — that's the adapter's SKILL.md
-- Create primitives inline — run `/create-primitive` first (EC13)
 - Overwrite hand-edited files without confirmation
 - Touch project source code outside `<layer>/<slice-name>/`

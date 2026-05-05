@@ -191,4 +191,4 @@ FAILED: <phase> — <tool>
 | EC10 | `component-registry.json` is malformed JSON | Stop — display: "Run: `jq . .claude/state/component-registry.json` to diagnose" |
 | EC11 | `get_variable_defs` returns no variables | Prompt: proceed with empty token list / cancel |
 | EC12 | Child component referenced in decompose not in registry | Create child as `type: local` in `ui/` subdirectory — non-blocking |
-| EC13 | No primitive found in project | Stop Phase 5 — prompt: "Run `/create-primitive` to establish Code Connect pattern, then continue" |
+| EC13 | No primitive found in project | Onboarding prompt — ask user to pick a simple primitive (no children); create it inline with CC pattern setup; then continue with the original component |
