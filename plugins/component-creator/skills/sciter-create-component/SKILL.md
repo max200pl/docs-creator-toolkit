@@ -26,7 +26,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 Output this line immediately when the skill starts, before any tool calls:
 ```
-[component-creator v0.0.4 | sciter-create-component]
+[component-creator v0.0.6 | sciter-create-component]
 ```
 
 ### Step 0 — Pre-flight (MANDATORY — do not skip any sub-step)
@@ -181,13 +181,19 @@ Scan agent memory `feedback_*.md` for patterns matching this component:
 
 ## Phase 4 — Registry (MANDATORY)
 
-Write to **`.claude/state/component-registry.json`** — the JSON file. Never write to `.claude/docs/reference-component-registry.md` or any markdown file.
+Write to **`.claude/state/component-registry.json`** — the JSON file.
 
-Follow `rules/registry-schema.md` strictly — allowed fields only. Set:
-- `figma_node_id`: component set nodeId (e.g. `314:4129`)
-- `variants`: all implemented types (e.g. `["sec", "prim", "with-icon"]`)
-- `ssim_score`: min across all 3 SSIM runs
-- `status`: `"done"` after Phase 5 Code Connect published
+⛔ NEVER write to `.claude/docs/reference-component-registry.md` — that is a read-only generated markdown view, not the source of truth.
+
+Follow `rules/registry-schema.md` strictly. Before writing, validate the new entry:
+- All keys must be in the allowed list from `registry-schema.md`
+- `path` must be the `.js` file, not a directory
+- `figma_node_id` must be the **component set** nodeId (captured in Phase 0.5), not a variant nodeId
+- `variants`: all implemented type names (e.g. `["sec", "prim", "with-icon"]`)
+- `ssim_score`: minimum score across all parallel SSIM runs
+- `status`: `"in-progress"` at Phase 4; updated to `"done"` after Phase 5
+
+If any field violates the schema → stop and show `REGISTRY SCHEMA VIOLATION: <field>` before writing.
 
 ## Agent Memory
 

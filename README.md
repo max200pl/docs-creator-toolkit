@@ -7,7 +7,7 @@ Claude Code plugin collection — `.claude/` documentation authoring + Figma-to-
 | Plugin | What it does | Status |
 | ---- | ---- | ---- |
 | `docs-creator` | Generates and maintains `.claude/` documentation for any project — architecture, design system, component conventions, data flow, API contracts | stable `v0.15.0` |
-| `component-creator` | Creates UI components from Figma designs with visual verification, Code Connect integration, and component registry management | beta `v0.0.4` |
+| `component-creator` | Creates UI components from Figma designs with visual verification, Code Connect integration, and component registry management | beta `v0.0.6` |
 
 ## Installation
 

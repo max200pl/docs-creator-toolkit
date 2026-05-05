@@ -26,7 +26,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 Output this line immediately when the skill starts, before any tool calls:
 ```
-[component-creator v0.0.4 | create-component]
+[component-creator v0.0.6 | create-component]
 ```
 
 ### Step 0 — Pre-flight (MANDATORY — do not skip any sub-step)
