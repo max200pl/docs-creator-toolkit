@@ -76,16 +76,17 @@ Read the `mainComponentNodeId` field from the response.
 
 ### Phase 0.5 — Variant Analysis and Plan (MANDATORY — do not start Phase 1 without user confirmation)
 
-1. `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` → all variant property combinations
-2. For each variant: note what differs (colors, layout, states)
-3. Check registry for component name or `figma_node_id`
-4. Show plan:
+1. `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` → all variant property combinations + **each variant's own nodeId**
+2. Record each default-state variant's nodeId for SSIM (e.g. sec/default=314:4128, prim/default=314:4127, with-icon/default=314:4149)
+3. For each variant: note what differs (colors, layout, states)
+4. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
+5. Show plan:
 
 ```
 Component Set: <name> (N variants)
 
-☑ <prop> / default  — <description>
-☑ <prop> / hover    — ...
+☑ <type> / default  — nodeId: <id> — <description>
+☑ <type> / hover    — (CSS :hover)
 ☐ disabled          — (uncheck if not needed)
 
 Existing in registry: <none | partial match>
@@ -94,7 +95,7 @@ Suggested layer: <widgets | shared/ui>
 Confirm variant selection →
 ```
 
-5. **Wait for explicit user confirmation before Phase 1.**
+6. **Wait for explicit user confirmation before Phase 1.**
 
 ---
 
@@ -145,19 +146,15 @@ SSIM — runs only for **default state of each type**, in parallel.
    // (hover/disabled states inspected manually via Space overlay)
    ```
 
-2. SSIM — 3 parallel runs, one per type's default variant node:
+2. SSIM — 3 parallel runs, one per type using the **variant's own nodeId** (NOT the component set nodeId):
    ```bash
-   # Run all 3 in parallel — each opens its own preview window
-   tools/fetch-figma-screenshot.sh <fileKey> <sec_node_id>       /tmp/figma-sec.png
-   tools/fetch-figma-screenshot.sh <fileKey> <prim_node_id>      /tmp/figma-prim.png
-   tools/fetch-figma-screenshot.sh <fileKey> <with-icon_node_id> /tmp/figma-icon.png
-
-   tools/preview-component.sh res/.../button.preview.js Button <width> /tmp/figma-sec.png
-   tools/preview-component.sh res/.../button.preview.js Button <width> /tmp/figma-prim.png
-   tools/preview-component.sh res/.../button.preview.js Button <width> /tmp/figma-icon.png
+   # Use variant nodeIds from Phase 0.5 — NOT the component set nodeId
+   tools/fetch-figma-screenshot.sh <fileKey> <sec_DEFAULT_nodeId>       /tmp/figma-sec.png
+   tools/fetch-figma-screenshot.sh <fileKey> <prim_DEFAULT_nodeId>      /tmp/figma-prim.png
+   tools/fetch-figma-screenshot.sh <fileKey> <with-icon_DEFAULT_nodeId> /tmp/figma-icon.png
    ```
-   Each run opens its own window. All 3 SSIM scores must meet threshold.
-   Use a single-variant preview.js per run (not the full grid preview).
+   ⚠️ Component set screenshot = ALL variants grid = WRONG for SSIM. Always use the specific variant nodeId.
+   Each run opens its own window. Create a single-variant preview.js per run.
 
 3. ScreenshotHistory — save `_code_` and `_figma_` for each verified type.
 
@@ -181,6 +178,16 @@ Scan agent memory `feedback_*.md` for patterns matching this component:
 3. PASS → copy preview screenshot → `tools/ScreenshotHistory/{ts}_code_{name}.png`
 4. Fix applied → write `.claude/agent-memory/sciter-create-component/feedback_ssim_<topic>.md`
 5. 3 failures → EC14 escalation (see `sequences/sciter-create-component.mmd`)
+
+## Phase 4 — Registry (MANDATORY)
+
+Write to **`.claude/state/component-registry.json`** — the JSON file. Never write to `.claude/docs/reference-component-registry.md` or any markdown file.
+
+Follow `rules/registry-schema.md` strictly — allowed fields only. Set:
+- `figma_node_id`: component set nodeId (e.g. `314:4129`)
+- `variants`: all implemented types (e.g. `["sec", "prim", "with-icon"]`)
+- `ssim_score`: min across all 3 SSIM runs
+- `status`: `"done"` after Phase 5 Code Connect published
 
 ## Agent Memory
 
