@@ -46,6 +46,12 @@ Output this line immediately when the skill starts, before any tool calls:
 
 **0.2 Read docs** (parallel): `reference-component-creation-template.md`, `component-registry.json`, `frontend-analysis.json` (extract `naming_conventions` + `styling_system`), `frontend-design-system.md` (extract `token_file` + `typography_file`).
 
+**Do NOT read any existing component files (JS/CSS/figma.ts) or individual registry entries as templates or code patterns.** Use only:
+- `reference-component-creation-template.md` → code conventions
+- `rules/registry-schema.md` → registry entry format
+- `rules/component-output-format.md` → naming, file layout
+Existing components (ButtonFeedback, etc.) are read ONLY in Phase 5 to discover Code Connect format from the primitive's `.figma.ts` file.
+
 **0.3 Agent memory** — check `.claude/agent-memory/sciter-create-component/`. If empty → seed `feedback_ssim_typography.md` (see § Agent Memory below).
 
 **0.4 Figma token** — `mcp__figma__whoami`. On 401 → stop (EC5).

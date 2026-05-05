@@ -46,6 +46,11 @@ Output this line immediately when the skill starts, before any tool calls:
 
 **0.2 Read docs** (parallel): `reference-component-creation-template.md`, `component-registry.json`, `frontend-analysis.json`, `frontend-design-system.md`.
 
+**Do NOT read existing component files (JS/CSS/figma.ts) or individual registry entries as templates.** Use only:
+- `reference-component-creation-template.md` → code conventions
+- `rules/registry-schema.md` → registry entry format
+Existing components are read ONLY in Phase 5 to discover Code Connect format from the primitive's `.figma.ts`.
+
 **0.3 Figma token** — `mcp__figma__whoami`. On 401 → stop (EC5).
 
 **0.4 Parse URL** — extract `fileKey` + `nodeId` (convert `-` → `:` in node-id).
