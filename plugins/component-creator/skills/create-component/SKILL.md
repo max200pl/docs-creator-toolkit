@@ -11,6 +11,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 > **Execution flow:** `sequences/create-component.mmd` — source of truth for all steps and branches
 > **Workflow rules:** `rules/component-creation-workflow.md` — preconditions, EC table, Tool Failure Pattern
 > **Output format:** `rules/component-output-format.md` — naming, file layout, registry schema, checklist
+> **Registry schema:** `rules/registry-schema.md` — strict field allowlist; validate before every Phase 4 write
 
 ## Usage
 

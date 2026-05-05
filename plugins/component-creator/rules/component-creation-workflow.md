@@ -77,6 +77,8 @@ Call `adapter.visual_verify(component, figma_ref)`. Implementation is fully adap
 
 ### Phase 4 — Registry
 
+> Schema enforcement: `rules/registry-schema.md` — only allowed fields may be written. Validate keys before writing.
+
 Upsert registry entry:
 
 ```json

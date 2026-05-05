@@ -11,6 +11,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 > **Execution flow:** `sequences/sciter-create-component.mmd` (Sciter delta) + `sequences/create-component.mmd` (generic base)
 > **Workflow rules:** `rules/component-creation-workflow.md`
 > **Output format:** `rules/component-output-format.md` (Sciter CSS overrides below take precedence)
+> **Registry schema:** `rules/registry-schema.md` — strict field allowlist; validate before every Phase 4 write
 
 ## Usage
 
