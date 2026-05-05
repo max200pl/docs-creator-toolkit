@@ -38,6 +38,18 @@ Mark each item `in_progress` before starting, `completed` immediately after fini
 
 **Then — follow `sequences/create-component.mmd` exactly.**
 
+## What to Read and When
+
+| File | Read at | Purpose |
+| ---- | ---- | ---- |
+| `reference-component-creation-template.md` | Step 0 | **Primary** code pattern — file structure, conventions, examples |
+| `frontend-analysis.json` | Step 0 | `naming_conventions`, `styling_system` |
+| `frontend-design-system.md` | Step 0 | `token_file`, `typography_file` paths |
+| `component-registry.json` | Phase 1 Agent 2 | Reuse check only |
+| Existing component files | **Phase 5 only** | Code Connect format discovery from primitive |
+
+**Never read an existing component as a code generation reference.** Existing components may have workarounds, outdated patterns, or project-specific quirks. `reference-component-creation-template.md` is the canonical source for how new components should be written.
+
 ## Adapter Hooks
 
 Generic skill calls these hooks — adapter SKILL.md implements them:

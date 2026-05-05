@@ -38,6 +38,18 @@ Mark each item `in_progress` before starting, `completed` immediately after fini
 
 **Then — follow `sequences/sciter-create-component.mmd` for Sciter overrides, `sequences/create-component.mmd` for everything else.**
 
+## What to Read and When
+
+| File | Read at | Purpose |
+| ---- | ---- | ---- |
+| `reference-component-creation-template.md` | Step 0 | **Primary** code pattern — file structure, Sciter conventions |
+| `frontend-analysis.json` | Step 0 | `naming_conventions`, `styling_system` |
+| `frontend-design-system.md` | Step 0 | `token_file`, `typography_file` paths |
+| `component-registry.json` | Phase 1 Agent 2 | Reuse check only |
+| Existing component files | **Phase 5 only** | Code Connect format from primitive |
+
+**Never read an existing component (e.g. `button-feedback`) as a code generation reference.** Use `reference-component-creation-template.md` as the canonical pattern. Existing components are read only in Phase 5 to discover Code Connect format.
+
 ## Sciter Adapter Overrides
 
 ### adapter.generate() — CSS rules
