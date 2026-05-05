@@ -27,10 +27,39 @@ Execution follows `sequences/create-component.mmd`. Each phase summary below —
 
 ### Step 0 — Pre-flight
 
-1. `TodoWrite` — initialize all ~15 task items as `pending`. Mark each `in_progress` BEFORE starting, `completed` IMMEDIATELY after finishing. Only one task `in_progress` at a time.
+1. `TodoWrite` — initialize all task items as `pending`. Mark each `in_progress` BEFORE starting, `completed` IMMEDIATELY after finishing. Only one task `in_progress` at a time.
 2. Read: `component-creation-template.md`, `component-registry.json`, `frontend-analysis.json`.
 3. Extract `naming_conventions` + `styling_system` from analysis JSON.
 4. Call Figma `whoami` — abort on 401 (EC5).
+5. Check if `<name>/` directory exists (even if empty) → EC2 if found without registry entry.
+6. Call `get_code_connect_suggestions(nodeId, fileKey)`:
+   - If `mainComponentNodeId ≠ nodeId` → **HARD STOP** — provided node is a variant, not a component set:
+     > "This is a variant node (◆), not a component set (◆◆). Please right-click the parent component set in Figma layers panel → Copy link to selection and provide that URL."
+   - Wait for user to provide parent URL. Re-parse `fileKey` + `nodeId`. Continue.
+
+### Phase 0.5 — Variant Analysis and Plan
+
+Runs after Step 0, before Phase 1. Purpose: understand what exists and build a creation plan the user confirms before any code is written.
+
+1. `get_design_context(nodeId, disableCodeConnect: true)` → get all N variants with their property combinations (e.g. `type=prim|sec`, `state=default|hover|disabled|with-icon`)
+2. For each variant: identify what makes it different — unique layout, colors, tokens, states
+3. Check registry for the component name → surface EXACT / PARTIAL match if found
+4. Show the user a structured plan:
+   ```
+   Component Set: <name> (N variants found)
+
+   ☑ prim / default  — primary solid button, blue bg
+   ☑ prim / hover    — lighter blue bg
+   ☑ sec / default   — outline, blue border, white bg
+   ☑ sec / hover     — ...
+   ☐ disabled        — (uncheck if not needed)
+
+   Existing in registry: <none | Button (partial match — prim only)>
+   Layer: <suggested FSD layer>
+
+   Confirm to proceed with implementation →
+   ```
+5. Wait for user to confirm variant selection and layer choice before Phase 1.
 
 ### Phase 1 — Context gathering (3 parallel agents)
 

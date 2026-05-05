@@ -16,14 +16,15 @@ sequenceDiagram
     note over S: Step 0 additions
 
     S->>F: get_code_connect_suggestions(nodeId, fileKey)
-    F-->>S: mainComponentNodeId (if variant)
+    F-->>S: mainComponentNodeId
 
-    alt variant detected
-        S->>F: get_design_context(mainComponentNodeId, disableCodeConnect)
-        F-->>S: all variant properties + count
-        S-->>U: show all variants — which to implement?
-        U-->>S: selected variants
+    alt nodeId is a variant (mainComponentNodeId ≠ nodeId)
+        S-->>U: STOP — variant node detected (◆)<br/>Provide the parent ◆◆ component set URL
+        U-->>S: parent URL
+        S->>S: re-parse fileKey + nodeId
     end
+
+    note over S: Phase 0.5 — Variant Analysis and Plan (see create-component.mmd)
 
     S->>Mem: read .claude/agent-memory/sciter-create-component/feedback_*.md
     Mem-->>S: known fixes (typography, icon centering, layout tips)

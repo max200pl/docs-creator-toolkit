@@ -25,13 +25,14 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 **First — show the full plan.** Call TodoWrite with all items as `pending` before doing any work:
 
 ```
-☐ Step 0   — Pre-flight (docs + Figma token + variant check)
+☐ Step 0   — Pre-flight (docs + Figma token + variant hard-block)
+☐ Phase 0.5 — Variant analysis + implementation plan (user confirms)
 ☐ Phase 1  — Context: Figma design + Reuse check + Token/typography sync
 ☐ Phase 1.5 — Decompose (if composite component)
 ☐ Phase 2A — Download assets (SVG icons)
 ☐ Phase 2B — Generate code (CSS + JS + preview + @import)
 ☐ Phase 3  — Visual verify (adapter)
-☐ Phase 4  — Registry upsert
+☐ Phase 4  — Registry upsert (rules/registry-schema.md)
 ☐ Phase 5  — Code Connect
 ```
 

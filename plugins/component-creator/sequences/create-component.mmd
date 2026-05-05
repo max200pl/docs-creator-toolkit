@@ -32,15 +32,25 @@ sequenceDiagram
     end
 
     S->>F: get_code_connect_suggestions(nodeId, fileKey)
-    F-->>S: mainComponentNodeId (if variant)
+    F-->>S: mainComponentNodeId
 
-    alt variant detected (mainComponentNodeId ≠ nodeId)
-        S->>F: get_design_context(mainComponentNodeId, disableCodeConnect)
-        F-->>S: all variant properties + count
-        S-->>U: show all variants — which to implement?
-        U-->>S: selected variants
-        note over S: use mainComponentNodeId<br/>as working node
+    alt nodeId is a variant (mainComponentNodeId ≠ nodeId)
+        S-->>U: STOP — this is a variant node, not a component set<br/>Please provide the parent ◆◆ component set URL
+        U-->>S: parent component set URL
+        S->>S: parse new fileKey + nodeId from parent URL
     end
+
+    note over S: Phase 0.5 — Variant Analysis and Plan
+
+    S->>F: get_design_context(nodeId, disableCodeConnect)
+    F-->>S: all N variants with properties<br/>(e.g. type=prim|sec, state=default|hover|disabled)
+
+    note over S: for each variant — lightweight analysis<br/>(layout differences, unique tokens, typography)
+
+    S-->>U: show implementation plan
+    note over U: "Component Set: <name> (N variants)<br/>☑ prim / default — ...<br/>☑ prim / hover — ...<br/>☑ sec / default — ...<br/>Uncheck variants you don't need. Confirm to proceed."
+
+    U-->>S: selected variants confirmed
 
     note over S: Phase 1 — Context (3 parallel)
 
