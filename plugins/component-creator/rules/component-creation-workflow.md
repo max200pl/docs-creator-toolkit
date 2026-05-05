@@ -122,8 +122,10 @@ Applied in Phase 1 Agent 2.
 ```text
 load registry
   ↓
-name match?
-  EXACT  → stop "Already exists — reusing"
+match by figma_node_id (mainComponentNodeId) OR name?
+  EXACT  → scan codebase for usages (grep component name in source)
+              0 usages → "Exists but unused — add variant or update?"
+              N usages → stop "Already exists — reusing"
   PARTIAL → show match, ask: extend / refactor / create new
   NONE   → check filesystem for name collision (EC2)
               files exist on disk → EC2 prompt

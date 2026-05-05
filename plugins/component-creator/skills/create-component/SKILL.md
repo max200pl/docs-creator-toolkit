@@ -50,8 +50,10 @@ Invoke all three simultaneously:
 
 **Agent 2 — Reuse check:**
 - Load `component-registry.json`
+- Working node = `mainComponentNodeId` from Step 0 (if variant was resolved) or original `nodeId`
 - Apply Reuse Decision Tree (§ in `rules/component-creation-workflow.md`):
   - EXACT MATCH → report "Already exists" and stop
+  - EXACT MATCH + 0 codebase usages → report "Already exists but not used anywhere — add variant or update?"
   - PARTIAL MATCH → show match, ask user: extend / refactor / create new
   - EC2 (files on disk, not in registry) → prompt user
 

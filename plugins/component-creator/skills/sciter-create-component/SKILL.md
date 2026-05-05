@@ -35,10 +35,21 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 Follow `create-component` Step 0 exactly, then additionally:
 
-5. **Validate node type** — after parsing Figma URL, call `mcp__figma__get_design_context(nodeId, fileKey)`:
-   - If response indicates a **variant** (has `variantProperties`, or is a child of a component set) → stop immediately:
-     > "The provided node is a variant, not a component set. In Figma, right-click the parent ◆◆ component set in the layers panel → Copy link to selection. Provide that URL."
-   - Standalone component or component set → proceed
+5. **Validate node type** — after parsing Figma URL, call `mcp__figma__get_code_connect_suggestions(nodeId, fileKey)`:
+   - If response contains `mainComponentNodeId` different from `nodeId` → this is a **variant**, not a component set
+     - Resolve parent: use `mainComponentNodeId` as the working node for all subsequent phases
+     - Call `mcp__figma__get_design_context(mainComponentNodeId, fileKey, disableCodeConnect: true)` → get all variant properties (e.g. `type: prim|sec`, `stay: default|hover|disabled`)
+     - Show user:
+       > "Node `<nodeId>` is a variant (`<variantProps>`). Found `<N>` variants in component set `<name>` (`<mainComponentNodeId>`).
+       > Which variants do you want to implement? (all pre-selected — uncheck what you don't need)
+       > ☑ prim / default  ☑ prim / hover  ☑ prim / disabled
+       > ☑ sec / default   ☑ sec / hover   ☑ sec / disabled
+       > ..."
+     - Wait for user selection before proceeding
+   - Check registry for `mainComponentNodeId` or component name:
+     - **Found in registry** → surface to Agent 2 reuse check (handled there, see Phase 1)
+     - **Not in registry** → proceed with selected variants
+   - Standalone component set → proceed as-is
 
 6. Load agent memory:
    - Check if `.claude/agent-memory/sciter-create-component/` exists in the target project.
@@ -56,11 +67,29 @@ Follow `create-component` Step 0 exactly, then additionally:
      ```
    - Read all `feedback_*.md` files → extract known fix patterns and apply proactively in Phase 2 code generation.
 
-### Phase 1 — Context (unchanged + Sciter typography note)
+### Phase 1 — Context (unchanged + Sciter overrides)
 
-Follow `create-component` Phase 1 exactly.
+Follow `create-component` Phase 1 exactly, with these additions:
 
-**Critical for Sciter — typography mixin matching (Agent 3):** typography sync is especially important here because wrong mixin = wrong font metrics = SSIM failure. After Agent 3 resolves mixins, verify each matched mixin exists in `typography_file` as `@mixin <name>` (not just as a comment or variable). If the mixin exists but the font file is not loaded (e.g. weight 600 .ttf missing) → flag this to the user before Phase 2: "Mixin `@font-md-semibold` exists but `SemiBold.ttf` is not loaded — use `@font-md-medium` instead or add the font file."
+**Agent 2 — Reuse check (variant + reuse extension):**
+
+If Step 0 resolved a variant → parent `mainComponentNodeId` is the working node. Agent 2 checks registry by that node ID AND by component name:
+
+- **Found, `figma_connected: true`** → scan codebase for usages (`grep -r "ComponentName" res/`):
+  - **0 usages found:**
+    > "Component `<name>` is in the registry but not used anywhere in the codebase. Continuing will add/update variants. Proceed?"
+  - **N usages found:** show PARTIAL MATCH flow (extend / refactor / create new)
+- **Found, `figma_connected: false`** → EC9 (ask for Figma URL to complete the entry)
+- **Not found** → proceed to Phase 2
+
+**Agent 3 — Typography mixin matching (critical for Sciter):**
+
+After matching, verify each resolved mixin:
+- Mixin definition exists in `typography_file` as `@mixin <name>` ✓
+- Font file for that weight is loaded (scan `@font-face` or font-loader in project) ✓
+- If mixin exists but font file missing:
+  > "Mixin `@font-md-semibold` found but `SemiBold.ttf` is not loaded. Use `@font-md-medium` instead, or add the font file first?"
+- Never silently fall back to a different weight — always ask.
 
 ### Phase 1.5 — Decompose (unchanged)
 
