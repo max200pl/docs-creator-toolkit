@@ -125,6 +125,25 @@ Confirm variant selection →
 
 ### adapter.visual_verify() — SSIM
 
+**Component set preview strategy:**
+When the component is a component set with multiple variants (types × states), the `preview.js` must reproduce the exact same grid layout as the Figma component set screenshot:
+- Rows = states (Default, hover, disabled)
+- Columns = types (sec, prim, with-icon)
+- Same spacing/gaps as Figma
+
+This way SSIM compares the full grid in one shot. Do NOT compare a partial layout against the full Figma set screenshot — SSIM will always fail due to composition mismatch.
+
+For `:hover` and `[disabled]` states that cannot be triggered programmatically, use CSS forced-state classes in preview:
+```js
+// Force hover state for preview row
+<div class="button button--sec button--preview-hover">Not Now</div>
+```
+```css
+/* preview-only forced states */
+.button--preview-hover { /* same styles as :hover */ }
+.button--preview-disabled { /* same styles as [disabled] */ }
+```
+
 **Resolve adaptive threshold before running:**
 Scan agent memory `feedback_*.md` for patterns matching this component:
 - Has SVG icons + border-radius → use threshold `0.92` (known rendering ceiling)
