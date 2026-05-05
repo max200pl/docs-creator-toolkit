@@ -20,7 +20,6 @@ All must be true before `/create-component` starts. Pre-flight (Step 0) verifies
 | P5 | Figma access token valid (`whoami` succeeds) | env `FIGMA_ACCESS_TOKEN` / `.env` | stop → EC5 |
 | P6 | Figma URL or node ID provided | user argument or interactive prompt | prompt user |
 
-**Code generation reference:** always `reference-component-creation-template.md`. Never read an existing component as a pattern for new code — existing components may carry workarounds or outdated conventions. Existing components are accessed only in Phase 5 (Code Connect format discovery from primitive).
 
 ## Phases
 
