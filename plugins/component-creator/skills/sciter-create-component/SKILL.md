@@ -132,8 +132,16 @@ Scan agent memory `feedback_*.md` for patterns matching this component:
 
 1. `tools/fetch-figma-screenshot.sh <fileKey> <nodeId> /tmp/figma-<name>.png`
    → copy to `tools/ScreenshotHistory/{ts}_figma_{name}.png`
-2. Loop max 3: `tools/preview-component.sh <preview.js> <Name> <width> /tmp/figma-<name>.png`
-   → SSIM >= threshold = PASS; < threshold = show diff, fix, retry
+2. Loop max 3 — exact command:
+   ```bash
+   tools/preview-component.sh res/<layer>/<name>/<name>.preview.js <ClassName> <width_dip> /tmp/figma-<name>.png
+   ```
+   Example: `tools/preview-component.sh res/widgets/button/button.preview.js Button 159 /tmp/figma-Button.png`
+   - First arg: **path to `.preview.js` file** (not the main `.js`, not the directory)
+   - Second arg: PascalCase component class name
+   - Third arg: width in dip (integer, no units)
+   - Fourth arg: path to Figma reference PNG
+   Do NOT read the script to check its signature — use this format exactly.
 3. PASS → copy preview screenshot → `tools/ScreenshotHistory/{ts}_code_{name}.png`
 4. Fix applied → write `.claude/agent-memory/sciter-create-component/feedback_ssim_<topic>.md`
 5. 3 failures → EC14 escalation (see `sequences/sciter-create-component.mmd`)
