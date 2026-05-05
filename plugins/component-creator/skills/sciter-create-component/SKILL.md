@@ -146,15 +146,22 @@ SSIM — runs only for **default state of each type**, in parallel.
    // (hover/disabled states inspected manually via Space overlay)
    ```
 
-2. SSIM — 3 parallel runs, one per type using the **variant's own nodeId** (NOT the component set nodeId):
+2. SSIM — 3 parallel runs, one per type. **CRITICAL:** fetch screenshot for VARIANT nodeId, NOT component set nodeId.
+
+   Why: component set screenshot = full 3×3 grid (e.g. 1256×960px). Single-button preview = 1 row (e.g. 1228×160px). Tool squishes Figma grid 6× to match → SSIM measures noise, not real diff.
+
    ```bash
-   # Use variant nodeIds from Phase 0.5 — NOT the component set nodeId
+   # Variant nodeIds recorded in Phase 0.5 — use those, NOT the component set nodeId
+   # Example: Button set = 314:4129 (WRONG for SSIM)
+   #          sec/default = 314:4128 (CORRECT)
+   #          prim/default = 314:4127 (CORRECT)
+
    tools/fetch-figma-screenshot.sh <fileKey> <sec_DEFAULT_nodeId>       /tmp/figma-sec.png
    tools/fetch-figma-screenshot.sh <fileKey> <prim_DEFAULT_nodeId>      /tmp/figma-prim.png
    tools/fetch-figma-screenshot.sh <fileKey> <with-icon_DEFAULT_nodeId> /tmp/figma-icon.png
    ```
-   ⚠️ Component set screenshot = ALL variants grid = WRONG for SSIM. Always use the specific variant nodeId.
-   Each run opens its own window. Create a single-variant preview.js per run.
+
+   Create a single-variant preview.js per SSIM run (one button, matching dimensions). Each run opens its own window.
 
 3. ScreenshotHistory — save `_code_` and `_figma_` for each verified type.
 
