@@ -1,39 +1,35 @@
 {
-  "name": "claude-docs-creator",
+  "name": "docs-creator-toolkit",
   "owner": {
     "name": "Maksym Poskannyi"
   },
   "metadata": {
-    "description": "Marketplace for the claude-docs-creator monorepo — docs-creator toolkit + component-creator plugin.",
-    "version": "0.0.1"
+    "description": "docs-creator + component-creator plugins for Claude Code — documentation authoring and Figma-to-code component creation.",
+    "version": "0.15.0"
   },
   "plugins": [
     {
       "name": "docs-creator",
-      "source": "./plugins/docs-creator",
-      "description": "Authoring, validation, and drift-detection for .claude/ docs in any project. Ships 15 api skills (init-project, analyze-frontend, create-frontend-docs, update-frontend-docs, create-sequences, check-links, analyze-api-contracts, create-api-contracts-docs, update-api-contracts-docs, create-api-contract, create-docs, update-docs, validate-claude-docs, status, menu), 12 agents, 10 rules, 6 hooks.",
+      "source": "max200pl/claude-docs-creator-plugin",
+      "description": "Authoring, validation, and drift-detection for .claude/ docs. Ships analyze-frontend, create-frontend-docs, analyze-api-contracts, init-project, update-docs, validate-claude-docs, status, menu and more.",
       "version": "0.15.0",
-      "author": {
-        "name": "Maksym Poskannyi"
-      },
-      "homepage": "https://github.com/max200pl/claude-docs-creator",
-      "repository": "https://github.com/max200pl/claude-docs-creator",
+      "author": { "name": "Maksym Poskannyi" },
+      "homepage": "https://github.com/max200pl/docs-creator-toolkit",
+      "repository": "https://github.com/max200pl/claude-docs-creator-plugin",
       "license": "MIT",
-      "keywords": ["documentation", "claude-code", "toolkit", "frontend-analysis", "plugin-authoring"],
+      "keywords": ["documentation", "claude-code", "frontend-analysis"],
       "category": "developer-tools"
     },
     {
       "name": "component-creator",
-      "source": "./plugins/component-creator",
-      "description": "Figma-to-code component creation with visual verification, Figma Code Connect integration, and component registry management. Reads docs-creator analysis output to generate components matching project conventions.",
-      "version": "0.0.1",
-      "author": {
-        "name": "Maksym Poskannyi"
-      },
-      "homepage": "https://github.com/max200pl/claude-docs-creator",
-      "repository": "https://github.com/max200pl/claude-docs-creator",
+      "source": "max200pl/docs-creator-toolkit",
+      "description": "Figma-to-code component creation with SSIM visual verification, Code Connect integration, and component registry.",
+      "version": "0.0.4",
+      "author": { "name": "Maksym Poskannyi" },
+      "homepage": "https://github.com/max200pl/docs-creator-toolkit",
+      "repository": "https://github.com/max200pl/docs-creator-toolkit",
       "license": "MIT",
-      "keywords": ["figma", "components", "claude-code", "code-connect", "component-registry"],
+      "keywords": ["figma", "components", "claude-code", "code-connect"],
       "category": "developer-tools"
     }
   ]
