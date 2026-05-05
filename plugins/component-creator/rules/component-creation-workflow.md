@@ -37,9 +37,13 @@ Run all three in parallel. Wait for all before proceeding.
 
 - **Agent 1 — Figma design:** `get_design_context(nodeId, fileKey)` → layout/colors/typography reference. Then `get_design_context(nodeId, fileKey, disableCodeConnect: true)` → full child structure + variant states + icon node list.
 - **Agent 2 — Reuse check:** load registry, apply Reuse Decision Tree (see below). Result: EXACT / PARTIAL / NO match.
-- **Agent 3 — Token sync:** read local token file + `get_variable_defs(nodeId, fileKey)`. Compare by hex-normalized value. Result: matched tokens list + missing tokens list.
+- **Agent 3 — Token + typography sync:**
+  1. **Color/spacing tokens** — read `token_file` + `get_variable_defs(nodeId, fileKey)`. Compare by hex-normalized value. Result: matched tokens list + missing tokens list.
+  2. **Typography mixins** — read `typography_file` (from `frontend-design-system.md` frontmatter). For each text element in the design context (from Agent 1), extract: `font-size`, `font-weight`, `line-height`. Match against existing `@mixin` definitions by those three values. Result:
+     - Match found → record mixin name to use in CSS generation
+     - No match → surface as typography gap: prompt user "No matching mixin for `{size}/{weight}/{lh}` — create new `@mixin <name>` or use closest `@mixin <closest>`?"
 
-After agents complete — surface conflicts: EC3b (token name mismatch), EC11 (no Figma tokens). User confirms before Phase 2.
+After agents complete — surface conflicts: EC3b (token name mismatch), EC11 (no Figma tokens), typography gaps. User confirms before Phase 2.
 
 ### Phase 1.5 — Decompose (conditional)
 

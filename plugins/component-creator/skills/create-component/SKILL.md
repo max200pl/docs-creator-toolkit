@@ -55,10 +55,20 @@ Invoke all three simultaneously:
   - PARTIAL MATCH → show match, ask user: extend / refactor / create new
   - EC2 (files on disk, not in registry) → prompt user
 
-**Agent 3 — Token sync:**
+**Agent 3 — Token + typography sync:**
+
+*Color/spacing tokens:*
 - Read `token_file` path from `frontend-design-system.md` frontmatter
 - `mcp__figma__get_variable_defs(nodeId, fileKey)`
-- Compare by hex-normalized value → produce: matched list + missing list
+- Compare by hex-normalized value → matched list + missing list
+
+*Typography mixins:*
+- Read `typography_file` path from `frontend-design-system.md` frontmatter
+- From Agent 1 design context: extract all text elements → for each collect `font-size`, `font-weight`, `line-height`
+- Match against existing `@mixin` definitions in typography file by those three values
+- Match found → record mixin name for Phase 2 CSS generation
+- No match → surface gap: "No mixin for `{size}/{weight}/{lh}` — create `@mixin <name>` or use closest `@mixin <closest>`?"
+- User picks before Phase 2 starts — never guess or invent a mixin name
 
 After all agents: surface EC3b (token name mismatch) and EC11 (no Figma tokens) if applicable. Wait for user confirmation before Phase 2.
 

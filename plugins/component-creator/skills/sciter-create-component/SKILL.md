@@ -56,9 +56,11 @@ Follow `create-component` Step 0 exactly, then additionally:
      ```
    - Read all `feedback_*.md` files → extract known fix patterns and apply proactively in Phase 2 code generation.
 
-### Phase 1 — Context (unchanged)
+### Phase 1 — Context (unchanged + Sciter typography note)
 
 Follow `create-component` Phase 1 exactly.
+
+**Critical for Sciter — typography mixin matching (Agent 3):** typography sync is especially important here because wrong mixin = wrong font metrics = SSIM failure. After Agent 3 resolves mixins, verify each matched mixin exists in `typography_file` as `@mixin <name>` (not just as a comment or variable). If the mixin exists but the font file is not loaded (e.g. weight 600 .ttf missing) → flag this to the user before Phase 2: "Mixin `@font-md-semibold` exists but `SemiBold.ttf` is not loaded — use `@font-md-medium` instead or add the font file."
 
 ### Phase 1.5 — Decompose (unchanged)
 
