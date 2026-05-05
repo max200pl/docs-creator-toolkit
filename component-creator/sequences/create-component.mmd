@@ -1,0 +1,145 @@
+---
+title: "create-component — Generic Orchestrator Flow"
+---
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    actor U as User
+    participant S as Skill
+    participant R as Registry
+    participant F as Figma
+    participant A as Adapter
+    participant FS as FileSystem
+
+    U->>S: /create-component <name> [figma-url]
+
+    note over S: Step 0 — Pre-flight
+    S->>S: TodoWrite — init all tasks pending
+    S->>FS: read template + registry + analysis
+    note over S: extract naming_conventions<br/>+ styling_system
+
+    critical Figma token check
+        S->>F: whoami
+        F-->>S: authenticated
+    option EC5 — token invalid
+        S-->>U: stop — fix FIGMA_ACCESS_TOKEN
+    end
+
+    note over S: Phase 1 — Context (3 parallel)
+
+    par Agent 1 — Figma design
+        S->>F: get_design_context(nodeId, fileKey)
+        F-->>S: layout + colors + typography
+        S->>F: get_design_context(nodeId, disableCodeConnect)
+        F-->>S: full structure + variants<br/>+ icon nodes list
+    and Agent 2 — Reuse check
+        S->>R: load registry
+        R-->>S: known components
+        note over R: EXACT / PARTIAL / NO match
+    and Agent 3 — Token sync
+        S->>FS: read token file
+        S->>F: get_variable_defs(nodeId, fileKey)
+        F-->>S: Figma variables
+        note over S: compare by value<br/>matched / missing tokens
+    end
+
+    alt EXACT MATCH
+        S-->>U: already exists — reusing
+    else PARTIAL MATCH
+        S-->>U: extend or refactor?
+        U-->>S: choice
+    else EC2 — on disk, not in registry
+        S-->>U: overwrite / register / cancel?
+        U-->>S: choice
+    end
+
+    opt EC3b — token name mismatch
+        S-->>U: Figma name vs local name<br/>map or skip?
+        U-->>S: mapping confirmed
+    end
+
+    opt EC11 — no Figma tokens
+        S-->>U: generate empty / cancel?
+        U-->>S: choice
+    end
+
+    opt Phase 1.5 — Composite detected
+        note over S: Decompose bottom-up
+        S->>S: build dependency tree<br/>(deepest children first)
+        note over S: classify each child<br/>by FSD layer
+        note over S: build children before parent
+    end
+
+    note over S: Phase 2 — Implement
+
+    opt EC6 — special chars in name
+        S-->>U: converted name preview
+        U-->>S: confirm / edit
+    end
+
+    par Stream A — Download assets
+        loop each icon node
+            S->>F: fetch SVG (nodeId)
+            F-->>FS: img/<kebab-name>.svg
+        end
+    and Stream B — Generate code
+        S->>FS: add missing tokens to token file
+        S->>A: generate(template, tokens,<br/>variants, layer, styling_system)
+        note over A: adapter writes CSS + JS<br/>+ preview file
+        A-->>FS: component files written
+        S->>FS: register @import in main CSS
+        S->>S: run component-done checklist
+    end
+
+    opt EC4 — no icons detected
+        note over S: log note, continue
+    end
+
+    opt EC12 — child not in registry
+        note over S: create as local<br/>non-blocking
+    end
+
+    opt EC7 — style wiring
+        note over S: read styling_system<br/>from frontend-analysis.json
+    end
+
+    opt Phase 3 — Visual verify
+        S->>A: visual_verify(component, figma_ref)
+        note over A: adapter-specific<br/>(SSIM / screenshot / etc.)
+        A-->>S: pass / fail + report
+        note over S: on fail — adapter handles<br/>retries + escalation
+    end
+
+    note over S: Phase 4 — Registry
+    S->>R: upsert(name, type, layer,<br/>path, figma_node_id, status)
+    R-->>S: written
+
+    note over S: Phase 5 — Code Connect
+    S->>FS: scan for primitive<br/>(*.figma.ts / *.figma.js)
+
+    alt EC13 — no primitive found
+        S-->>U: no primitive detected<br/>run /create-primitive first
+        U-->>S: primitive created
+    end
+
+    S->>FS: read primitive → extract CC pattern
+    note over S: discovers format + template<br/>+ publish command
+
+    S->>F: get_code_connect_map(nodeId, fileKey)
+    F-->>S: existing mappings (if any)
+
+    opt existing CC mapping
+        S-->>U: show old → new — replace?
+        U-->>S: confirmed
+    end
+
+    S->>FS: write <name>.figma.{ext}
+    S->>A: cc_publish(--dry-run)
+    A-->>S: validation ok
+    S->>A: cc_publish
+    A-->>S: published
+
+    S-->>U: done — files + registry + Code Connect
+
+    note over S,A: Tool Failure Pattern
+    note over S: critical tool fails →<br/>stop + structured report
+    note over S: non-critical tool fails →<br/>log in report, continue
