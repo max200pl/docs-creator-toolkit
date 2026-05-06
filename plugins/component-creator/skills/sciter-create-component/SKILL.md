@@ -91,11 +91,24 @@ Component Set: <name> (N variants)
 
 Existing in registry: <none | partial match>
 Suggested layer: <widgets | shared/ui>
+Path: res/<layer>/<name>/
+
+Files to be created:
+  <name>.js          — component class
+  <name>.css         — styles
+  <name>.preview.js  — full grid (all types, for Space overlay)
+  <name>.figma.ts    — Code Connect
+  img/<icon>.svg     — (if icon variant present)
+
+Token delta (new tokens to add to tokens.css):
+  + --<token-name>: <value>   — <what it maps to in Figma>
+  = --<existing>              — already exists, reused as-is
+  (none) if all colors already covered by existing tokens
 
 SSIM verification plan (Phase 3):
-  ✦ sec       / default — nodeId: <id> — isolated window → compare with Figma screenshot
-  ✦ prim      / default — nodeId: <id> — isolated window → compare with Figma screenshot
-  ✦ with-icon / default — nodeId: <id> — isolated window → compare with Figma screenshot
+  ✦ <type1> / default — nodeId: <id> — width: <N>dip
+  ✦ <type2> / default — nodeId: <id> — width: <N>dip
+  ✦ <type3> / default — nodeId: <id> — width: <N>dip
   threshold: <0.92 if SVG icons present | 0.95 default>
   hover / disabled — CSS states, not SSIM-testable (verified visually via Space overlay)
 
