@@ -124,6 +124,24 @@ Confirm variant selection →
 
 ---
 
+## Phase 2A — Download SVG Assets
+
+For each icon variant detected in Phase 0.5:
+
+```bash
+tools/fetch-figma-svg.sh <fileKey> <iconNodeId> <layer>/img/<icon>.svg
+```
+
+**If `fetch-figma-svg.sh` returns 404 (asset URL expired):**
+Figma CDN pre-signed URLs expire in ~10-15 min. Fallback:
+1. `mcp__figma__get_screenshot(nodeId: <iconNodeId>, fileKey)` — fetches a fresh PNG render
+2. Save as `<layer>/img/<icon>.png` instead of `.svg`
+3. Update JS reference: `__DIR__ + "img/<icon>.png"`
+
+Do not retry the expired URL — it will not recover. Use the screenshot fallback immediately.
+
+---
+
 ## Sciter Adapter Overrides
 
 ### adapter.generate() — CSS rules
