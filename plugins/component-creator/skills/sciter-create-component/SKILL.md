@@ -95,15 +95,15 @@ Component Set: <name> (N variants)
 ☐ disabled          — (uncheck if not needed)
 
 Existing in registry: <none | partial match>
-Layer: res/widgets/<name>/   ← from reference-component-creation-template.md
+Layer: <exact path from reference-component-creation-template.md — Widget directory row, name substituted>
 
 Files to be created:
-  res/widgets/<name>/<name>.js          — component class
-  res/widgets/<name>/<name>.css         — styles
-  res/widgets/<name>/<name>.preview.js  — full grid (all types, for Space overlay)
-  res/widgets/<name>/<name>.figma.ts    — Code Connect
-  res/widgets/<name>/img/<icon>.svg     — (if icon variant present)
-  (paths derived from reference-component-creation-template.md)
+  <layer>/<name>.js          — component class
+  <layer>/<name>.css         — styles
+  <layer>/<name>.preview.js  — full grid (all types, for Space overlay)
+  <layer>/<name>.figma.ts    — Code Connect
+  <layer>/img/<icon>.svg     — (if icon variant present)
+  (<layer> = path resolved above from reference-component-creation-template.md)
 
 Token delta (new tokens to add to tokens.css):
   + --<token-name>: <value>   — <what it maps to in Figma>
