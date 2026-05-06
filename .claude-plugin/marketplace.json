@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "docs-creator",
-      "source": "max200pl/docs-creator-toolkit",
+      "source": "max200pl/claude-docs-creator-plugin",
       "description": "Authoring, validation, and drift-detection for .claude/ docs. Ships analyze-frontend, create-frontend-docs, analyze-api-contracts, init-project, update-docs, validate-claude-docs, status, menu and more.",
       "version": "0.15.0",
       "author": {
