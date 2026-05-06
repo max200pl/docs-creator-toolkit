@@ -248,6 +248,7 @@ Follow `rules/registry-schema.md` strictly. Before writing, validate the new ent
 - `path` must be the `.js` file, not a directory
 - `figma_node_id` must be the **component set** nodeId (captured in Phase 0.5), not a variant nodeId
 - `variants`: all implemented type names (e.g. `["sec", "prim", "with-icon"]`)
+- `states`: all CSS states implemented (e.g. `["default", "hover", "disabled"]`) — always include `"default"`; add `"hover"` if `:hover` is styled, `"disabled"` if `[disabled]` is styled
 - `ssim_score`: minimum score across all parallel SSIM runs
 - `status`: `"in-progress"` at Phase 4; updated to `"done"` after Phase 5
 

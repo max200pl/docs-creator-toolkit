@@ -22,6 +22,7 @@ description: "Strict field allowlist for component-registry.json. Any field not 
 | `uses` | string[] | Phase 4 | Names of primitive components this component uses |
 | `parent` | string \| null | Phase 4 | Parent component name for `type: local` entries |
 | `variants` | string[] | Phase 4 | Built variant type identifiers (e.g. `["prim", "sec", "with-icon"]`). `[]` for single-variant |
+| `states` | string[] | Phase 4 | CSS states implemented (e.g. `["default", "hover", "disabled"]`). Always includes `"default"`. CSS-only states (`:hover`, `[disabled]`) listed here even though not SSIM-tested. `[]` if only default exists. |
 | `created_at` | ISO-UTC string | Phase 4 | Creation timestamp |
 | `last_verified_at` | ISO-UTC string \| null | Phase 3 | Last SSIM verification timestamp |
 | `last_figma_sync_at` | ISO-UTC string \| null | Phase 5 | Last Code Connect sync timestamp |
