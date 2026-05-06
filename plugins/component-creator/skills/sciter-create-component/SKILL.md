@@ -163,6 +163,7 @@ Do not retry the expired URL — it will not recover. Use the screenshot fallbac
 | Typography | `@mixin name;` | `font` shorthand with `var()` |
 | Mixin syntax | no commas inside `@mixin` | comma-separated values |
 | Centering + `width:*` | `vertical-align: middle` on every child | `content-vertical-align` on parent |
+| `<button>` block | `display: block` on root element | default inline-block — adds 2px line-height gap below button, inflating body height |
 
 ### adapter.generate() — JS rules
 
@@ -206,9 +207,10 @@ SSIM — runs only for **default state of each type**, in parallel.
    ```js
    // <name>.preview-<type>.js  (temporary — delete after SSIM passes)
    import { Button } from "./button.js";
+   document.body.style.background = "#d9d9d9";
    document.body.content(<Button type="sec" label="Not Now" />);
    ```
-   Repeat for every type: `button.preview-sec.js`, `button.preview-prim.js`, `button.preview-with-icon.js`.
+   Repeat for every type.
 
    **Step B — Fetch Figma screenshot per type** using the default-state variant nodeId recorded in Phase 0.5:
    ```bash
@@ -229,7 +231,9 @@ SSIM — runs only for **default state of each type**, in parallel.
    - Fourth arg: path to per-type Figma PNG
    Do NOT read the script to check its signature — use this format exactly.
 
-   ⚠️ `find-component.py save_history()` clears all PNGs in ScreenshotHistory before writing new ones. Run types sequentially, not in parallel — each run's results are overwritten by the next. Read the SSIM score from stdout before moving to the next type.
+   ⚠️ **Window reuse bug:** `preview-component.sh` finds the first open window named "Preview". If the previous type's window is still open, the script captures it instead of the new one → wrong SSIM. **Before each type run: close the previous preview window (red button).** If unsure, run `pkill -f sciterjsMacOS` to kill all Sciter windows.
+
+   ⚠️ **Figma PNGs must stay in `/tmp/`:** `find-component.py save_history()` clears ALL PNGs in ScreenshotHistory on every run. Never store Figma reference PNGs there — deleted by the next SSIM run. Always use `/tmp/figma-<type>.png`.
 
    **Step D — Cleanup:** after all types pass, delete the temporary `*.preview-<type>.js` files.
 
@@ -255,7 +259,7 @@ Follow `rules/registry-schema.md` strictly. Before writing, validate the new ent
 - `path` must be the `.js` file, not a directory
 - `figma_node_id` must be the **component set** nodeId (captured in Phase 0.5), not a variant nodeId
 - `variants`: all implemented type names (e.g. `["sec", "prim", "with-icon"]`)
-- `states`: all CSS states implemented (e.g. `["default", "hover", "disabled"]`) — always include `"default"`; add `"hover"` if `:hover` is styled, `"disabled"` if `[disabled]` is styled
+- `states`: Figma `state` axis values with distinct static designs (e.g. `["Default", "disable"]`) — exclude CSS-only interaction states (hover) that have no separate Figma frame; values vary per component
 - `ssim_score`: minimum score across all parallel SSIM runs
 - `status`: `"in-progress"` at Phase 4; updated to `"done"` after Phase 5
 
