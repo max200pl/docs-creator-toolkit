@@ -80,7 +80,12 @@ Read the `mainComponentNodeId` field from the response.
 2. Record each default-state variant's nodeId for SSIM (e.g. sec/default=314:4128, prim/default=314:4127, with-icon/default=314:4149)
 3. For each variant: note what differs (colors, layout, states)
 4. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
-5. Show plan:
+5. **Derive layer and path from `reference-component-creation-template.md`** (already loaded in Step 0.2):
+   - Find the row matching `Widget directory` or `Component file` in the file conventions table
+   - Extract the path pattern, e.g. `res/widgets/<widget-name>/`
+   - Substitute `<widget-name>` with the kebab-case component name
+   - **Do NOT guess between `widgets/` and `shared/ui/`** — use only what the template says
+6. Show plan:
 
 ```
 Component Set: <name> (N variants)
@@ -90,15 +95,15 @@ Component Set: <name> (N variants)
 ☐ disabled          — (uncheck if not needed)
 
 Existing in registry: <none | partial match>
-Suggested layer: <widgets | shared/ui>
-Path: res/<layer>/<name>/
+Layer: res/widgets/<name>/   ← from reference-component-creation-template.md
 
 Files to be created:
-  <name>.js          — component class
-  <name>.css         — styles
-  <name>.preview.js  — full grid (all types, for Space overlay)
-  <name>.figma.ts    — Code Connect
-  img/<icon>.svg     — (if icon variant present)
+  res/widgets/<name>/<name>.js          — component class
+  res/widgets/<name>/<name>.css         — styles
+  res/widgets/<name>/<name>.preview.js  — full grid (all types, for Space overlay)
+  res/widgets/<name>/<name>.figma.ts    — Code Connect
+  res/widgets/<name>/img/<icon>.svg     — (if icon variant present)
+  (paths derived from reference-component-creation-template.md)
 
 Token delta (new tokens to add to tokens.css):
   + --<token-name>: <value>   — <what it maps to in Figma>
