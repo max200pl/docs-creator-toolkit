@@ -90,9 +90,16 @@ Read the `mainComponentNodeId` field from the response.
 ```
 Component Set: <name> (N variants)
 
-☑ <type> / default  — nodeId: <id> — <description>
-☑ <type> / hover    — (CSS :hover)
-☐ disabled          — (uncheck if not needed)
+Property axes detected:
+  type   — <list of values>        → JS prop
+  state  — Default / hover / disable / … → CSS :hover / [disabled] / …
+  effect — Default / shadow / blur / … → CSS transition / box-shadow / …
+  (only "type" becomes a JS prop; state + effect → CSS-only)
+
+☑ <type> / state:Default / effect:Default  — nodeId: <id> — <description>
+☑ <type> / state:hover   — (CSS :hover)
+☑ <type> / state:disable — (CSS [disabled])
+☑ <type> / effect:*      — (CSS transitions/shadows — no extra JS prop)
 
 Existing in registry: <none | partial match>
 Layer: <exact path from reference-component-creation-template.md — Widget directory row, name substituted>
@@ -111,11 +118,11 @@ Token delta (new tokens to add to tokens.css):
   (none) if all colors already covered by existing tokens
 
 SSIM verification plan (Phase 3):
-  ✦ <type1> / default — nodeId: <id> — width: <N>dip
-  ✦ <type2> / default — nodeId: <id> — width: <N>dip
-  ✦ <type3> / default — nodeId: <id> — width: <N>dip
+  ✦ <type1> / state:Default / effect:Default — nodeId: <id> — width: <N>dip
+  ✦ <type2> / state:Default / effect:Default — nodeId: <id> — width: <N>dip
+  ✦ <type3> / state:Default / effect:Default — nodeId: <id> — width: <N>dip
   threshold: <0.92 if SVG icons present | 0.95 default>
-  hover / disabled — CSS states, not SSIM-testable (verified visually via Space overlay)
+  state:hover / state:disable / effect:* — CSS-only, not SSIM-testable (verified visually via Space overlay)
 
 Confirm variant selection →
 ```
