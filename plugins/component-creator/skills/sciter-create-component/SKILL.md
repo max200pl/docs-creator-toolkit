@@ -227,7 +227,7 @@ SSIM — runs only for **default state of each type**, in parallel.
    3. The script opens the window, waits for it to appear, then auto-captures
 
    Ask before EACH type run:
-   > "Закрой предыдущее preview окно → скажи когда готово"
+   > "Close the previous preview window → confirm when ready"
 
    Only proceed after explicit user confirmation ("есть", "готово", "да"). Do NOT run the script speculatively — a stale open window will be captured instead of the new one.
 
