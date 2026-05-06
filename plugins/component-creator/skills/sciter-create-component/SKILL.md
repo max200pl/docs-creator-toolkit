@@ -26,7 +26,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 Output this line immediately when the skill starts, before any tool calls:
 ```
-[component-creator v0.0.6 | sciter-create-component]
+[component-creator v0.0.7 | sciter-create-component]
 ```
 
 ### Step 0 — Pre-flight (MANDATORY — do not skip any sub-step)
@@ -137,27 +137,51 @@ SSIM — runs only for **default state of each type**, in parallel.
 
 **Implementation:**
 
-1. `preview.js` — full grid for human review:
+1. `<name>.preview.js` — full grid for human review only (NOT used for SSIM):
    ```js
-   // row per type, all 3 types visible
+   // one row per type — all types visible for Space overlay inspection
    <Button type="sec" label="Not Now" />
    <Button type="prim" label="Update" />
    <Button type="with-icon" label="Not Now" />
-   // (hover/disabled states inspected manually via Space overlay)
+   // hover/disabled states inspected manually via Space overlay
    ```
 
-2. SSIM — one run per type, using the **default-state variant nodeId** recorded in Phase 0.5.
+2. SSIM — **one separate run per type**. Never run SSIM against the full-grid `preview.js`.
 
    ⚠️ Never use the component set nodeId for SSIM. A component set screenshot includes all variants in a grid — its height is N× taller than a single-variant preview. The comparison tool scales both to the same size, compressing the Figma screenshot and making overlay useless.
 
-   Always match: one Figma screenshot of one variant ↔ one preview of that same variant.
+   Always match: **one Figma screenshot of one variant ↔ one temporary single-variant preview file**.
 
+   **Step A — For each type, create a temporary single-variant preview file:**
+   ```js
+   // <name>.preview-<type>.js  (temporary — delete after SSIM passes)
+   import { Button } from "./button.js";
+   document.body.content(<Button type="sec" label="Not Now" />);
+   ```
+   Repeat for every type: `button.preview-sec.js`, `button.preview-prim.js`, `button.preview-with-icon.js`.
+
+   **Step B — Fetch Figma screenshot per type** using the default-state variant nodeId recorded in Phase 0.5:
    ```bash
-   tools/fetch-figma-screenshot.sh <fileKey> <type1_default_nodeId> /tmp/figma-<type1>.png
-   tools/fetch-figma-screenshot.sh <fileKey> <type2_default_nodeId> /tmp/figma-<type2>.png
+   tools/fetch-figma-screenshot.sh <fileKey> <sec_default_nodeId>       /tmp/figma-sec.png
+   tools/fetch-figma-screenshot.sh <fileKey> <prim_default_nodeId>      /tmp/figma-prim.png
+   tools/fetch-figma-screenshot.sh <fileKey> <withicon_default_nodeId>  /tmp/figma-with-icon.png
    ```
 
-   Create a single-variant preview.js per run. Each run opens its own window.
+   **Step C — Run SSIM per type** using `--js` mode (loop max 3 per type):
+   ```bash
+   tools/preview-component.sh --js res/widgets/button/button.preview-sec.js       159 /tmp/figma-sec.png
+   tools/preview-component.sh --js res/widgets/button/button.preview-prim.js      159 /tmp/figma-prim.png
+   tools/preview-component.sh --js res/widgets/button/button.preview-with-icon.js 159 /tmp/figma-with-icon.png
+   ```
+   - `--js` flag MUST be first — standard mode derives path as `<name>.preview.js` and will not find `preview-<type>.js`
+   - Second arg: path to the per-type preview file (absolute or relative to project root)
+   - Third arg: width in dip (integer, no units) — use the variant's own width from Phase 0.5
+   - Fourth arg: path to per-type Figma PNG
+   Do NOT read the script to check its signature — use this format exactly.
+
+   ⚠️ `find-component.py save_history()` clears all PNGs in ScreenshotHistory before writing new ones. Run types sequentially, not in parallel — each run's results are overwritten by the next. Read the SSIM score from stdout before moving to the next type.
+
+   **Step D — Cleanup:** after all types pass, delete the temporary `*.preview-<type>.js` files.
 
 3. ScreenshotHistory — save `_code_` and `_figma_` for each verified type.
 
@@ -166,21 +190,9 @@ Scan agent memory `feedback_*.md` for patterns matching this component:
 - Has SVG icons + border-radius → use threshold `0.92` (known rendering ceiling)
 - Default → `0.95`
 
-1. `tools/fetch-figma-screenshot.sh <fileKey> <nodeId> /tmp/figma-<name>.png`
-   → copy to `tools/ScreenshotHistory/{ts}_figma_{name}.png`
-2. Loop max 3 — exact command:
-   ```bash
-   tools/preview-component.sh res/<layer>/<name>/<name>.preview.js <ClassName> <width_dip> /tmp/figma-<name>.png
-   ```
-   Example: `tools/preview-component.sh res/widgets/button/button.preview.js Button 159 /tmp/figma-Button.png`
-   - First arg: **path to `.preview.js` file** (not the main `.js`, not the directory)
-   - Second arg: PascalCase component class name
-   - Third arg: width in dip (integer, no units)
-   - Fourth arg: path to Figma reference PNG
-   Do NOT read the script to check its signature — use this format exactly.
-3. PASS → copy preview screenshot → `tools/ScreenshotHistory/{ts}_code_{name}.png`
-4. Fix applied → write `.claude/agent-memory/sciter-create-component/feedback_ssim_<topic>.md`
-5. 3 failures → EC14 escalation (see `sequences/sciter-create-component.mmd`)
+- PASS → copy preview screenshot → `tools/ScreenshotHistory/{ts}_code_{name}-<type>.png`
+- Fix applied → write `.claude/agent-memory/sciter-create-component/feedback_ssim_<topic>.md`
+- 3 failures on any type → EC14 escalation (see `sequences/sciter-create-component.mmd`)
 
 ## Phase 4 — Registry (MANDATORY)
 
