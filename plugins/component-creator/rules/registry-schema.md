@@ -22,7 +22,7 @@ description: "Strict field allowlist for component-registry.json. Any field not 
 | `uses` | string[] | Phase 4 | Names of primitive components this component uses |
 | `parent` | string \| null | Phase 4 | Parent component name for `type: local` entries |
 | `variants` | string[] | Phase 4 | Built variant type identifiers (e.g. `["prim", "sec", "with-icon"]`). `[]` for single-variant |
-| `states` | string[] | Phase 4 | Values of the Figma `state` property axis (e.g. `["Default", "hover", "disable"]`). Taken verbatim from Figma — do not rename. `[]` if the component has no `state` axis. `effect` axis is NOT stored here. |
+| `states` | string[] | Phase 4 | Figma `state` axis values with distinct static designs (e.g. `["Default", "disable"]`). Exclude CSS-only interaction states (hover, focus) — those have no separate Figma frame. Values vary per component. `[]` if no `state` axis. `effect` axis not stored. |
 | `created_at` | ISO-UTC string | Phase 4 | Creation timestamp |
 | `last_verified_at` | ISO-UTC string \| null | Phase 3 | Last SSIM verification timestamp |
 | `last_figma_sync_at` | ISO-UTC string \| null | Phase 5 | Last Code Connect sync timestamp |
