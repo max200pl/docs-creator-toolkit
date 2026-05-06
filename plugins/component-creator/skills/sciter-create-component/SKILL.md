@@ -92,6 +92,13 @@ Component Set: <name> (N variants)
 Existing in registry: <none | partial match>
 Suggested layer: <widgets | shared/ui>
 
+SSIM verification plan (Phase 3):
+  ✦ sec       / default — nodeId: <id> — isolated window → compare with Figma screenshot
+  ✦ prim      / default — nodeId: <id> — isolated window → compare with Figma screenshot
+  ✦ with-icon / default — nodeId: <id> — isolated window → compare with Figma screenshot
+  threshold: <0.92 if SVG icons present | 0.95 default>
+  hover / disabled — CSS states, not SSIM-testable (verified visually via Space overlay)
+
 Confirm variant selection →
 ```
 
