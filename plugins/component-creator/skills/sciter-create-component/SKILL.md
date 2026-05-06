@@ -259,6 +259,14 @@ Scan agent memory `feedback_*.md` for patterns matching this component:
 - Fix applied → write `.claude/agent-memory/sciter-create-component/feedback_ssim_<topic>.md`
 - 3 failures on any type → EC14 escalation (see `sequences/sciter-create-component.mmd`)
 
+**When SSIM fails — diagnose in this order:**
+1. **Size** — does the button bounding box match Figma? (width × height in px)
+2. **Padding / margins** — is there extra space around the component? (body margin, display:block gap)
+3. **Element positions** — is text/icon centered correctly?
+4. **Colors** — only after layout is correct
+
+Never start diagnosis from background color. Background mismatch is a symptom, not a root cause — fix layout first.
+
 ## Phase 4 — Registry (MANDATORY)
 
 Write to **`.claude/state/component-registry.json`** — the JSON file.
