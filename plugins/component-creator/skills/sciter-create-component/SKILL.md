@@ -286,6 +286,21 @@ Root cause: font shorthand with var() is silently ignored in Sciter — font met
 never applied → wrong element dimensions → SSIM fails on layout, not color.
 Fix: replace font: var(--x) with @mixin name; (no parens, no comma)
 Apply to: ALL components with text elements
+
+# SSIM Fix: button display block
+Root cause: <button> in Sciter is display:inline-block by default — adds 2px
+line-height gap below the element, inflating body height vs Figma.
+Fix: add display: block as the FIRST property on the root .button rule.
+Apply to: ALL button-like components that use <button> as root element.
+Generate this from the start — do not wait for SSIM failure to discover it.
+
+# SSIM Fix: text centering in flow:horizontal
+Root cause: content-align / content-horizontal-align on parent doesn't center
+text inside a span child in Sciter flow layout.
+Fix: on the label span — width: * (fills available space) + text-align: center
++ vertical-align: middle. Do NOT use content-align on the parent.
+Apply to: ALL button-like components with centered label text.
+Generate this from the start — do not wait for SSIM failure to discover it.
 ```
 
 ## EC13 — Inline Primitive Onboarding (Sciter)
