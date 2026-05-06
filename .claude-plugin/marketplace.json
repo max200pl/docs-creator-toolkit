@@ -11,6 +11,7 @@
     {
       "name": "docs-creator",
       "source": "max200pl/docs-creator-toolkit",
+      "path": "plugins/docs-creator",
       "description": "Authoring, validation, and drift-detection for .claude/ docs. Ships analyze-frontend, create-frontend-docs, analyze-api-contracts, init-project, update-docs, validate-claude-docs, status, menu and more.",
       "version": "0.15.0",
       "author": {
@@ -29,6 +30,7 @@
     {
       "name": "component-creator",
       "source": "max200pl/docs-creator-toolkit",
+      "path": "plugins/component-creator",
       "description": "Figma-to-code component creation with SSIM visual verification, Code Connect integration, and component registry.",
       "version": "0.0.8",
       "author": {
