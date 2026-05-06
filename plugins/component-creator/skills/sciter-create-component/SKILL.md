@@ -220,6 +220,17 @@ SSIM — runs only for **default state of each type**, in parallel.
    ```
 
    **Step C — Run SSIM per type** using `--js` mode (loop max 3 per type):
+
+   For each type, the sequence is:
+   1. **STOP before running the script** — ask the user to confirm all previous Sciter preview windows are closed
+   2. Only after user confirms → run `preview-component.sh`
+   3. The script opens the window, waits for it to appear, then auto-captures
+
+   Ask before EACH type run:
+   > "Закрой предыдущее preview окно → скажи когда готово"
+
+   Only proceed after explicit user confirmation ("есть", "готово", "да"). Do NOT run the script speculatively — a stale open window will be captured instead of the new one.
+
    ```bash
    tools/preview-component.sh --js res/widgets/button/button.preview-sec.js       159 /tmp/figma-sec.png
    tools/preview-component.sh --js res/widgets/button/button.preview-prim.js      159 /tmp/figma-prim.png
