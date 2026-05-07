@@ -53,6 +53,7 @@ Output this line immediately when the skill starts, before any tool calls:
 - `docs/reference-component-build.md` — tooling: SSIM strategy, preview rules, diagnosis order
 - `docs/reference-token-sync.md` — token conflict resolution rules
 - `docs/reference-component-decompose.md` — decompose rules, EC12, icon naming
+- `docs/reference-figma-nodes.md` — node types, Step 0.7 classification logic
 
 **Do NOT read any existing component files (JS/CSS/figma.ts) or individual registry entries as templates or code patterns.** Use only:
 - `reference-component-creation-template.md` → code conventions
@@ -68,17 +69,28 @@ Existing components (ButtonFeedback, etc.) are read ONLY in Phase 5 to discover 
 
 **0.6 EC2 check** — if directory `<name>/` exists (even empty) and no registry entry → prompt: overwrite / register as-is / cancel.
 
-**0.7 Variant hard-block** ⚠️ — call `mcp__figma__get_code_connect_suggestions(nodeId, fileKey)`.
-Read the `mainComponentNodeId` field from the response.
+**0.7 Node type detection** — see `docs/reference-figma-nodes.md` for full type table.
 
-**Compare literally:** is `mainComponentNodeId` the same string as `nodeId`?
-- **YES (equal)** → node is a component set → continue to Phase 0.5
-- **NO (different)** → node is a variant → **STOP. Do NOT proceed. Do NOT call get_design_context. Do NOT read files.**
-  Show exactly:
-  > "Node `<nodeId>` is a **variant** (◆), not a component set (◆◆).
-  > `mainComponentNodeId` = `<mainComponentNodeId>` — this is the correct node.
-  > Please provide the Figma URL with node-id=`<mainComponentNodeId>` (replace `-` with `-` in the URL)."
-- Re-parse the new URL provided by user. Repeat step 0.7 with the new nodeId.
+Call `mcp__figma__get_code_connect_suggestions(nodeId, fileKey)` → get `mainComponentNodeId`.
+
+**Classification:**
+
+| Condition | Node type | Action |
+| ---- | ---- | ---- |
+| `mainComponentNodeId == nodeId` | `COMPONENT_SET` or standalone `COMPONENT` | ✅ Proceed to Phase 0.5 |
+| `mainComponentNodeId != nodeId` AND node is a `COMPONENT` whose parent is `COMPONENT_SET` | Variant (◆ inside ◆◆) | 🔄 Redirect: use `mainComponentNodeId` as new nodeId |
+| `mainComponentNodeId != nodeId` AND node type is `INSTANCE` | Instance placed on canvas | ⬆ Drill: follow `componentId` → find source `COMPONENT` → check if parent is `COMPONENT_SET` → use set if exists |
+| node type is `FRAME` / `GROUP` / `VECTOR` / `TEXT` / other | Not a component | ❌ Stop |
+
+**Redirect message (variant case):**
+> "Node `<nodeId>` is a **variant** (◆), not a component set (◆◆).
+> Correct node: `<mainComponentNodeId>` — use this URL:
+> `https://www.figma.com/design/<fileKey>?node-id=<mainComponentNodeId>`"
+
+**Stop message (non-component):**
+> "This is a `<type>` node, not a component. Select a component (◆) or component set (◆◆) in Figma."
+
+After redirect or drill — re-run Step 0.7 with the resolved nodeId.
 
 ---
 
