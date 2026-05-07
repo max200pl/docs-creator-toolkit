@@ -44,7 +44,15 @@ Output this line immediately when the skill starts, before any tool calls:
 ☐ Phase 5   — Code Connect
 ```
 
-**0.2 Read docs** (parallel): `reference-component-creation-template.md`, `component-registry.json`, `frontend-analysis.json` (extract `naming_conventions` + `styling_system`), `frontend-design-system.md` (extract `token_file` + `typography_file`).
+**0.2 Read docs** (parallel):
+- `reference-component-creation-template.md` — code conventions, layer placement
+- `component-registry.json` — existing components
+- `frontend-analysis.json` — extract `naming_conventions` + `styling_system`
+- `frontend-design-system.md` — extract `token_file` + `typography_file`
+- `docs/reference-sciter-css.md` — Sciter CSS rules (flow, dip, alignment, behavior)
+- `docs/reference-component-build.md` — tooling: SSIM strategy, preview rules, diagnosis order
+- `docs/reference-token-sync.md` — token conflict resolution rules
+- `docs/reference-component-decompose.md` — decompose rules, EC12, icon naming
 
 **Do NOT read any existing component files (JS/CSS/figma.ts) or individual registry entries as templates or code patterns.** Use only:
 - `reference-component-creation-template.md` → code conventions
@@ -164,6 +172,7 @@ Do not retry the expired URL — it will not recover. Use the screenshot fallbac
 | Mixin syntax | no commas inside `@mixin` | comma-separated values |
 | Centering + `width:*` | `vertical-align: middle` on every child | `content-vertical-align` on parent |
 | `<button>` block | `display: block` on root element | default inline-block — adds 2px line-height gap below button, inflating body height |
+| Pixel-perfect sizing | Figma value = source of truth; if token value ≠ Figma → use raw `dip` | sacrificing accuracy for token reuse |
 
 ### adapter.generate() — JS rules
 
@@ -174,6 +183,7 @@ Do not retry the expired URL — it will not recover. Use the screenshot fallbac
 | Icon paths | `__DIR__ + "img/..."` | `"./img/..."` |
 | Imports | must include `.js` extension | bare paths |
 | State | native Sciter element methods | React hooks |
+| Disabled attr | `state-disabled={this.disabled}` | `disabled={this.disabled}` — HTML attr, not Sciter state system |
 
 ### adapter.visual_verify() — SSIM
 
@@ -279,6 +289,7 @@ Follow `rules/registry-schema.md` strictly. Before writing, validate the new ent
 - `figma_node_id` must be the **component set** nodeId (captured in Phase 0.5), not a variant nodeId
 - `variants`: all implemented type names (e.g. `["sec", "prim", "with-icon"]`)
 - `states`: Figma `state` axis values with distinct static designs (e.g. `["Default", "disable"]`) — exclude CSS-only interaction states (hover) that have no separate Figma frame; values vary per component
+- `uses`: names of primitive components used by this component — match Figma child node IDs against `figma_node_id` entries in registry; `[]` if no primitives used
 - `ssim_score`: minimum score across all parallel SSIM runs
 - `status`: `"in-progress"` at Phase 4; updated to `"done"` after Phase 5
 
@@ -310,6 +321,12 @@ Fix: on the label span — width: * (fills available space) + text-align: center
 Apply to: ALL button-like components with centered label text.
 Generate this from the start — do not wait for SSIM failure to discover it.
 ```
+
+## Phase 5 — Code Connect (Sciter specifics)
+
+- Use **`.figma.ts`** extension, NOT `.figma.js` — CLI transpiles `.ts → .js`; `.figma.js` is sent raw and `import` breaks in Figma runtime
+- Project must NOT have `"type": "module"` in `package.json` — breaks CLI transpilation
+- Always call `get_code_connect_map(nodeId, fileKey)` BEFORE generating — if mapping exists, show old→new diff and ask user to replace or keep
 
 ## EC13 — Inline Primitive Onboarding (Sciter)
 
