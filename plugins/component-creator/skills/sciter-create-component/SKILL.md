@@ -44,16 +44,11 @@ Output this line immediately when the skill starts, before any tool calls:
 ☐ Phase 5   — Code Connect
 ```
 
-**0.2 Read docs** (parallel):
+**0.2 Read docs** (parallel — only what's needed before Step 0.6):
 - `reference-component-creation-template.md` — code conventions, layer placement
-- `component-registry.json` — existing components
+- `component-registry.json` — existing components (needed for EC2 check)
 - `frontend-analysis.json` — extract `naming_conventions` + `styling_system`
 - `frontend-design-system.md` — extract `token_file` + `typography_file`
-- `docs/reference-sciter-css.md` — Sciter CSS rules (flow, dip, alignment, behavior)
-- `docs/reference-component-build.md` — tooling: SSIM strategy, preview rules, diagnosis order
-- `docs/reference-token-sync.md` — token conflict resolution rules
-- `docs/reference-component-decompose.md` — decompose rules, EC12, icon naming
-- `docs/reference-figma-nodes.md` — node types, Step 0.7 classification logic
 
 **Do NOT read any existing component files (JS/CSS/figma.ts) or individual registry entries as templates or code patterns.** Use only:
 - `reference-component-creation-template.md` → code conventions
@@ -61,7 +56,7 @@ Output this line immediately when the skill starts, before any tool calls:
 - `rules/component-output-format.md` → naming, file layout
 Existing components (ButtonFeedback, etc.) are read ONLY in Phase 5 to discover Code Connect format from the primitive's `.figma.ts` file.
 
-**0.3 Agent memory** — check `.claude/agent-memory/sciter-create-component/`. If empty → seed `feedback_ssim_typography.md` (see § Agent Memory below).
+**0.3 Agent memory** — Read `docs/reference-sciter-agent-memory.md` (seed templates). Check `.claude/agent-memory/sciter-create-component/`. If empty → seed from the templates.
 
 **0.4 Figma token** — `mcp__figma__whoami`. On 401 → stop (EC5).
 
@@ -69,7 +64,7 @@ Existing components (ButtonFeedback, etc.) are read ONLY in Phase 5 to discover 
 
 **0.6 EC2 check** — if directory `<name>/` exists (even empty) and no registry entry → prompt: overwrite / register as-is / cancel.
 
-**0.7 Node type detection** — see `docs/reference-figma-nodes.md` for full type table.
+**0.7 Node type detection** — Read `docs/reference-figma-nodes.md` (full type table + classification logic).
 
 Call `mcp__figma__get_code_connect_suggestions(nodeId, fileKey)` → get `mainComponentNodeId`.
 
@@ -151,7 +146,19 @@ Confirm variant selection →
 
 ---
 
+## Phase 1 — Context: Figma + Reuse + Token sync
+
+Read `docs/reference-token-sync.md` before comparing tokens.
+
+> Phase 1 runs parallel to Phase 0.5 confirmation wait — start token sync after showing plan.
+
+## Phase 1.5 — Decompose (if composite)
+
+Read `docs/reference-component-decompose.md` — decompose rules, child classification, build order, EC12.
+
 ## Phase 2A — Download SVG Assets
+
+Read `docs/reference-component-decompose.md` § Icon Naming Algorithm before naming icon files.
 
 For each icon variant detected in Phase 0.5:
 
@@ -168,6 +175,10 @@ Figma CDN pre-signed URLs expire in ~10-15 min. Fallback:
 Do not retry the expired URL — it will not recover. Use the screenshot fallback immediately.
 
 ---
+
+## Phase 2B — Generate Sciter CSS + JS + preview + @import
+
+Read `docs/reference-sciter-css.md` before writing any CSS.
 
 ## Sciter Adapter Overrides
 
@@ -197,7 +208,9 @@ Do not retry the expired URL — it will not recover. Use the screenshot fallbac
 | State | native Sciter element methods | React hooks |
 | Disabled attr | `state-disabled={this.disabled}` | `disabled={this.disabled}` — HTML attr, not Sciter state system |
 
-### adapter.visual_verify() — SSIM
+### adapter.visual_verify() — SSIM (Phase 3)
+
+Read `docs/reference-component-build.md` before running any preview or SSIM commands.
 
 **Component set preview + SSIM strategy:**
 
