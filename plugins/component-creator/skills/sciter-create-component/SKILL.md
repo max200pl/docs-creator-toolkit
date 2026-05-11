@@ -91,9 +91,14 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
 
 ### Phase 0.5 — Variant Analysis and Plan (MANDATORY — do not start Phase 1 without user confirmation)
 
-1. `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` → all variant property combinations + **each variant's own nodeId**
-2. Record each default-state variant's nodeId for SSIM (e.g. sec/default=314:4128, prim/default=314:4127, with-icon/default=314:4149)
-3. For each variant: note what differs (colors, layout, states)
+1. `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` → full structure: variant combinations, each variant's own nodeId, **all child component instances** (nested components)
+2. Record each default-state variant's nodeId for SSIM
+3. **Detect ALL child component instances** — scan the design context for nested COMPONENT/INSTANCE nodes:
+   - For each child: note name, nodeId, variants/states
+   - Check registry: EXACT MATCH → reuse; NOT FOUND → must build first
+   - Detect asset sets among children (see `docs/reference-component-decompose.md` § Asset Set Detection)
+   - Build **full dependency tree** (bottom-up order)
+4. For each variant: note what differs (colors, layout, states)
 4. **Derive component name from Figma layer name** → convert to PascalCase → **always show to user and ask to confirm or correct:**
    > "Component name derived from Figma: `<Name>` — confirm or enter correct name:"
    Do NOT proceed with the name silently. Figma layer names may contain typos.
@@ -123,6 +128,17 @@ Property axes detected:
 
 Existing in registry: <none | partial match>
 Layer: <exact path from reference-component-creation-template.md — Widget directory row, name substituted>
+
+Child components detected:
+  ✦ <ChildName> — nodeId: <id> — <in registry ✅ reuse | NOT in registry ❌ build first>
+  ✦ <IconSetName> — asset set → download to <layer>/<name>/img/
+
+Build order (bottom-up):
+  1. <deepest child> — <status>
+  2. <next child>    — <status>
+  3. <this component> — BUILD NOW
+
+⚠ Components marked ❌ must be built first. Cannot proceed until all dependencies are in registry.
 
 Files to be created:
   <layer>/<name>.js          — component class
