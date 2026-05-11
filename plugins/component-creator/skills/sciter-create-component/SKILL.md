@@ -93,11 +93,15 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
 
 1. `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` → full structure: variant combinations, each variant's own nodeId, **all child component instances** (nested components)
 2. Record each default-state variant's nodeId for SSIM
-3. **Detect ALL child component instances** — scan the design context for nested COMPONENT/INSTANCE nodes:
-   - For each child: note name, nodeId, variants/states
-   - Check registry: EXACT MATCH → reuse; NOT FOUND → must build first
+3. **Detect ALL child component instances** — after `get_design_context`, make a second call to scan children:
+   - Call `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` if not already done — this reveals raw child structure
+   - In the response, look for: child nodes whose `type` is `COMPONENT` or `INSTANCE`; they appear as nested component references in the JSX output or as child entries in the structure tree
+   - For EACH child component found: record its `name`, `nodeId`, and any property axes (variants/states)
+   - If design context doesn't show deep children: call `mcp__figma__get_metadata(nodeId, fileKey)` on the parent to get the `children` array with nodeIds, then call `get_design_context` per child
+   - Check registry per child: EXACT MATCH → reuse; NOT FOUND → must build first
    - Detect asset sets among children (see `docs/reference-component-decompose.md` § Asset Set Detection)
    - Build **full dependency tree** (bottom-up order)
+   - If zero children found but design shows nested components → re-read the design context response and extract component references explicitly
 4. For each variant: note what differs (colors, layout, states)
 4. **Derive component name from Figma layer name** → convert to PascalCase → **always show to user and ask to confirm or correct:**
    > "Component name derived from Figma: `<Name>` — confirm or enter correct name:"
