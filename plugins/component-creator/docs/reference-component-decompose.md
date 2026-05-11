@@ -4,6 +4,20 @@ description: "Decompose rules for composite components — Phase 1.5. How to cla
 
 # Component Decompose — Reference
 
+## Sub-Component Detection (Phase 0.5)
+
+Before deciding layer placement — check if the component name starts with an existing parent component name from registry:
+
+```
+"AsidePanelNavBarIcon" starts with "AsidePanel" (in registry)
+→ suggest: res/widgets/aside-panel/ui/aside-panel-nav-bar-icon/
+   type: local, parent: "AsidePanel"
+```
+
+Show both options and let user decide:
+- **(a) Top-level widget** — `res/widgets/aside-panel-nav-bar-icon/`, `type: primitive`
+- **(b) Sub-component** — `res/widgets/aside-panel/ui/aside-panel-nav-bar-icon/`, `type: local, parent: "AsidePanel"`
+
 ## When to Decompose
 
 Decompose when `get_design_context(disableCodeConnect: true)` reveals child component instances (not just nested frames). Pure layout wrappers with no logic or states → flatten into parent, no separate file.

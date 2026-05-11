@@ -94,8 +94,14 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
 1. `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` → all variant property combinations + **each variant's own nodeId**
 2. Record each default-state variant's nodeId for SSIM (e.g. sec/default=314:4128, prim/default=314:4127, with-icon/default=314:4149)
 3. For each variant: note what differs (colors, layout, states)
-4. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
-5. **Derive layer and path from `reference-component-creation-template.md`** (already loaded in Step 0.2):
+4. **Derive component name from Figma layer name** → convert to PascalCase → **always show to user and ask to confirm or correct:**
+   > "Component name derived from Figma: `<Name>` — confirm or enter correct name:"
+   Do NOT proceed with the name silently. Figma layer names may contain typos (e.g. `AssidePanel` vs `AsidePanel`).
+5. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
+6. **Detect sub-component placement** — if component name starts with an existing registry entry name:
+   > e.g. `AsidePanelNavBarIcon` starts with `AsidePanel` → suggest `type: local, parent: "AsidePanel"`
+   Show both options in plan: (a) top-level widget or (b) sub-component inside parent `ui/`. User confirms.
+7. **Derive layer and path from `reference-component-creation-template.md`** (already loaded in Step 0.2):
    - Find the row matching `Widget directory` or `Component file` in the file conventions table
    - Extract the path pattern, e.g. `res/widgets/<widget-name>/`
    - Substitute `<widget-name>` with the kebab-case component name
@@ -139,6 +145,9 @@ SSIM verification plan (Phase 3):
   threshold: <0.92 if SVG icons present | 0.95 default>
   state:hover / state:disable / effect:* — CSS-only, not SSIM-testable (verified visually via Space overlay)
 
+  ⚠️ width = component frame bounding box from get_design_context (`absoluteBoundingBox.width`)
+  NOT the size of icon child nodes inside the component (icons are resources in img/, irrelevant to SSIM)
+
 Confirm variant selection →
 ```
 
@@ -160,19 +169,24 @@ Read `docs/reference-component-decompose.md` — decompose rules, child classifi
 
 Read `docs/reference-component-decompose.md` § Icon Naming Algorithm before naming icon files.
 
+**Always try SVG first.** Never plan PNG download upfront — PNG is fallback only.
+
 For each icon variant detected in Phase 0.5:
 
 ```bash
+# Step 1 — always try SVG
 tools/fetch-figma-svg.sh <fileKey> <iconNodeId> <layer>/img/<icon>.svg
 ```
 
-**If `fetch-figma-svg.sh` returns 404 (asset URL expired):**
-Figma CDN pre-signed URLs expire in ~10-15 min. Fallback:
-1. `mcp__figma__get_screenshot(nodeId: <iconNodeId>, fileKey)` — fetches a fresh PNG render
-2. Save as `<layer>/img/<icon>.png` instead of `.svg`
-3. Update JS reference: `__DIR__ + "img/<icon>.png"`
+**Only if `fetch-figma-svg.sh` returns 404 (asset URL expired):**
+```bash
+# Step 2 — fallback to PNG screenshot
+mcp__figma__get_screenshot(nodeId: <iconNodeId>, fileKey)
+# Save as <layer>/img/<icon>.png
+# Update JS: __DIR__ + "img/<icon>.png"
+```
 
-Do not retry the expired URL — it will not recover. Use the screenshot fallback immediately.
+In Phase 0.5 plan — always list icons as `.svg`. Change to `.png` only after actual 404.
 
 ---
 
