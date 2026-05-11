@@ -61,7 +61,9 @@ If a sub-step needs more than one sentence in SKILL.md → it needs its own doc.
 
 ## Why
 
-The LLM reads SKILL.md on every invocation. Bloated skills increase context load and reduce instruction precision. Reference docs are read only when the relevant step is reached — just-in-time loading keeps context lean.
+The LLM reads SKILL.md on every invocation. Bloated skills increase context load and reduce instruction precision.
+
+**Plugin docs/ files are NOT readable via relative path** — they resolve from the project's CWD, not the plugin's install directory. Never add `Read docs/reference-*.md` instructions to SKILL.md. Reference docs are human-only documentation.
 
 ## Enforcement
 
