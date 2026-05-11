@@ -18,6 +18,53 @@ If `## Component Placement Rules` section is absent → ask user where to place 
 Layer: <path from Component Placement Rules>  (reference-component-creation-template.md)
 ```
 
+## Child Component Detection (Phase 0.5)
+
+Always scan for nested component instances — even for standalone COMPONENT nodes (not just COMPONENT_SET).
+
+### Algorithm
+
+**Step 1 — get full structure:**
+Call `get_design_context(nodeId, fileKey, disableCodeConnect: true)`.
+Parse the response for child nodes whose `type` is `COMPONENT` or `INSTANCE`.
+
+**Step 2 — if children not visible:**
+Call `get_metadata(nodeId, fileKey)` → get `children` array with nodeIds and types.
+For each child with `type: COMPONENT | INSTANCE`: call `get_design_context(childNodeId, fileKey, disableCodeConnect: true)`.
+
+**Step 3 — recurse:**
+For each child component found, repeat Steps 1–2 to detect ITS children.
+Continue until no more nested components. The tree may be N levels deep.
+
+**Step 4 — classify each node:**
+- `COMPONENT_SET` or `COMPONENT` with variant axis → real component, check registry
+- `COMPONENT`/`INSTANCE` with only visual image variants → asset set (see § Asset Set Detection)
+- `FRAME`, `GROUP`, text, shapes → layout only, no separate component needed
+
+**Step 5 — check registry per component node:**
+- EXACT MATCH (by `figma_node_id` or name) → reuse, import from `path`
+- NOT FOUND → must build first; block parent until dependency is ready
+
+**Step 6 — states drive asset variants:**
+If a child component has states (e.g. `default`/`active`) AND uses an icon asset set →
+the icon set must provide one file per state:
+```
+<icon-type>-<state>.svg   (e.g. home-normal.svg, home-active.svg)
+```
+The parent component's state selector picks the correct file.
+
+### Build order output (show in plan)
+
+```
+Build order (bottom-up):
+  1. <asset-set-name> — asset set → download to <parent>/img/
+  2. <deepest-child>  — ❌ not in registry / ✅ reuse from <path>
+  3. <parent-child>   — ❌ not in registry / ✅ reuse
+  4. <this-component> — BUILD NOW
+```
+
+⚠ Any component marked ❌ must be built first. Do not proceed until all are in registry.
+
 ## Asset Set Detection (Phase 0.5)
 
 Before treating a Figma component set as a new component — check if it's actually a **set of visual assets** (icons, images) rather than a UI component.
