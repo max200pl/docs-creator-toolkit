@@ -43,13 +43,20 @@ If a step has no doc yet → create one before adding detail to SKILL.md.
 
 ## Pattern
 
+Sub-steps are listed in SKILL.md — the plan is the executable checklist.
+The doc contains HOW to execute each sub-step (algorithm, rules, examples).
+
 ```
 ## Phase N — <Name>
 
 Read `docs/reference-<step-topic>.md`.
 
-<one sentence: what decision to make or action to take>
+1. <sub-step A> — one sentence what to do
+2. <sub-step B> — one sentence what to do
+3. <sub-step C> — one sentence what to do
 ```
+
+Sub-step detail (fallbacks, edge cases, code examples) → in the doc, not in SKILL.md.
 
 ## Why
 
