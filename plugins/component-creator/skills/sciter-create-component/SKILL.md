@@ -101,6 +101,7 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
    - Check registry per child: EXACT MATCH → reuse; NOT FOUND → must build first
    - Detect asset sets among children (see `docs/reference-component-decompose.md` § Asset Set Detection)
    - Build **full dependency tree** (bottom-up order)
+   - **Recurse into each child** — repeat child detection for each found COMPONENT/INSTANCE until the full tree is built (no more nested components). The tree may be N levels deep.
    - If zero children found but design shows nested components → re-read the design context response and extract component references explicitly
 4. For each variant: note what differs (colors, layout, states)
 4. **Derive component name from Figma layer name** → convert to PascalCase → **always show to user and ask to confirm or correct:**
