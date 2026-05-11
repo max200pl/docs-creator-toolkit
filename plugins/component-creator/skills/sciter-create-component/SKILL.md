@@ -180,6 +180,23 @@ Confirm variant selection →
 
 ---
 
+## Execution — Build from plan
+
+After user confirms Phase 0.5 plan, execute in the order shown in **Build order**:
+
+**For each item in build order (bottom-up):**
+
+| Item type | Action |
+| ---- | ---- |
+| Asset set | Phase 2A: download all icon variants to `<parent>/img/` immediately |
+| Component ✅ in registry | Skip build — just import from registry `path` in parent's JS |
+| Component ❌ not in registry | **STOP** — show: "Build `<Name>` first with `/create-component`, then re-run." Do not proceed. |
+| This component (last in order) | Run full Phases 1 → 5 |
+
+**Asset sets are downloaded before any code is generated** — icons must be in `img/` before Phase 2B writes the JS that references them.
+
+---
+
 ## Phase 1 — Context: Figma + Reuse + Token sync
 
 Read `docs/reference-token-sync.md` before comparing tokens.
