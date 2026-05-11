@@ -31,13 +31,15 @@ Each phase or step has its **own dedicated reference doc**. A doc covers exactly
 
 | Step | Doc |
 | ---- | ---- |
+| Step 0.3 — agent memory seed | `docs/reference-sciter-agent-memory.md` |
 | Step 0.7 — node classification | `docs/reference-figma-nodes.md` |
-| Phase 0.5 — child detection + build plan | `docs/reference-component-decompose.md` |
+| Phase 0.5 — plan display format | `docs/reference-component-plan.md` |
+| Phase 0.5 — child detection + decompose | `docs/reference-component-decompose.md` |
 | Phase 1 — token sync | `docs/reference-token-sync.md` |
-| Phase 2A — icon download | `docs/reference-component-decompose.md` § Icon Naming |
-| Phase 2B — CSS/JS generation | `docs/reference-sciter-css.md` |
-| Phase 3 — SSIM + preview | `docs/reference-component-build.md` |
-| Phase 0.3 — agent memory | `docs/reference-sciter-agent-memory.md` |
+| Phase 2A — icon download + naming | `docs/reference-component-decompose.md` § Icon Naming |
+| Phase 2B — CSS/JS adapter rules | `docs/reference-sciter-css.md` § Adapter Override Rules |
+| Phase 2B optional — Sciter API ref | `docs/reference-sciter-links.md` |
+| Phase 3 — SSIM full loop | `docs/reference-component-build.md` § Full SSIM Loop |
 
 If a step has no doc yet → create one before adding detail to SKILL.md.
 

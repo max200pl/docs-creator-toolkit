@@ -60,6 +60,47 @@ document.body.content(
 
 Without wrapping, SSIM comparison is meaningless — the component renders at a different size than in Figma.
 
+## Full SSIM Loop (Per-Type)
+
+**Strategy:** one run per type (COMPONENT_SET) or one run total (single COMPONENT). Never SSIM against the full-grid `preview.js`.
+
+**Resolve threshold first:** scan agent memory `feedback_*.md`:
+- SVG icons + border-radius → `0.92` (anti-aliasing ceiling)
+- Default → `0.95`
+
+**Step A — Create temp preview file per type:**
+```js
+// <name>.preview-<type>.js  (temporary — delete after all types pass)
+import { <ClassName> } from "./<name>.js";
+document.body.style.background = "#d9d9d9";
+// Fixed size → render directly
+// width:*/height:* → wrap: <div style="width:<W>dip; height:<H>dip;"><Name /></div>
+```
+
+**Step B — Fetch Figma screenshot per type** (use default-state variant nodeId from Phase 0.5):
+```bash
+tools/fetch-figma-screenshot.sh <fileKey> <variant_nodeId> /tmp/figma-<type>.png
+```
+Store in `/tmp/` only — never in ScreenshotHistory (cleared on every run).
+
+**Step C — User confirmation before each type:**
+> "Close the previous preview window → confirm when ready"
+Do NOT run the script until user confirms. Stale open window = wrong capture.
+
+**Step D — Run SSIM** using `--js` mode (max 3 attempts per type):
+```bash
+tools/preview-component.sh --js <name>.preview-<type>.js <width_dip> /tmp/figma-<type>.png
+```
+- `--js` first — standard mode derives wrong path
+- Width from Phase 0.5 plan (component frame `absoluteBoundingBox`, not icon size)
+- Read SSIM score from stdout before moving to next type
+
+**Step E — On pass:** copy screenshot → `ScreenshotHistory/{ts}_code_{name}-<type>.png`
+
+**Step F — Cleanup:** delete all `*.preview-<type>.js` after all types pass.
+
+**On failure:** write fix to agent memory → `feedback_ssim_<topic>.md` → retry (max 3). After 3 failures → EC14 escalation.
+
 ## SSIM Failure Diagnosis Order
 
 When SSIM fails, diagnose in this order. Do NOT start with color/background.

@@ -113,68 +113,9 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
    Show both options in plan: (a) top-level or (b) sub-component inside parent `ui/`. User confirms.
 7. **Detect layer** — read `## Component Placement Rules` from `reference-component-creation-template.md` (already loaded in Step 0.2). Use the rule that matches this component. If section absent → ask user.
    Show in plan: `Layer: <path>  (from Component Placement Rules)`
-6. Show plan:
-
-```
-Component Set: <name> (N variants)
-
-Property axes detected:
-  type   — <list of values>        → JS prop
-  state  — Default / hover / disable / … → CSS :hover / [disabled] / …
-  effect — Default / shadow / blur / … → CSS transition / box-shadow / …
-  (only "type" becomes a JS prop; state + effect → CSS-only)
-
-☑ <type> / state:Default / effect:Default  — nodeId: <id> — <description>
-☑ <type> / state:hover   — (CSS :hover)
-☑ <type> / state:disable — (CSS [disabled])
-☑ <type> / effect:*      — (CSS transitions/shadows — no extra JS prop)
-
-Existing in registry: <none | partial match>
-Layer: <exact path from reference-component-creation-template.md — Widget directory row, name substituted>
-
-Child components detected:
-  ✦ <ChildName> — nodeId: <id> — <in registry ✅ reuse | NOT in registry ❌ build first>
-  ✦ <IconSetName> — asset set → download to <layer>/<name>/img/
-
-Build order (bottom-up):
-  1. <deepest child> — <status>
-  2. <next child>    — <status>
-  3. <this component> — BUILD NOW
-
-⚠ Components marked ❌ must be built first. Cannot proceed until all dependencies are in registry.
-
-Files to be created:
-  <layer>/<name>.js          — component class
-  <layer>/<name>.css         — styles
-  <layer>/<name>.preview.js  — full grid (all types, for Space overlay)
-  <layer>/<name>.figma.ts    — Code Connect
-  <layer>/img/<icon>.svg     — (if icon variant present)
-  (<layer> = path resolved above from reference-component-creation-template.md)
-
-Token delta (new tokens to add to tokens.css):
-  + --<token-name>: <value>   — <what it maps to in Figma>
-  = --<existing>              — already exists, reused as-is
-  (none) if all colors already covered by existing tokens
-
-SSIM verification plan (Phase 3):
-
-  — If COMPONENT_SET (multiple types/variants):
-  ✦ <type1> / state:Default / effect:Default — nodeId: <id> — width: <W>dip
-  ✦ <type2> / state:Default / effect:Default — nodeId: <id> — width: <W>dip
-  ✦ <type3> / state:Default / effect:Default — nodeId: <id> — width: <W>dip
-  One run per type. threshold: <0.92 if SVG icons | 0.95 default>
-
-  — If single COMPONENT (no variant axis):
-  ✦ <ComponentName> — nodeId: <id> — width: <W>dip × height: <H>dip
-  One run, full component. threshold: <0.92 if SVG icons | 0.95 default>
-
-  state:hover / effect:* — CSS-only, verified visually via Space overlay
-
-  ⚠️ width + height = component frame absoluteBoundingBox from get_design_context
-  NOT the size of child nodes inside (icons in img/ are irrelevant to SSIM dimensions)
+6. Show plan — use format from `docs/reference-component-plan.md`.
 
 Confirm variant selection →
-```
 
 6. **Wait for explicit user confirmation before Phase 1.**
 
@@ -226,133 +167,24 @@ In Phase 0.5 plan — always list icons as `.svg`. Change to `.png` only after a
 
 Read `docs/reference-sciter-css.md` before writing any CSS.
 
-## Sciter Adapter Overrides
+## Phase 2B — Sciter Adapter Rules
 
-### adapter.generate() — CSS rules
+Read `docs/reference-sciter-css.md` § Adapter Override Rules.
 
-| Rule | Correct | Wrong |
-| ---- | ---- | ---- |
-| Layout | `flow: horizontal` / `flow: vertical` | `display: flex` |
-| Flex fill | `width: *` / `height: *` | `flex: 1` |
-| Hidden overflow | `overflow: none` | `overflow: hidden` |
-| Dimensions | `dip` (1:1 from Figma px) | `px` |
-| Colors | CSS vars only | hardcoded hex |
-| Typography | `@mixin name;` | `font` shorthand with `var()` |
-| Mixin syntax | no commas inside `@mixin` | comma-separated values |
-| Centering + `width:*` | `vertical-align: middle` on every child | `content-vertical-align` on parent |
-| `<button>` block | `display: block` on root element | default inline-block — adds 2px line-height gap below button, inflating body height |
-| Pixel-perfect sizing | Figma value = source of truth; if token value ≠ Figma → use raw `dip` | sacrificing accuracy for token reuse |
+1. Generate CSS — follow adapter CSS rules (flow/dip/overflow/centering/display:block/pixel-perfect)
+2. Generate JS — follow adapter JS rules (class extends Element / state-disabled / __DIR__ paths)
+3. Write `<name>.preview.js` — full grid all types for Space overlay (NOT used for SSIM)
+4. Add `@import` to main CSS entry file
 
-### adapter.generate() — JS rules
-
-| Rule | Correct | Wrong |
-| ---- | ---- | ---- |
-| Base class | `class Name extends Element` | functional component |
-| HTML attr | `class="..."` | `className="..."` |
-| Icon paths | `__DIR__ + "img/..."` | `"./img/..."` |
-| Imports | must include `.js` extension | bare paths |
-| State | native Sciter element methods | React hooks |
-| Disabled attr | `state-disabled={this.disabled}` | `disabled={this.disabled}` — HTML attr, not Sciter state system |
+(Sciter API reference: `docs/reference-sciter-links.md`)
 
 ### adapter.visual_verify() — SSIM (Phase 3)
 
-Read `docs/reference-component-build.md` before running any preview or SSIM commands.
+Read `docs/reference-component-build.md` § Full SSIM Loop (Per-Type).
 
-**Component set preview + SSIM strategy:**
-
-`preview.js` — shows all variants as a grid (for visual inspection, Space overlay).
-SSIM — runs only for **default state of each type**, in parallel.
-
-**Why not full grid SSIM:** hover/disabled are CSS states that can't be pixel-perfectly forced in a static preview. Comparing forced states against Figma's renderer produces false SSIM failures.
-
-**Why not one canonical variant:** each type (sec, prim, with-icon) has different visual weight — all three need independent verification.
-
-**Implementation:**
-
-1. `<name>.preview.js` — full grid for human review only (NOT used for SSIM):
-   ```js
-   // one row per type — all types visible for Space overlay inspection
-   <Button type="sec" label="Not Now" />
-   <Button type="prim" label="Update" />
-   <Button type="with-icon" label="Not Now" />
-   // hover/disabled states inspected manually via Space overlay
-   ```
-
-2. SSIM — **one separate run per type**. Never run SSIM against the full-grid `preview.js`.
-
-   ⚠️ Never use the component set nodeId for SSIM. A component set screenshot includes all variants in a grid — its height is N× taller than a single-variant preview. The comparison tool scales both to the same size, compressing the Figma screenshot and making overlay useless.
-
-   Always match: **one Figma screenshot of one variant ↔ one temporary single-variant preview file**.
-
-   **Step A — For each type, create a temporary single-variant preview file:**
-
-   If component uses `width: *` or `height: *` — wrap in container with real dimensions from Figma (see `docs/reference-component-build.md` § Flex Container Wrapping).
-
-   ```js
-   // <name>.preview-<type>.js  (temporary — delete after SSIM passes)
-   import { <ClassName> } from "./<name>.js";
-   document.body.style.background = "#d9d9d9";
-   // Fixed size → render directly:
-   //   document.body.content(<ComponentName prop="value" />);
-   // Flex sizing (width:* or height:*) → wrap with parent dims from Figma:
-   //   document.body.content(<div style="width:<W>dip; height:<H>dip;"><ComponentName /></div>);
-   ```
-   Repeat for every type.
-
-   **Step B — Fetch Figma screenshot per type** using the default-state variant nodeId recorded in Phase 0.5:
-   ```bash
-   tools/fetch-figma-screenshot.sh <fileKey> <sec_default_nodeId>       /tmp/figma-sec.png
-   tools/fetch-figma-screenshot.sh <fileKey> <prim_default_nodeId>      /tmp/figma-prim.png
-   tools/fetch-figma-screenshot.sh <fileKey> <withicon_default_nodeId>  /tmp/figma-with-icon.png
-   ```
-
-   **Step C — Run SSIM per type** using `--js` mode (loop max 3 per type):
-
-   For each type, the sequence is:
-   1. **STOP before running the script** — ask the user to confirm all previous Sciter preview windows are closed
-   2. Only after user confirms → run `preview-component.sh`
-   3. The script opens the window, waits for it to appear, then auto-captures
-
-   Ask before EACH type run:
-   > "Close the previous preview window → confirm when ready"
-
-   Only proceed after explicit user confirmation ("есть", "готово", "да"). Do NOT run the script speculatively — a stale open window will be captured instead of the new one.
-
-   ```bash
-   tools/preview-component.sh --js res/widgets/button/button.preview-sec.js       159 /tmp/figma-sec.png
-   tools/preview-component.sh --js res/widgets/button/button.preview-prim.js      159 /tmp/figma-prim.png
-   tools/preview-component.sh --js res/widgets/button/button.preview-with-icon.js 159 /tmp/figma-with-icon.png
-   ```
-   - `--js` flag MUST be first — standard mode derives path as `<name>.preview.js` and will not find `preview-<type>.js`
-   - Second arg: path to the per-type preview file (absolute or relative to project root)
-   - Third arg: width in dip (integer, no units) — use the variant's own width from Phase 0.5
-   - Fourth arg: path to per-type Figma PNG
-   Do NOT read the script to check its signature — use this format exactly.
-
-   ⚠️ **Window reuse bug:** `preview-component.sh` finds the first open window named "Preview". If the previous type's window is still open, the script captures it instead of the new one → wrong SSIM. **Before each type run: close the previous preview window (red button).** If unsure, run `pkill -f sciterjsMacOS` to kill all Sciter windows.
-
-   ⚠️ **Figma PNGs must stay in `/tmp/`:** `find-component.py save_history()` clears ALL PNGs in ScreenshotHistory on every run. Never store Figma reference PNGs there — deleted by the next SSIM run. Always use `/tmp/figma-<type>.png`.
-
-   **Step D — Cleanup:** after all types pass, delete the temporary `*.preview-<type>.js` files.
-
-3. ScreenshotHistory — save `_code_` and `_figma_` for each verified type.
-
-**Resolve adaptive threshold before running:**
-Scan agent memory `feedback_*.md` for patterns matching this component:
-- Has SVG icons + border-radius → use threshold `0.92` (known rendering ceiling)
-- Default → `0.95`
-
-- PASS → copy preview screenshot → `tools/ScreenshotHistory/{ts}_code_{name}-<type>.png`
-- Fix applied → write `.claude/agent-memory/sciter-create-component/feedback_ssim_<topic>.md`
-- 3 failures on any type → EC14 escalation (see `sequences/sciter-create-component.mmd`)
-
-**When SSIM fails — diagnose in this order:**
-1. **Size** — does the button bounding box match Figma? (width × height in px)
-2. **Padding / margins** — is there extra space around the component? (body margin, display:block gap)
-3. **Element positions** — is text/icon centered correctly?
-4. **Colors** — only after layout is correct
-
-Never start diagnosis from background color. Background mismatch is a symptom, not a root cause — fix layout first.
+1. Resolve adaptive threshold from agent memory (0.92 SVG+border-radius | 0.95 default)
+2. Execute per-type loop: Steps A–F from doc
+3. On pass: save to ScreenshotHistory; on 3 failures: EC14 escalation
 
 ## Phase 4 — Registry (MANDATORY)
 
@@ -374,30 +206,8 @@ If any field violates the schema → stop and show `REGISTRY SCHEMA VIOLATION: <
 
 ## Agent Memory
 
-Seed on first run if `.claude/agent-memory/sciter-create-component/` is empty:
-
-```
-# SSIM Fix: typography
-Root cause: font shorthand with var() is silently ignored in Sciter — font metrics
-never applied → wrong element dimensions → SSIM fails on layout, not color.
-Fix: replace font: var(--x) with @mixin name; (no parens, no comma)
-Apply to: ALL components with text elements
-
-# SSIM Fix: button display block
-Root cause: <button> in Sciter is display:inline-block by default — adds 2px
-line-height gap below the element, inflating body height vs Figma.
-Fix: add display: block as the FIRST property on the root .button rule.
-Apply to: ALL button-like components that use <button> as root element.
-Generate this from the start — do not wait for SSIM failure to discover it.
-
-# SSIM Fix: text centering in flow:horizontal
-Root cause: content-align / content-horizontal-align on parent doesn't center
-text inside a span child in Sciter flow layout.
-Fix: on the label span — width: * (fills available space) + text-align: center
-+ vertical-align: middle. Do NOT use content-align on the parent.
-Apply to: ALL button-like components with centered label text.
-Generate this from the start — do not wait for SSIM failure to discover it.
-```
+Seed templates: `docs/reference-sciter-agent-memory.md`.
+Seed on first run if `.claude/agent-memory/sciter-create-component/` is empty.
 
 ## Phase 5 — Code Connect (Sciter specifics)
 

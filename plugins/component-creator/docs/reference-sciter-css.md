@@ -97,3 +97,31 @@ clear: after;
 flow-rows: 40px 1* 40px;
 flow-columns: 200px 1*;
 ```
+
+## Adapter Override Rules (sciter-create-component)
+
+### CSS rules
+
+| Rule | Correct | Wrong |
+| ---- | ---- | ---- |
+| Layout | `flow: horizontal` / `flow: vertical` | `display: flex` |
+| Flex fill | `width: *` / `height: *` | `flex: 1` |
+| Hidden overflow | `overflow: none` | `overflow: hidden` |
+| Dimensions | `dip` (1:1 from Figma px) | `px` |
+| Colors | CSS vars only | hardcoded hex |
+| Typography | `@mixin name;` | `font` shorthand with `var()` |
+| Mixin syntax | no commas inside `@mixin` | comma-separated values |
+| Centering + `width:*` | `vertical-align: middle` on every child | `content-vertical-align` on parent |
+| `<button>` block | `display: block` as first property | default inline-block (adds 2px gap) |
+| Pixel-perfect | Figma value = source of truth; token ≠ Figma → raw `dip` | sacrificing accuracy for token reuse |
+
+### JS rules
+
+| Rule | Correct | Wrong |
+| ---- | ---- | ---- |
+| Base class | `class Name extends Element` | functional component |
+| HTML attr | `class="..."` | `className="..."` |
+| Icon paths | `__DIR__ + "img/..."` | `"./img/..."` |
+| Imports | must include `.js` extension | bare paths |
+| State | native Sciter element methods | React hooks |
+| Disabled | `state-disabled={this.disabled}` | `disabled={this.disabled}` (HTML attr, not Sciter state) |
