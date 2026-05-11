@@ -138,14 +138,21 @@ Token delta (new tokens to add to tokens.css):
   (none) if all colors already covered by existing tokens
 
 SSIM verification plan (Phase 3):
-  ✦ <type1> / state:Default / effect:Default — nodeId: <id> — width: <N>dip
-  ✦ <type2> / state:Default / effect:Default — nodeId: <id> — width: <N>dip
-  ✦ <type3> / state:Default / effect:Default — nodeId: <id> — width: <N>dip
-  threshold: <0.92 if SVG icons present | 0.95 default>
-  state:hover / state:disable / effect:* — CSS-only, not SSIM-testable (verified visually via Space overlay)
 
-  ⚠️ width = component frame bounding box from get_design_context (`absoluteBoundingBox.width`)
-  NOT the size of icon child nodes inside the component (icons are resources in img/, irrelevant to SSIM)
+  — If COMPONENT_SET (multiple types/variants):
+  ✦ <type1> / state:Default / effect:Default — nodeId: <id> — width: <W>dip
+  ✦ <type2> / state:Default / effect:Default — nodeId: <id> — width: <W>dip
+  ✦ <type3> / state:Default / effect:Default — nodeId: <id> — width: <W>dip
+  One run per type. threshold: <0.92 if SVG icons | 0.95 default>
+
+  — If single COMPONENT (no variant axis):
+  ✦ <ComponentName> — nodeId: <id> — width: <W>dip × height: <H>dip
+  One run, full component. threshold: <0.92 if SVG icons | 0.95 default>
+
+  state:hover / effect:* — CSS-only, verified visually via Space overlay
+
+  ⚠️ width + height = component frame absoluteBoundingBox from get_design_context
+  NOT the size of child nodes inside (icons in img/ are irrelevant to SSIM dimensions)
 
 Confirm variant selection →
 ```
