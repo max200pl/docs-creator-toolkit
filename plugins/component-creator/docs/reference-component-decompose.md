@@ -15,10 +15,15 @@ Before treating a Figma component set as a new component — check if it's actua
 
 **If it's an asset set:** do NOT create a separate component directory. Download the icons and place them in `img/` of the parent component that uses them.
 
+Path follows project conventions from `reference-component-creation-template.md`:
 ```
-AsidePanelNavBarIcon (4 icon variants: home/history/backup/tools)
+<layer>/<parent-component-name>/img/<icon-name>.svg
+```
+
+Example (paths are project-specific, not hardcoded):
+```
 → NOT a component
-→ download as: res/widgets/aside-panel/img/home-normal.svg, history-normal.svg, ...
+→ download to: <layer>/<parent>/img/home-normal.svg, history-normal.svg, ...
 ```
 
 ## Sub-Component Detection (Phase 0.5)
@@ -27,9 +32,11 @@ Before deciding layer placement — check registry for a parent component whose 
 
 **Pattern:** `<ParentName><Suffix>` → suggest placing inside parent's `ui/` directory.
 
+Paths follow project conventions from `reference-component-creation-template.md` (not hardcoded).
+
 Show both options and let user decide:
-- **(a) Top-level** — standalone widget, `type: primitive/feature`
-- **(b) Sub-component** — inside parent `ui/` directory, `type: local, parent: "<ParentName>"`
+- **(a) Top-level** — `<layer>/<component-name>/`, `type: primitive/feature`
+- **(b) Sub-component** — `<layer>/<parent-name>/ui/<component-name>/`, `type: local, parent: "<ParentName>"`
 
 ## When to Decompose
 
