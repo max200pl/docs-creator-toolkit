@@ -79,7 +79,8 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
    - Parse response for COMPONENT/INSTANCE children
    - If not visible → `get_metadata(nodeId)` → children array → `get_design_context` per child
    - For each INSTANCE: follow `componentId` to SOURCE → recurse into SOURCE children
-   - For each COMPONENT_SET found: call `get_design_context` to extract all property axes (type/state/effect) + all variant nodeIds
+   - For each COMPONENT_SET found (including asset sets): call `get_design_context(nodeId, fileKey, disableCodeConnect: true)` to extract **all property axes** (type/state/effect) + all variant nodeIds
+   - **Asset sets also have effect axes** (e.g. hover) — extract them too, then decide: if hover variant is visually identical to another state → CSS-only, no extra SVG; if visually distinct → separate SVG file
    - Repeat N levels deep until full tree built
    - Classify: asset set (pure image variants) / real component / layout-only
    - Registry check: EXACT MATCH → reuse | NOT FOUND → must build first
@@ -104,7 +105,8 @@ Component table:
   │ <child>         │ <nodeId>   │ state    │ <s1>,<s2>    │ prop/CSS class       │ icon swap     │ ❌ build first │
   │                 │            │ effect   │ hover        │ CSS :hover           │ highlight     │ local ui/      │
   ├─────────────────┼────────────┼──────────┼──────────────┼──────────────────────┼───────────────┼────────────────┤
-  │ <asset-set>     │ <nodeId>   │ type×st  │ N variants   │ <t>-<s>.svg per pair │ —             │ ASSET SET      │
+  │ <asset-set>     │ <nodeId>   │ type×st  │ N variants   │ distinct visuals → SVG │ —           │ ASSET SET      │
+  │                 │            │ ×effect  │              │ same visual → CSS only │               │ download only  │
   └─────────────────┴────────────┴──────────┴──────────────┴──────────────────────┴───────────────┴────────────────┘
 
   state = condition (active/disabled) | effect = visual reaction (hover/shadow/transition)
