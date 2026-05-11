@@ -260,14 +260,16 @@ SSIM — runs only for **default state of each type**, in parallel.
 
    **Step A — For each type, create a temporary single-variant preview file:**
 
+   If component uses `width: *` or `height: *` — wrap in container with real dimensions from Figma (see `docs/reference-component-build.md` § Flex Container Wrapping).
+
    ```js
    // <name>.preview-<type>.js  (temporary — delete after SSIM passes)
    import { <ClassName> } from "./<name>.js";
    document.body.style.background = "#d9d9d9";
-   // Fixed size → render directly
-   // Flex sizing (width:* or height:*) → wrap with parent dims from Figma
-   // See docs/reference-component-build.md § Flex Container Wrapping
-   document.body.content(/* component render */);
+   // Fixed size → render directly:
+   //   document.body.content(<ComponentName prop="value" />);
+   // Flex sizing (width:* or height:*) → wrap with parent dims from Figma:
+   //   document.body.content(<div style="width:<W>dip; height:<H>dip;"><ComponentName /></div>);
    ```
    Repeat for every type.
 
