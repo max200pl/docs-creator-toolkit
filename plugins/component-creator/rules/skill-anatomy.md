@@ -25,14 +25,30 @@ A SKILL.md contains only:
 
 If a section exceeds ~10 lines → extract to a `docs/reference-*.md` and replace with a one-line read instruction.
 
+## One Doc Per Step
+
+Each phase or step has its **own dedicated reference doc**. A doc covers exactly one step's rules — never shared between steps.
+
+| Step | Doc |
+| ---- | ---- |
+| Step 0.7 — node classification | `docs/reference-figma-nodes.md` |
+| Phase 0.5 — child detection + build plan | `docs/reference-component-decompose.md` |
+| Phase 1 — token sync | `docs/reference-token-sync.md` |
+| Phase 2A — icon download | `docs/reference-component-decompose.md` § Icon Naming |
+| Phase 2B — CSS/JS generation | `docs/reference-sciter-css.md` |
+| Phase 3 — SSIM + preview | `docs/reference-component-build.md` |
+| Phase 0.3 — agent memory | `docs/reference-sciter-agent-memory.md` |
+
+If a step has no doc yet → create one before adding detail to SKILL.md.
+
 ## Pattern
 
 ```
 ## Phase N — <Name>
 
-Read `docs/reference-<topic>.md` before proceeding.
+Read `docs/reference-<step-topic>.md`.
 
-<one sentence describing what to do>
+<one sentence: what decision to make or action to take>
 ```
 
 ## Why
