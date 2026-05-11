@@ -61,13 +61,23 @@ Continue until no more nested components. The tree may be N levels deep.
 - EXACT MATCH (by `figma_node_id` or name) → reuse, import from `path`
 - NOT FOUND → must build first; block parent until dependency is ready
 
-**Step 7 — states drive asset variants:**
-If a child component has states (e.g. `default`/`active`) AND uses an icon asset set →
-the icon set must provide one file per state per type:
+**Step 7 — read actual icon variants from Figma, do not assume combinations:**
+
+For each asset set found, call `get_design_context(assetSetNodeId, fileKey, disableCodeConnect: true)` to get the **exact list of variants** that exist in Figma.
+
+Each variant has its own `nodeId` and property combination (e.g. `type=scan, state=active`).
+Build the download list from the actual variants — not from a theoretical grid of all types × all states.
+
 ```
-<icon-type>-<state>.svg   (e.g. scan-normal.svg, scan-active.svg)
+Actual variants found (example):
+  scan/active   → nodeId: X → scan-active.svg
+  scan/default  → nodeId: Y → scan-normal.svg
+  backup        → nodeId: Z → backup.svg        ← no active variant
+  history       → nodeId: W → history.svg        ← no active variant
+  toolbox       → nodeId: V → toolbox.svg        ← no active variant
 ```
-Download ALL combinations — not just the first item's icons.
+
+Download only the variants that exist. File naming from § Icon Naming Algorithm.
 
 ### Build order output (show in plan)
 
