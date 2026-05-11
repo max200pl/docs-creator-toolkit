@@ -65,6 +65,21 @@ Build order (bottom-up):
 
 ⚠ Any component marked ❌ must be built first. Do not proceed until all are in registry.
 
+## Execution — Build from Plan
+
+After user confirms Phase 0.5 plan, execute in the **Build order** shown (bottom-up):
+
+| Item type | Action |
+| ---- | ---- |
+| Asset set | Download all icon variants to `<parent>/img/` immediately — before Phase 2B |
+| Component ✅ in registry | Skip build — import from registry `path` in parent's JS |
+| Component ❌ not in registry | **STOP** — "Build `<Name>` first with `/create-component`, then re-run." |
+| This component (last) | Run full Phases 1 → 5 |
+
+**Icons must be downloaded before Phase 2B** — JS references `img/` paths that must exist.
+
+---
+
 ## Asset Set Detection (Phase 0.5)
 
 Before treating a Figma component set as a new component — check if it's actually a **set of visual assets** (icons, images) rather than a UI component.
