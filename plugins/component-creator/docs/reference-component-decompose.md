@@ -149,6 +149,21 @@ Child component instances detected but no registry entry and no files on disk.
 3. Continue building parent using local child
 4. `validate-registry` later scans `uses` fields, finds `type: local` in 2+ components, flags for promotion
 
+## Phase 2A — SVG Download
+
+Always try SVG first. Never plan PNG upfront.
+
+```bash
+# Step 1 — SVG
+tools/fetch-figma-svg.sh <fileKey> <iconNodeId> <layer>/img/<icon>.svg
+
+# Step 2 — PNG fallback (only on 404)
+mcp__figma__get_screenshot(nodeId: <iconNodeId>, fileKey)
+# Save as <layer>/img/<icon>.png; update JS to __DIR__ + "img/<icon>.png"
+```
+
+In Phase 0.5 plan — list icons as `.svg`. Change to `.png` only after actual 404.
+
 ## Icon Naming Algorithm
 
 Convert Figma `layerName` to kebab-case SVG filename:

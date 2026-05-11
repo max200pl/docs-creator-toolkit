@@ -64,60 +64,30 @@ Existing components (ButtonFeedback, etc.) are read ONLY in Phase 5 to discover 
 
 **0.6 EC2 check** — if directory `<name>/` exists (even empty) and no registry entry → prompt: overwrite / register as-is / cancel.
 
-**0.7 Node type detection** — Read `docs/reference-figma-nodes.md` (full type table + classification logic).
+**0.7 Node type detection** — Read `docs/reference-figma-nodes.md`.
 
-Call `mcp__figma__get_code_connect_suggestions(nodeId, fileKey)` → get `mainComponentNodeId`.
-
-**Classification:**
-
-| Condition | Node type | Action |
-| ---- | ---- | ---- |
-| `mainComponentNodeId == nodeId` | `COMPONENT_SET` or standalone `COMPONENT` | ✅ Proceed to Phase 0.5 |
-| `mainComponentNodeId != nodeId` AND node is a `COMPONENT` whose parent is `COMPONENT_SET` | Variant (◆ inside ◆◆) | 🔄 Redirect: use `mainComponentNodeId` as new nodeId |
-| `mainComponentNodeId != nodeId` AND node type is `INSTANCE` | Instance placed on canvas | ⬆ Drill: follow `componentId` → find source `COMPONENT` → check if parent is `COMPONENT_SET` → use set if exists |
-| node type is `FRAME` / `GROUP` / `VECTOR` / `TEXT` / other | Not a component | ❌ Stop |
-
-**Redirect message (variant case):**
-> "Node `<nodeId>` is a **variant** (◆), not a component set (◆◆).
-> Correct node: `<mainComponentNodeId>` — use this URL:
-> `https://www.figma.com/design/<fileKey>?node-id=<mainComponentNodeId>`"
-
-**Stop message (non-component):**
-> "This is a `<type>` node, not a component. Select a component (◆) or component set (◆◆) in Figma."
-
-After redirect or drill — re-run Step 0.7 with the resolved nodeId.
+1. `get_code_connect_suggestions(nodeId, fileKey)` → `mainComponentNodeId`
+2. Classify node type → proceed / redirect / drill / stop (see doc)
+3. Re-run with resolved nodeId after redirect or drill
 
 ---
 
 ### Phase 0.5 — Variant Analysis and Plan (MANDATORY — do not start Phase 1 without user confirmation)
 
-1. `mcp__figma__get_design_context(nodeId, fileKey, disableCodeConnect: true)` → full structure: variant combinations, each variant's own nodeId, **all child component instances** (nested components)
-2. Record each default-state variant's nodeId for SSIM
-3. **Detect ALL child component instances** — follow `docs/reference-component-decompose.md` § Child Component Detection:
-   - 3a. Parse `get_design_context(disableCodeConnect: true)` for COMPONENT/INSTANCE children
-   - 3b. If not visible → `get_metadata(nodeId)` → children array → `get_design_context` per child
-   - 3c. Recurse N levels deep until full tree
-   - 3d. Classify: real component / asset set / layout-only
-   - 3e. Registry check per component: ✅ reuse | ❌ build first
-   - 3f. States drive asset variants (`<icon>-<state>.svg`)
-   - 3g. Show build order bottom-up in plan
-4. For each variant: note what differs (colors, layout, states)
-4. **Derive component name from Figma layer name** → convert to PascalCase → **always show to user and ask to confirm or correct:**
-   > "Component name derived from Figma: `<Name>` — confirm or enter correct name:"
-   Do NOT proceed with the name silently. Figma layer names may contain typos.
-5. **Asset set detection** — before treating as a component, check if all variants are pure image/icon nodes with no layout or behavior (see `docs/reference-component-decompose.md` § Asset Set Detection):
-   - If asset set → do NOT create a component directory; download icons to parent's `img/`; stop here
-   - If real component → continue
-6. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
-7. **Detect sub-component placement** — check registry for a parent whose name is a prefix of this component name (see `docs/reference-component-decompose.md` § Sub-Component Detection).
-   Show both options in plan: (a) top-level or (b) sub-component inside parent `ui/`. User confirms.
-7. **Detect layer** — read `## Component Placement Rules` from `reference-component-creation-template.md` (already loaded in Step 0.2). Use the rule that matches this component. If section absent → ask user.
-   Show in plan: `Layer: <path>  (from Component Placement Rules)`
-6. Show plan — use format from `docs/reference-component-plan.md`.
+Read `docs/reference-component-decompose.md` § Child Component Detection + Asset Set Detection + Sub-Component Detection.
+Read `docs/reference-component-plan.md` for plan display format.
 
-Confirm variant selection →
+1. `get_design_context(nodeId, fileKey, disableCodeConnect: true)` → full structure
+2. Record default-state variant nodeIds for SSIM
+3. Detect all child instances recursively — `docs/reference-component-decompose.md` § Child Component Detection
+4. Derive name from Figma layer → always confirm with user (typo check)
+5. Asset set detection — `docs/reference-component-decompose.md` § Asset Set Detection
+6. Registry check by name or `figma_node_id`
+7. Sub-component placement detection — `docs/reference-component-decompose.md` § Sub-Component Detection
+8. Layer detection — `## Component Placement Rules` from `reference-component-creation-template.md`
+9. Show plan — `docs/reference-component-plan.md`
 
-6. **Wait for explicit user confirmation before Phase 1.**
+**Wait for explicit user confirmation before Phase 1.**
 
 ---
 
@@ -140,32 +110,12 @@ Read `docs/reference-component-decompose.md` — decompose rules, child classifi
 
 ## Phase 2A — Download SVG Assets
 
-Read `docs/reference-component-decompose.md` § Icon Naming Algorithm before naming icon files.
+Read `docs/reference-component-decompose.md` § Phase 2A — SVG Download + § Icon Naming Algorithm.
 
-**Always try SVG first.** Never plan PNG download upfront — PNG is fallback only.
-
-For each icon variant detected in Phase 0.5:
-
-```bash
-# Step 1 — always try SVG
-tools/fetch-figma-svg.sh <fileKey> <iconNodeId> <layer>/img/<icon>.svg
-```
-
-**Only if `fetch-figma-svg.sh` returns 404 (asset URL expired):**
-```bash
-# Step 2 — fallback to PNG screenshot
-mcp__figma__get_screenshot(nodeId: <iconNodeId>, fileKey)
-# Save as <layer>/img/<icon>.png
-# Update JS: __DIR__ + "img/<icon>.png"
-```
-
-In Phase 0.5 plan — always list icons as `.svg`. Change to `.png` only after actual 404.
+1. Download each icon — SVG first, PNG fallback on 404
+2. Name files per icon naming algorithm
 
 ---
-
-## Phase 2B — Generate Sciter CSS + JS + preview + @import
-
-Read `docs/reference-sciter-css.md` before writing any CSS.
 
 ## Phase 2B — Sciter Adapter Rules
 
@@ -188,38 +138,21 @@ Read `docs/reference-component-build.md` § Full SSIM Loop (Per-Type).
 
 ## Phase 4 — Registry (MANDATORY)
 
-Write to **`.claude/state/component-registry.json`** — the JSON file.
+Read `rules/registry-schema.md` — strict field allowlist, validate before writing.
 
-⛔ NEVER write to `.claude/docs/reference-component-registry.md` — that is a read-only generated markdown view, not the source of truth.
-
-Follow `rules/registry-schema.md` strictly. Before writing, validate the new entry:
-- All keys must be in the allowed list from `registry-schema.md`
-- `path` must be the `.js` file, not a directory
-- `figma_node_id` must be the **component set** nodeId (captured in Phase 0.5), not a variant nodeId
-- `variants`: all implemented type names (e.g. `["sec", "prim", "with-icon"]`)
-- `states`: Figma `state` axis values with distinct static designs (e.g. `["Default", "disable"]`) — exclude CSS-only interaction states (hover) that have no separate Figma frame; values vary per component
-- `uses`: names of primitive components used by this component — match Figma child node IDs against `figma_node_id` entries in registry; `[]` if no primitives used
-- `ssim_score`: minimum score across all parallel SSIM runs
-- `status`: `"in-progress"` at Phase 4; updated to `"done"` after Phase 5
-
-If any field violates the schema → stop and show `REGISTRY SCHEMA VIOLATION: <field>` before writing.
+1. Write to `.claude/state/component-registry.json` (JSON only, never markdown)
+2. Validate all fields against schema — stop on violation with `REGISTRY SCHEMA VIOLATION: <field>`
+3. `status: "in-progress"` at Phase 4 → update to `"done"` after Phase 5
 
 ## Agent Memory
 
 Seed templates: `docs/reference-sciter-agent-memory.md`.
 Seed on first run if `.claude/agent-memory/sciter-create-component/` is empty.
 
-## Phase 5 — Code Connect (Sciter specifics)
+## Phase 5 — Code Connect
 
-- Use **`.figma.ts`** extension, NOT `.figma.js` — CLI transpiles `.ts → .js`; `.figma.js` is sent raw and `import` breaks in Figma runtime
-- Project must NOT have `"type": "module"` in `package.json` — breaks CLI transpilation
-- Always call `get_code_connect_map(nodeId, fileKey)` BEFORE generating — if mapping exists, show old→new diff and ask user to replace or keep
+Read `docs/reference-code-connect-sciter.md`.
 
-## EC13 — Inline Primitive Onboarding (Sciter)
-
-Same as `create-component` EC13 but inline creation uses Sciter rules + SSIM verify.
-
-Show:
-> "No Code Connect pattern found yet — one-time setup needed.
-> Pick a **simple Sciter primitive** without child components (Button, Icon, Badge).
-> Paste its Figma URL (component set ◆◆, not a variant ◆):"
+1. Check existing mapping — `get_code_connect_map(nodeId, fileKey)` before generating
+2. Generate `.figma.ts` (not `.figma.js`) following pattern from existing primitive
+3. Publish — dry-run first; EC13 if no primitive found (see doc)
