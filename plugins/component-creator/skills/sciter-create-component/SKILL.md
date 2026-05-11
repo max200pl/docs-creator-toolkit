@@ -25,7 +25,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 ### ⚙ Version check
 
 ```
-[component-creator v0.0.18 | sciter-create-component]
+[component-creator v0.0.19 | sciter-create-component]
 ```
 
 ### Step 0 — Pre-flight (MANDATORY)
