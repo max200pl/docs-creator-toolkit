@@ -104,11 +104,11 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
 7. **Detect sub-component placement** — check registry for a parent whose name is a prefix of this component name (see `docs/reference-component-decompose.md` § Sub-Component Detection).
    Show both options in plan: (a) top-level or (b) sub-component inside parent `ui/`. User confirms.
 7. **Auto-detect layer** (see `docs/reference-component-decompose.md` § Layer Auto-Detection):
-   - Read `architecture.organizing_principle` from `frontend-analysis.json`
-   - **FSD:** classify by component type (primitive → `shared/ui/`, domain noun → `entities/features/widgets/`)
-   - **Non-FSD:** read `## Component Placement Rules` from `reference-component-creation-template.md`
-   - Show detection result in plan:
-     > `Layer detection: FSD → shared/ui/button/ (primitive, no domain noun)`
+   - `architecture.organizing_principle` from `frontend-analysis.json` (read in Step 0.2)
+   - **FSD:** component type → layer from `architecture.top_level_dirs`
+   - **Non-FSD:** `## Component Placement Rules` from `reference-component-creation-template.md`
+   - Show in plan:
+     > `Layer detection: organizing_principle=fsd → src/shared/ui/button/`
 6. Show plan:
 
 ```
