@@ -52,6 +52,24 @@ For each INSTANCE found:
 For each COMPONENT or COMPONENT_SET found (including inside sources), repeat Steps 1–3.
 Continue until no more nested components. The tree may be N levels deep.
 
+**Step 4b — extract all states/variants for every COMPONENT or COMPONENT_SET found:**
+
+For each component node (not just the root), call `get_design_context(nodeId, fileKey, disableCodeConnect: true)` and extract:
+- All property axes (type, state, effect, etc.)
+- All variant combinations with their nodeIds
+- Which axes are CSS-only (state, effect) vs JS props (type)
+
+```
+For each COMPONENT_SET child:
+  axes = get_design_context(childNodeId).componentPropertyDefinitions
+  for each axis in axes:
+    record: axis_name, values[], axis_type (JS_prop | CSS_only)
+  for each variant:
+    record: variant_nodeId, property_combination
+```
+
+This builds the full Component Information table used in the plan (see reference-component-plan.md § Dependency Table).
+
 **Step 5 — classify each node:**
 - `COMPONENT_SET` or `COMPONENT` with variant axis → real component, check registry
 - `COMPONENT`/`INSTANCE` with only visual image variants → asset set (see § Asset Set Detection)

@@ -23,15 +23,24 @@ Property axes detected:
 Existing in registry: <none | partial match>
 Layer: <path from Component Placement Rules>   (reference-component-creation-template.md)
 
-Child components detected:
-  ✦ <ChildName> — nodeId: <id> — ✅ in registry, reuse from <path>
-  ✦ <ChildName> — nodeId: <id> — ❌ NOT in registry, build first
-  ✦ <IconSetName> — asset set → download to <layer>/<name>/img/
+Dependency table:
+
+  ┌─────────────────┬──────────────┬─────────────────────────┬────────────────┐
+  │   Component     │ Variants/States              │ Uses            │ Status         │
+  ├─────────────────┼──────────────────────────────┼─────────────────┼────────────────┤
+  │ <ChildName>     │ state: <s1>, <s2>            │ <AssetSetName>  │ ❌ build first │
+  │                 │ type: <t1>, <t2>             │                 │                │
+  ├─────────────────┼──────────────────────────────┼─────────────────┼────────────────┤
+  │ <AssetSetName>  │ <axis>: <v1>/<v2>            │ —               │ asset set      │
+  │                 │ (N variants → N .svg files)  │                 │ download       │
+  ├─────────────────┼──────────────────────────────┼─────────────────┼────────────────┤
+  │ <ThisComponent> │ (no variant axis)            │ <ChildName>     │ BUILD NOW      │
+  └─────────────────┴──────────────────────────────┴─────────────────┴────────────────┘
 
 Build order (bottom-up):
-  1. <deepest child or asset set> — <status>
-  2. <next child>                 — <status>
-  3. <this component>             — BUILD NOW
+  1. <asset-set> — download to <layer>/<name>/img/
+  2. <deepest-child> — ❌ build first / ✅ reuse
+  3. <this-component> — BUILD NOW
 
 ⚠ Components marked ❌ must be built first. Cannot proceed until all in registry.
 
