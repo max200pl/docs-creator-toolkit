@@ -22,11 +22,13 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 ## Execution
 
-### ⚙ Version check
+### ⚙ Version check — OUTPUT THIS AS YOUR VERY FIRST TEXT, before any tool call
 
 ```
 [component-creator v0.0.19 | sciter-create-component]
 ```
+
+Do not call any tools before outputting the version line above.
 
 ### Step 0 — Pre-flight (MANDATORY)
 
@@ -49,7 +51,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 - `.claude/state/frontend-analysis.json` — `naming_conventions` + `styling_system`
 - `.claude/docs/frontend-design-system.md` or `token_file` path — tokens + typography
 
-**0.3 Agent memory** — check `.claude/agent-memory/sciter-create-component/`. If empty → create these seed files:
+**0.3 Agent memory** — use `Glob(".claude/agent-memory/sciter-create-component/**")` to list files. If empty → create these seed files:
 - `feedback_ssim_typography.md`: font shorthand `var()` silently ignored → use `@mixin name;`
 - `feedback_ssim_display_block.md`: `<button>` is inline-block → always add `display: block` first
 - `feedback_ssim_centering.md`: `content-align` ignored when child uses `width:*` → use `vertical-align: middle` on each child
