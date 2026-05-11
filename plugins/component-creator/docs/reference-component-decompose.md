@@ -37,10 +37,10 @@ For each child with `type: COMPONENT | INSTANCE`: call `get_design_context(child
 ⚠️ When a child is an `INSTANCE` — do NOT stop there. An Instance is a placed copy; its internal structure is defined by its SOURCE component, not by the instance itself.
 
 ```
-INSTANCE (AsidePanelNavBarItem placed 4x)
+INSTANCE (<name> placed N times)
   └─ componentId → SOURCE COMPONENT or COMPONENT_SET
        └─ recurse into SOURCE children to find nested components
-            e.g. AsidePanelNavBarIcon (COMPONENT_SET of icon variants)
+            (e.g. nested COMPONENT_SET of icon variants)
 ```
 
 For each INSTANCE found:
@@ -121,11 +121,7 @@ Path follows project conventions from `reference-component-creation-template.md`
 <layer>/<parent-component-name>/img/<icon-name>.svg
 ```
 
-Example (paths are project-specific, not hardcoded):
-```
-→ NOT a component
-→ download to: <layer>/<parent>/img/home-normal.svg, history-normal.svg, ...
-```
+Path: `<layer>/<parent>/img/<icon-name>.svg` — project-specific, derived from template.
 
 ## Sub-Component Detection (Phase 0.5)
 
@@ -199,10 +195,10 @@ Convert Figma `layerName` to kebab-case SVG filename:
 4. Add `.svg`
 
 ```
-"Icon / Scan / Normal"  → scan-normal.svg
-"Icon / Scan / Active"  → scan-active.svg
-"Ic_Settings"           → ic-settings.svg
-"Settings icon"         → settings-icon.svg
+"Icon / <Name> / Normal"  → <name>-normal.svg
+"Icon / <Name> / Active"  → <name>-active.svg
+"Ic_<Name>"               → ic-<name>.svg
+"<Name> icon"             → <name>-icon.svg
 ```
 
 Icon names must describe **purpose**, not appearance (`close.svg` not `x-shape.svg`).
