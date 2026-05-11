@@ -259,11 +259,18 @@ SSIM — runs only for **default state of each type**, in parallel.
    Always match: **one Figma screenshot of one variant ↔ one temporary single-variant preview file**.
 
    **Step A — For each type, create a temporary single-variant preview file:**
+
+   If component uses `width: *` or `height: *` — wrap in container with real dimensions from Figma (see `docs/reference-component-build.md` § Flex Container Wrapping):
    ```js
-   // <name>.preview-<type>.js  (temporary — delete after SSIM passes)
-   import { Button } from "./button.js";
-   document.body.style.background = "#d9d9d9";
+   // Component with fixed size — no wrapper needed
    document.body.content(<Button type="sec" label="Not Now" />);
+
+   // Component with width:* or height:* — wrap with Figma parent dims
+   document.body.content(
+     <div style="width: <W>dip; height: <H>dip;">
+       <AsidePanelNavBar />
+     </div>
+   );
    ```
    Repeat for every type.
 
