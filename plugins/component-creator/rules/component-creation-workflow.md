@@ -80,9 +80,11 @@ After agents complete — surface conflicts: EC3b (token name mismatch), EC11 (n
 Only when Agent 1 reveals child component instances.
 
 1. Build dependency tree — deepest children first.
-2. Classify each child by FSD layer.
-3. Build each child component via Phase 2 before building the parent.
-4. Never auto-create primitives silently — if a needed primitive is missing from registry, flag it and stop (run `/create-primitive` first).
+2. For each child instance, check registry by `figma_node_id` or name:
+   - **EXACT MATCH in registry** → reuse: import from `path` field, add to `uses[]`. Do NOT rebuild.
+   - **NOT in registry** → flag to user: "Child component `<Name>` not found. Build it first with `/create-component`, then re-run." Stop — do not auto-build silently.
+3. Build the parent only after all required children are confirmed in registry.
+4. Populate `uses: ["<ChildName>", ...]` in the parent's Phase 4 registry entry from the children found above.
 
 ### Phase 2 — Implement (2 parallel streams)
 
