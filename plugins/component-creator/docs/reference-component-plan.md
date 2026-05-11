@@ -45,12 +45,18 @@ Build order (bottom-up):
 ⚠ Components marked ❌ must be built first. Cannot proceed until all in registry.
 
 Files to be created:
-  <layer>/<name>.js          — component class
-  <layer>/<name>.css         — styles
-  <layer>/<name>.preview.js  — full grid (all types, for Space overlay)
-  <layer>/<name>.figma.ts    — Code Connect
-  <layer>/img/<icon>.svg     — (if icons detected)
-  (<layer> = path from Component Placement Rules)
+  <layer>/<name>/
+    <name>.js                — main component
+    <name>.css               — styles
+    <name>.preview.js        — Space overlay preview
+    <name>.figma.ts          — Code Connect
+    img/
+      <icon-1>.svg           — (one line per icon from dependency table)
+      <icon-2>.svg
+    ui/                      — (only if sub-components detected)
+      <sub-name>.js          — sub-component
+      <sub-name>.css
+  (<layer> = path from Component Placement Rules; ui/ only if local children)
 
 Token delta:
   + --<token-name>: <value>   — <Figma variable it maps to>
