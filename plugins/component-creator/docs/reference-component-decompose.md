@@ -69,15 +69,14 @@ Each variant has its own `nodeId` and property combination (e.g. `type=scan, sta
 Build the download list from the actual variants — not from a theoretical grid of all types × all states.
 
 ```
-Actual variants found (example):
-  scan/active   → nodeId: X → scan-active.svg
-  scan/default  → nodeId: Y → scan-normal.svg
-  backup        → nodeId: Z → backup.svg        ← no active variant
-  history       → nodeId: W → history.svg        ← no active variant
-  toolbox       → nodeId: V → toolbox.svg        ← no active variant
+Actual variants found — read from get_design_context, not assumed:
+  <type-A>/<state-1> → nodeId: X → <type-a>-<state-1>.svg
+  <type-A>/<state-2> → nodeId: Y → <type-a>-<state-2>.svg
+  <type-B>           → nodeId: Z → <type-b>.svg   ← single variant, no state axis
+  <type-C>           → nodeId: W → <type-c>.svg   ← single variant
 ```
 
-Download only the variants that exist. File naming from § Icon Naming Algorithm.
+The variant list is the source of truth. File naming per § Icon Naming Algorithm.
 
 ### Build order output (show in plan)
 
