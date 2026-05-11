@@ -58,16 +58,22 @@ Files to be created:
       <sub-name>.css
   (<layer> = path from Component Placement Rules; ui/ only if local children)
 
-States table:
+States & effects table:
 
-  ┌─────────────────┬────────────────┬──────────────────────┬─────────────────────────────┐
-  │ Component       │ State          │ Implementation       │ Visual change               │
-  ├─────────────────┼────────────────┼──────────────────────┼─────────────────────────────┤
-  │ <ComponentName> │ <state-name>   │ JS prop / CSS :hover │ <what changes visually>     │
-  │                 │ <state-name>   │ CSS [disabled]       │ <what changes visually>     │
-  ├─────────────────┼────────────────┼──────────────────────┼─────────────────────────────┤
-  │ <SubComponent>  │ <state-name>   │ prop active: bool    │ icon swap + color change    │
-  └─────────────────┴────────────────┴──────────────────────┴─────────────────────────────┘
+  ┌─────────────────┬──────────┬────────────────┬────────────────────────┬──────────────────────────┐
+  │ Component       │ Axis     │ Value          │ Implementation         │ Visual change            │
+  ├─────────────────┼──────────┼────────────────┼────────────────────────┼──────────────────────────┤
+  │ <ComponentName> │ state    │ <value>        │ JS prop / CSS class    │ <what changes>           │
+  │                 │ state    │ <value>        │ CSS [disabled]         │ <what changes>           │
+  │                 │ effect   │ hover          │ CSS :hover             │ <visual reaction>        │
+  │                 │ effect   │ <other-effect> │ CSS transition/shadow  │ <visual reaction>        │
+  ├─────────────────┼──────────┼────────────────┼────────────────────────┼──────────────────────────┤
+  │ <SubComponent>  │ state    │ active         │ prop active: bool      │ icon swap + highlight    │
+  │                 │ effect   │ hover          │ CSS :hover             │ background tint          │
+  └─────────────────┴──────────┴────────────────┴────────────────────────┴──────────────────────────┘
+
+  state = condition of the component (active, disabled, selected)
+  effect = visual reaction in a given state (hover, click, transition, shadow)
 
 Token delta:
   + --<token-name>: <value>   — <Figma variable it maps to>
