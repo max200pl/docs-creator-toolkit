@@ -32,26 +32,42 @@ Parse the response for child nodes whose `type` is `COMPONENT` or `INSTANCE`.
 Call `get_metadata(nodeId, fileKey)` → get `children` array with nodeIds and types.
 For each child with `type: COMPONENT | INSTANCE`: call `get_design_context(childNodeId, fileKey, disableCodeConnect: true)`.
 
-**Step 3 — recurse:**
-For each child component found, repeat Steps 1–2 to detect ITS children.
+**Step 3 — INSTANCE: always follow componentId to SOURCE**
+
+⚠️ When a child is an `INSTANCE` — do NOT stop there. An Instance is a placed copy; its internal structure is defined by its SOURCE component, not by the instance itself.
+
+```
+INSTANCE (AsidePanelNavBarItem placed 4x)
+  └─ componentId → SOURCE COMPONENT or COMPONENT_SET
+       └─ recurse into SOURCE children to find nested components
+            e.g. AsidePanelNavBarIcon (COMPONENT_SET of icon variants)
+```
+
+For each INSTANCE found:
+1. Get its `componentId` (from `get_design_context` or `get_metadata`)
+2. Call `get_design_context(componentId, fileKey, disableCodeConnect: true)` on the SOURCE
+3. Recurse into SOURCE children — this reveals nested COMPONENT_SET, asset sets, etc.
+
+**Step 4 — recurse on all found components:**
+For each COMPONENT or COMPONENT_SET found (including inside sources), repeat Steps 1–3.
 Continue until no more nested components. The tree may be N levels deep.
 
-**Step 4 — classify each node:**
+**Step 5 — classify each node:**
 - `COMPONENT_SET` or `COMPONENT` with variant axis → real component, check registry
 - `COMPONENT`/`INSTANCE` with only visual image variants → asset set (see § Asset Set Detection)
 - `FRAME`, `GROUP`, text, shapes → layout only, no separate component needed
 
-**Step 5 — check registry per component node:**
+**Step 6 — check registry per component node:**
 - EXACT MATCH (by `figma_node_id` or name) → reuse, import from `path`
 - NOT FOUND → must build first; block parent until dependency is ready
 
-**Step 6 — states drive asset variants:**
+**Step 7 — states drive asset variants:**
 If a child component has states (e.g. `default`/`active`) AND uses an icon asset set →
-the icon set must provide one file per state:
+the icon set must provide one file per state per type:
 ```
-<icon-type>-<state>.svg   (e.g. home-normal.svg, home-active.svg)
+<icon-type>-<state>.svg   (e.g. scan-normal.svg, scan-active.svg)
 ```
-The parent component's state selector picks the correct file.
+Download ALL combinations — not just the first item's icons.
 
 ### Build order output (show in plan)
 
