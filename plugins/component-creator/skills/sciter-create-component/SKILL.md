@@ -96,11 +96,13 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
 3. For each variant: note what differs (colors, layout, states)
 4. **Derive component name from Figma layer name** → convert to PascalCase → **always show to user and ask to confirm or correct:**
    > "Component name derived from Figma: `<Name>` — confirm or enter correct name:"
-   Do NOT proceed with the name silently. Figma layer names may contain typos (e.g. `AssidePanel` vs `AsidePanel`).
-5. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
-6. **Detect sub-component placement** — if component name starts with an existing registry entry name:
-   > e.g. `AsidePanelNavBarIcon` starts with `AsidePanel` → suggest `type: local, parent: "AsidePanel"`
-   Show both options in plan: (a) top-level widget or (b) sub-component inside parent `ui/`. User confirms.
+   Do NOT proceed with the name silently. Figma layer names may contain typos.
+5. **Asset set detection** — before treating as a component, check if all variants are pure image/icon nodes with no layout or behavior (see `docs/reference-component-decompose.md` § Asset Set Detection):
+   - If asset set → do NOT create a component directory; download icons to parent's `img/`; stop here
+   - If real component → continue
+6. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
+7. **Detect sub-component placement** — check registry for a parent whose name is a prefix of this component name (see `docs/reference-component-decompose.md` § Sub-Component Detection).
+   Show both options in plan: (a) top-level or (b) sub-component inside parent `ui/`. User confirms.
 7. **Derive layer and path from `reference-component-creation-template.md`** (already loaded in Step 0.2):
    - Find the row matching `Widget directory` or `Component file` in the file conventions table
    - Extract the path pattern, e.g. `res/widgets/<widget-name>/`

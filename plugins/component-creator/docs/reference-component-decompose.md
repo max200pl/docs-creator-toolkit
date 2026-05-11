@@ -4,19 +4,32 @@ description: "Decompose rules for composite components — Phase 1.5. How to cla
 
 # Component Decompose — Reference
 
+## Asset Set Detection (Phase 0.5)
+
+Before treating a Figma component set as a new component — check if it's actually a **set of visual assets** (icons, images) rather than a UI component.
+
+**Signs it's an asset set, not a component:**
+- All variants differ only in the visual image (different icons per type)
+- No layout, no text, no interactive behavior — pure image nodes
+- Variants map to different icon files, not different component states
+
+**If it's an asset set:** do NOT create a separate component directory. Download the icons and place them in `img/` of the parent component that uses them.
+
+```
+AsidePanelNavBarIcon (4 icon variants: home/history/backup/tools)
+→ NOT a component
+→ download as: res/widgets/aside-panel/img/home-normal.svg, history-normal.svg, ...
+```
+
 ## Sub-Component Detection (Phase 0.5)
 
-Before deciding layer placement — check if the component name starts with an existing parent component name from registry:
+Before deciding layer placement — check registry for a parent component whose name is a prefix of the new component name.
 
-```
-"AsidePanelNavBarIcon" starts with "AsidePanel" (in registry)
-→ suggest: res/widgets/aside-panel/ui/aside-panel-nav-bar-icon/
-   type: local, parent: "AsidePanel"
-```
+**Pattern:** `<ParentName><Suffix>` → suggest placing inside parent's `ui/` directory.
 
 Show both options and let user decide:
-- **(a) Top-level widget** — `res/widgets/aside-panel-nav-bar-icon/`, `type: primitive`
-- **(b) Sub-component** — `res/widgets/aside-panel/ui/aside-panel-nav-bar-icon/`, `type: local, parent: "AsidePanel"`
+- **(a) Top-level** — standalone widget, `type: primitive/feature`
+- **(b) Sub-component** — inside parent `ui/` directory, `type: local, parent: "<ParentName>"`
 
 ## When to Decompose
 
