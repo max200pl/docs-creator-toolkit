@@ -58,6 +58,17 @@ Files to be created:
       <sub-name>.css
   (<layer> = path from Component Placement Rules; ui/ only if local children)
 
+States table:
+
+  ┌─────────────────┬────────────────┬──────────────────────┬─────────────────────────────┐
+  │ Component       │ State          │ Implementation       │ Visual change               │
+  ├─────────────────┼────────────────┼──────────────────────┼─────────────────────────────┤
+  │ <ComponentName> │ <state-name>   │ JS prop / CSS :hover │ <what changes visually>     │
+  │                 │ <state-name>   │ CSS [disabled]       │ <what changes visually>     │
+  ├─────────────────┼────────────────┼──────────────────────┼─────────────────────────────┤
+  │ <SubComponent>  │ <state-name>   │ prop active: bool    │ icon swap + color change    │
+  └─────────────────┴────────────────┴──────────────────────┴─────────────────────────────┘
+
 Token delta:
   + --<token-name>: <value>   — <Figma variable it maps to>
   = --<existing>              — already exists, reused
