@@ -103,12 +103,8 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
 6. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
 7. **Detect sub-component placement** — check registry for a parent whose name is a prefix of this component name (see `docs/reference-component-decompose.md` § Sub-Component Detection).
    Show both options in plan: (a) top-level or (b) sub-component inside parent `ui/`. User confirms.
-7. **Auto-detect layer** (see `docs/reference-component-decompose.md` § Layer Auto-Detection):
-   - `architecture.organizing_principle` from `frontend-analysis.json` (read in Step 0.2)
-   - **FSD:** component type → layer from `architecture.top_level_dirs`
-   - **Non-FSD:** `## Component Placement Rules` from `reference-component-creation-template.md`
-   - Show in plan:
-     > `Layer detection: organizing_principle=fsd → src/shared/ui/button/`
+7. **Detect layer** — read `## Component Placement Rules` from `reference-component-creation-template.md` (already loaded in Step 0.2). Use the rule that matches this component. If section absent → ask user.
+   Show in plan: `Layer: <path>  (from Component Placement Rules)`
 6. Show plan:
 
 ```
