@@ -4,6 +4,46 @@ description: "Decompose rules for composite components — Phase 1.5. How to cla
 
 # Component Decompose — Reference
 
+## Layer Auto-Detection (Phase 0.5)
+
+Layer is derived from `architecture.organizing_principle` in `frontend-analysis.json` + `reference-component-creation-template.md`.
+
+### FSD projects (`organizing_principle: "fsd"`)
+
+Classify by component scope and dependencies:
+
+| Component type | Layer | Example |
+| ---- | ---- | ---- |
+| Generic UI primitive, no domain logic | `shared/ui` | Button, Icon, Badge, Input |
+| Domain entity (knows about business data) | `entities/<name>` | UserCard, ProductBadge |
+| User interaction with side effects | `features/<name>` | LoginForm, AddToCart |
+| Composite block, multiple features | `widgets/<name>` | Sidebar, Header |
+| Full page view | `pages/<name>` | DashboardPage |
+
+**Rule:** if component name has no domain noun → `shared/ui`. If it includes a domain noun (User, Product, Order) → `entities` or `features`.
+
+### Non-FSD projects
+
+Read `## Component Placement Rules` from `reference-component-creation-template.md` (Gap B).
+Use the layer path pattern defined there. If the section is absent → ask user where to place it.
+
+### In Phase 0.5 plan — always show detection result:
+
+```
+Layer detection:
+  Architecture: FSD (from frontend-analysis.json)
+  Component type: primitive (no domain noun, generic UI)
+  → shared/ui/button/
+```
+
+or
+
+```
+Layer detection:
+  Architecture: feature-folders (from frontend-analysis.json)
+  → widgets/button/ (from Component Placement Rules in template)
+```
+
 ## Asset Set Detection (Phase 0.5)
 
 Before treating a Figma component set as a new component — check if it's actually a **set of visual assets** (icons, images) rather than a UI component.

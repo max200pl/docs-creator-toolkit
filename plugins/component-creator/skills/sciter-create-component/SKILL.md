@@ -103,11 +103,12 @@ After redirect or drill — re-run Step 0.7 with the resolved nodeId.
 6. Check registry for component name or `figma_node_id` — check **`.claude/state/component-registry.json`** only, NOT markdown files
 7. **Detect sub-component placement** — check registry for a parent whose name is a prefix of this component name (see `docs/reference-component-decompose.md` § Sub-Component Detection).
    Show both options in plan: (a) top-level or (b) sub-component inside parent `ui/`. User confirms.
-7. **Derive layer and path from `reference-component-creation-template.md`** (already loaded in Step 0.2):
-   - Find the row matching `Widget directory` or `Component file` in the file conventions table
-   - Extract the path pattern, e.g. `res/widgets/<widget-name>/`
-   - Substitute `<widget-name>` with the kebab-case component name
-   - **Do NOT guess between `widgets/` and `shared/ui/`** — use only what the template says
+7. **Auto-detect layer** (see `docs/reference-component-decompose.md` § Layer Auto-Detection):
+   - Read `architecture.organizing_principle` from `frontend-analysis.json`
+   - **FSD:** classify by component type (primitive → `shared/ui/`, domain noun → `entities/features/widgets/`)
+   - **Non-FSD:** read `## Component Placement Rules` from `reference-component-creation-template.md`
+   - Show detection result in plan:
+     > `Layer detection: FSD → shared/ui/button/ (primitive, no domain noun)`
 6. Show plan:
 
 ```
