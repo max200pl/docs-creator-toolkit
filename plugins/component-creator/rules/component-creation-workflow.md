@@ -83,8 +83,13 @@ Only when Agent 1 reveals child component instances.
 2. For each child instance, check registry by `figma_node_id` or name:
    - **EXACT MATCH in registry** → reuse: import from `path` field, add to `uses[]`. Do NOT rebuild.
    - **NOT in registry** → flag to user: "Child component `<Name>` not found. Build it first with `/create-component`, then re-run." Stop — do not auto-build silently.
-3. Build the parent only after all required children are confirmed in registry.
-4. Populate `uses: ["<ChildName>", ...]` in the parent's Phase 4 registry entry from the children found above.
+3. **Sub-component relocation check** — for each child found in registry, determine if it belongs inside the parent's folder:
+   - Child name = `<ParentName><Suffix>` (e.g. `NavBar` suffix of `AsidePanel`) **AND** `uses[]` count in registry ≤ 1 (only used by this parent)
+   → **propose in plan:** move child from current top-level path into `<parent-layer>/<parent-name>/ui/<child-name>/`; update registry `path`, `parent`, `type: local`; update all imports
+   - Child is a generic primitive (Button, Icon, Badge) **OR** used by multiple parents → keep as-is, just import
+   Show relocation as an option in Phase 0.5 plan — user decides.
+4. Build the parent only after all required children are confirmed in registry.
+5. Populate `uses: ["<ChildName>", ...]` in the parent's Phase 4 registry entry from the children found above.
 
 ### Phase 2 — Implement (2 parallel streams)
 
