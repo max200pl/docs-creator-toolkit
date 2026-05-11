@@ -23,57 +23,42 @@ Property axes detected:
 Existing in registry: <none | partial match>
 Layer: <path from Component Placement Rules>   (reference-component-creation-template.md)
 
-Dependency table:
+Component table (one source of truth):
 
-  ┌─────────────────┬──────────────┬─────────────────────────┬────────────────┐
-  │   Component     │ Variants/States              │ Uses            │ Status         │
-  ├─────────────────┼──────────────────────────────┼─────────────────┼────────────────┤
-  │ <ChildName>     │ state: <s1>, <s2>            │ <AssetSetName>  │ ❌ build first │
-  │                 │ type: <t1>, <t2>             │                 │                │
-  ├─────────────────┼──────────────────────────────┼─────────────────┼────────────────┤
-  │ <AssetSetName>  │ <axis>: <v1>/<v2>            │ —               │ asset set      │
-  │                 │ (N variants → N .svg files)  │                 │ download       │
-  ├─────────────────┼──────────────────────────────┼─────────────────┼────────────────┤
-  │ <ThisComponent> │ (no variant axis)            │ <ChildName>     │ BUILD NOW      │
-  └─────────────────┴──────────────────────────────┴─────────────────┴────────────────┘
+  ┌─────────────────┬────────────┬──────────┬──────────────┬──────────────────────┬───────────────┬────────────────┐
+  │ Component       │ Figma ID   │ Axis     │ Values       │ Implementation       │ Visual change │ Status         │
+  ├─────────────────┼────────────┼──────────┼──────────────┼──────────────────────┼───────────────┼────────────────┤
+  │ <ComponentName> │ <nodeId>   │ type     │ <v1>, <v2>   │ JS prop              │ layout/icon   │ BUILD NOW      │
+  │                 │            │ state    │ <s1>, <s2>   │ JS prop / CSS class  │ color/icon    │                │
+  │                 │            │ effect   │ hover        │ CSS :hover           │ bg tint       │                │
+  ├─────────────────┼────────────┼──────────┼──────────────┼──────────────────────┼───────────────┼────────────────┤
+  │ <SubComponent>  │ <nodeId>   │ state    │ <s1>, <s2>   │ prop / CSS class     │ icon swap     │ ❌ build first │
+  │                 │            │ effect   │ hover        │ CSS :hover           │ highlight     │ local ui/      │
+  ├─────────────────┼────────────┼──────────┼──────────────┼──────────────────────┼───────────────┼────────────────┤
+  │ <AssetSetName>  │ <nodeId>   │ type     │ <v1>..<vN>   │ SVG in img/          │ —             │ ASSET SET      │
+  │                 │            │ state    │ <s1>..<sM>   │ <t>-<s>.svg per pair │               │ download only  │
+  └─────────────────┴────────────┴──────────┴──────────────┴──────────────────────┴───────────────┴────────────────┘
+
+  state = condition (active, disabled, selected) | effect = visual reaction (hover, shadow, transition)
 
 Build order (bottom-up):
-  1. <asset-set> — download to <layer>/<name>/img/
-  2. <deepest-child> — ❌ build first / ✅ reuse
-  3. <this-component> — BUILD NOW
+  1. <asset-set> (<nodeId>) — download N SVG → <layer>/<name>/img/
+  2. <sub-component> (<nodeId>) — ❌ build first / ✅ reuse from <path>
+  3. <this-component> (<nodeId>) — BUILD NOW
 
-⚠ Components marked ❌ must be built first. Cannot proceed until all in registry.
+⚠ Components marked ❌ must be built first.
 
 Files to be created:
   <layer>/<name>/
     <name>.js                — main component
-    <name>.css               — styles
+    <name>.css
     <name>.preview.js        — Space overlay preview
     <name>.figma.ts          — Code Connect
     img/
-      <icon-1>.svg           — (one line per icon from dependency table)
-      <icon-2>.svg
-    ui/                      — (only if sub-components detected)
-      <sub-name>.js          — sub-component
+      <icon>-<state>.svg     — (one line per actual Figma variant)
+    ui/                      — (only if local sub-components)
+      <sub-name>.js
       <sub-name>.css
-  (<layer> = path from Component Placement Rules; ui/ only if local children)
-
-States & effects table:
-
-  ┌─────────────────┬──────────┬────────────────┬────────────────────────┬──────────────────────────┐
-  │ Component       │ Axis     │ Value          │ Implementation         │ Visual change            │
-  ├─────────────────┼──────────┼────────────────┼────────────────────────┼──────────────────────────┤
-  │ <ComponentName> │ state    │ <value>        │ JS prop / CSS class    │ <what changes>           │
-  │                 │ state    │ <value>        │ CSS [disabled]         │ <what changes>           │
-  │                 │ effect   │ hover          │ CSS :hover             │ <visual reaction>        │
-  │                 │ effect   │ <other-effect> │ CSS transition/shadow  │ <visual reaction>        │
-  ├─────────────────┼──────────┼────────────────┼────────────────────────┼──────────────────────────┤
-  │ <SubComponent>  │ state    │ active         │ prop active: bool      │ icon swap + highlight    │
-  │                 │ effect   │ hover          │ CSS :hover             │ background tint          │
-  └─────────────────┴──────────┴────────────────┴────────────────────────┴──────────────────────────┘
-
-  state = condition of the component (active, disabled, selected)
-  effect = visual reaction in a given state (hover, click, transition, shadow)
 
 Token delta:
   + --<token-name>: <value>   — <Figma variable it maps to>
