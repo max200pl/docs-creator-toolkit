@@ -161,15 +161,20 @@ After user confirms:
 
 ## Phase 2A — Download SVG Assets
 
+> Icon rules: see `@plugins/component-creator/docs/reference-sciter-icons.md` (Sciter methods) and `@.claude/docs/reference-icon-connection.md` (project's detected pattern).
+
 For each icon from Phase 0.5 asset set (actual Figma variants only):
 1. `tools/fetch-figma-svg.sh <fileKey> <variantNodeId> <layer>/img/<icon>-<state>.svg`
 2. On 404 → `mcp__figma__get_screenshot(nodeId)` → save as `.png`
+3. **If project's `icon_pattern.color_change == "svg-swap-display"`** (read from `@.claude/docs/reference-icon-connection.md`) — ensure a pair of SVG files is downloaded per state (default + active, or normal + active per project convention in `icon_pattern.path_convention`). If Figma exposes only one variant but the project pattern requires a pair, fetch the closest matching variant and rename per project's state suffix convention; flag in component header-comment.
 
-Icon naming: remove prefix ("Icon / ", "Ic ") → kebab-case → lowercase → `.svg`
+Icon naming algorithm: see `@plugins/component-creator/docs/reference-sciter-icons.md#icon-naming-algorithm` — do not re-implement.
 
 ---
 
 ## Phase 2B — Sciter CSS + JS
+
+> Icon rules: read `@plugins/component-creator/docs/reference-sciter-icons.md` AND `@.claude/docs/reference-icon-connection.md` before any icon-related code emission.
 
 **CSS rules:**
 
@@ -191,9 +196,60 @@ Icon naming: remove prefix ("Icon / ", "Ic ") → kebab-case → lowercase → `
 | ---- | ---- | ---- |
 | Base class | `class Name extends Element` | functional |
 | HTML attr | `class="..."` | `className` |
-| Icon path | `__DIR__ + "img/..."` | `"./img/..."` |
 | Imports | include `.js` extension | bare paths |
 | Disabled | `state-disabled={this.disabled}` | `disabled=` |
+
+> Icon path / connection method — handled by the **Icon Connection** sub-section below (interactive). Do not hard-code `__DIR__ + "img/..."` here.
+
+### Icon Connection — interactive strategy choice
+
+**When this runs:** ONLY if Phase 0.5 asset set is non-empty (component contains icons). Otherwise skip this sub-section.
+
+**Step 1 — Read sources:**
+
+- `@.claude/docs/reference-icon-connection.md` — project's detected `icon_pattern` (connection, color_change, wrapper_component, notes)
+- `@.claude/docs/reference-component-creation-template.md` `## Icon usage patterns` section — agent-facing summary
+- `@plugins/component-creator/docs/reference-sciter-icons.md#sciter-official-recommended-method` — fallback baseline if user opts for official Sciter recommendation
+
+**Step 2 — Present options via `AskUserQuestion`:**
+
+Render preview before the question (replace `<placeholders>` with values from the JSON):
+
+```
+Detected project pattern (from reference-icon-connection.md):
+  Connection:   <icon_pattern.connection>
+  Color change: <icon_pattern.color_change>
+  Wrapper:      <wrapper_component.name or "none">
+
+Sciter official recommendation (from reference-sciter-icons.md):
+  Connection:   <official.connection — e.g. "css-foreground-icon" or "css-foreground-image">
+  Color change: <official.color_change — e.g. "css-fill" or "css-token-fill">
+```
+
+Question: `"Какую стратегию использовать для компонента <ComponentName>?"`
+
+Options (bounded — only these two):
+
+| Header | Label | Description |
+| ---- | ---- | ---- |
+| Project | Follow project pattern (recommended) | Apply detected pattern. Header-comment: `// Icon pattern follows project convention — see .claude/docs/reference-icon-connection.md` |
+| Sciter | Use Sciter official recommendation | Apply the official method from `reference-sciter-icons.md#sciter-official-recommended-method`. Header-comment: `// Icon pattern: Sciter official recommendation — see reference-sciter-icons.md#sciter-official-recommended-method` |
+
+**Auto-default rules:**
+
+- `icon_pattern.connection != null` AND `notes` is empty → default = **Project**
+- `icon_pattern.connection == null` (greenfield) → default = **Sciter**
+- `icon_pattern.notes` contains a conflict / non-recommended warning → default = **Project**, but append the warning verbatim to that option's description so the user sees it before choosing
+
+> Rationale for no "Custom" option: free-text strategy cannot be applied deterministically by the generator. If the user needs an off-pattern approach for a specific component, they should choose "Sciter" (which uses the official method) or accept the generated code and edit afterwards. A deliberate divergence from project pattern is a manual decision, not a templated one.
+
+**Step 3 — Apply choice:**
+
+1. Look up the chosen `(connection, color_change)` pair in `reference-sciter-icons.md#decision-matrix`
+2. If choice == **Project** AND `wrapper_component.name` is populated → emit `<WrapperName name={icon} state={state} />` instead of raw markup
+3. Generate code per the matrix cell
+4. Prepend the appropriate header-comment (per option's Description above)
+5. Record the choice in the component's registry entry under field `icon_strategy: project | sciter-official` — `update-component` reads this to maintain consistency on subsequent updates
 
 **Also:** write `<name>.preview.js` (full grid, all types) + add `@import` to main CSS entry.
 

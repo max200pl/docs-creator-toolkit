@@ -93,7 +93,7 @@ Bash: START_TS=$(date +%s); RUN_TS=$(date -u +%Y%m%dT%H%M%SZ); DISPLAY_TS=$(date
 Read `.claude/state/frontend-analysis.json`. Error cases:
 
 - File missing → stop: "No frontend analysis found. Run `/analyze-frontend` first."
-- `schema_version` field not matching the skill's expected (currently `1.0`) → stop: "Analysis schema version mismatch. Re-run `/analyze-frontend` to regenerate."
+- `schema_version` field not matching the skill's expected (currently `1.2` — bumped in Phase 3.6 to add `design_system.icon_pattern`) → stop: "Analysis schema version mismatch. Re-run `/analyze-frontend` to regenerate."
 - `generated.ts` older than 30 days → warn but proceed unless `--force-rerun`.
 - `frontend_roots` empty → stop: "Analysis has no frontend roots. Re-run `/analyze-frontend`."
 
@@ -115,6 +115,8 @@ Build `.claude/docs/reference-component-creation-template.md` from JSON per the 
 | Accessibility patterns | `component_inventory.a11y_observations` (or "None systematically observed") |
 | Test and story conventions | `component_inventory.test_colocation`, `storybook_present`, `storybook_coverage_pct` |
 | Design-token usage | `design_system.mechanism` + 1-2 examples from `design_system.color_palette` / `typography` |
+| Icon usage patterns (inline) | `design_system.icon_pattern.*` — see [rules/component-creation-template-format.md](../../rules/component-creation-template-format.md) `## Icon usage patterns` section spec |
+| Icon connection reference (standalone artefact) | `design_system.icon_pattern.*` — also writes `.claude/docs/reference-icon-connection.md` per [rules/icon-connection-doc-format.md](../../rules/icon-connection-doc-format.md) (see new phase below) |
 | Framework-specific idioms | `framework_idioms.body_markdown` (verbatim — already formatted by the subagent) |
 | Canonical skeleton | `component_inventory.canonical_skeleton_excerpt` verbatim |
 | Anti-patterns | Union of Notes flagged as anti-patterns across all subagents |
@@ -226,6 +228,28 @@ Read `component_inventory.components` list from `frontend-analysis.json`. For ea
 Merge logic if file already exists: preserve records with `figma_node_id` set; overwrite `status: "unverified"` records with fresh data. Never delete records with `figma_connected: true`.
 
 Also ensure project `.gitignore` has exception: `!.claude/state/component-registry.json` (registry must be version-controlled to preserve Figma connections across sessions).
+
+### Phase: Write reference-icon-connection.md
+
+Materialize the icon connection standalone doc — the human-facing record of how icons work in this project. Always written when `design_system.icon_pattern` exists in JSON (i.e. always, since the field is required as of Phase 3.6).
+
+**Source:** `design_system.icon_pattern` block from `frontend-analysis.json`.
+
+**Target:** `<project_root>/.claude/docs/reference-icon-connection.md`
+
+**Format spec:** [plugins/docs-creator/rules/icon-connection-doc-format.md](../../rules/icon-connection-doc-format.md) — follow its section order, headings, and conditional blocks exactly. Do NOT invent sections; do NOT omit required sections.
+
+**Conditional behavior:**
+
+- `icon_pattern.connection == null` AND `notes == "no icons detected"` → write a minimal doc with one section explaining "No icons detected in this project — when icons are added later, run `/docs-creator:update-frontend-docs design-system` to refresh." Do not fabricate examples.
+- `icon_pattern.wrapper_component.name == null` → omit the "Helper components" section content; render only `_No wrapper component — icons are used directly._`
+- `icon_pattern.notes` non-empty → include the "Conflicts / tech debt" section verbatim from `notes`; otherwise omit that section entirely.
+
+**Cross-references:** the generated doc MUST include a "See also" footer linking back to:
+- `@.claude/docs/reference-component-creation-template.md` (Icon usage patterns inline section)
+- For Sciter projects: `@plugins/component-creator/docs/reference-sciter-icons.md` (the methods reference)
+
+**File-naming:** same convention as `reference-component-creation-template.md` — plain name for single root, `-<root-slug>` suffix for multi-root.
 
 ### Phase: Update root CLAUDE.md Architecture section
 

@@ -28,7 +28,7 @@ When writing a JSON state file in SKIP case, use the minimal valid schema:
 
 // frontend-analysis.json — empty, schema present
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "generated": { "ts": "<ISO-UTC>", "plugin_version": "<version>" },
   "frontend_roots": []
 }

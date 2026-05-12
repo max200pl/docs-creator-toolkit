@@ -61,7 +61,7 @@ If the project needs a FULL refresh, run `/analyze-frontend` (to regenerate the 
 | ---- | ---- | ---- |
 | Preflight | **this skill** | Read `.claude/state/frontend-analysis.json`; validate `<area>` is known; confirm frontend scope |
 | Re-invoke subagent | 1-2 subagents matching `<area>` | Fresh scan of the area with current `stack_profile` from JSON |
-| Update JSON | **this skill** | Merge subagent result into `frontend_roots[*].<area-key>`; update `generated.ts` |
+| Update JSON | **this skill** | Merge subagent result into `frontend_roots[*].<area-key>`; update `generated.ts` and `generated.plugin_version` to current plugin version from `plugins/docs-creator/.claude-plugin/plugin.json`. Preserve `schema_version` as-is (Preflight already validated it matches current). |
 | Regenerate artefact | **this skill** | Write only the `.md` / `.mmd` files impacted by the area |
 | Update CLAUDE.md (conditional) | **this skill** | Only if area = `architecture` or `framework-idioms` (which affect the top-level summary) — refresh the `### Frontend` subsection paragraph. Other areas don't touch CLAUDE.md. |
 | Report | **this skill** | Persist run report per `rules/report-format.md` |

@@ -143,7 +143,7 @@ JSON schema:
 
 ```json
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "generated": {
     "plugin_version": "<e.g. 0.13.0>",
     "skill": "analyze-frontend",

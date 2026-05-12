@@ -33,7 +33,7 @@ description: "Quick-reference links for Sciter.js documentation and related tool
 | `@media`, `@const`, `@mixin` | https://docs.sciter.com/docs/CSS/at-media-const-mixin |
 | Behaviors + aspects | https://docs.sciter.com/docs/CSS/behaviors-and-aspects |
 | Scrollbars | https://docs.sciter.com/docs/CSS/scrollbars-styling |
-| Vector images / `icon()` | https://docs.sciter.com/docs/CSS/vector-images |
+| Vector images / `icon()` / `path()` | https://docs.sciter.com/docs/CSS/paths-and-vector-images |
 | Pseudo-elements | https://docs.sciter.com/docs/CSS/pseudo-elements |
 | Sprite `@image-map` | https://docs.sciter.com/docs/CSS/image-map |
 | Units (color, dimension) | https://docs.sciter.com/docs/CSS/units |

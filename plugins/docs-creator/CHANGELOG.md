@@ -2,6 +2,34 @@
 
 All notable changes to the `claude-docs-creator` plugin. Format loosely follows [Keep a Changelog](https://keepachangelog.com) and [Semantic Versioning](https://semver.org).
 
+## 0.16.0 — 2026-05-12
+
+Phase 3.6 — Icon Connection Flow infrastructure. Adds icon-pattern detection to `analyze-frontend` and a new standalone artefact in `create-frontend-docs`. Unblocks `component-creator` Phase 4 (Registry Management).
+
+### Added
+
+- **`docs/reference-icon-patterns.md`** — generic cross-framework enum for icon connection (`img-tag`, `css-foreground-image`, `inline-svg-use-sprite`, `icon-wrapper-component`, etc.) and color-change (`svg-swap-display`, `css-filter`, `css-fill`, `css-token-fill`, etc.) plus grep/AST detection signals. Single source of truth for `design-system-scanner`.
+- **`rules/icon-connection-doc-format.md`** — format rule for the new standalone artefact `.claude/docs/reference-icon-connection.md`, written by `create-frontend-docs` to document how icons connect in the analyzed project (human-facing companion to the agent-facing inline section in `reference-component-creation-template.md`).
+- **`agents/design-system-scanner.md`** — new `Icon pattern` dimension + 8-step `Icon Detection Algorithm` covering connection / color-change / wrapper-component / conflict detection. Emits `icon_pattern` block in the Summary Row.
+- **`skills/create-frontend-docs/SKILL.md`** — new phase `Write reference-icon-connection.md` between component-registry write and CLAUDE.md update. Template-section map gets two new rows for `## Icon usage patterns` (inline) and the standalone artefact.
+- **`rules/component-creation-template-format.md`** — new section spec `## Icon usage patterns` (after Design-token usage, before Framework-specific idioms) with conditional notes-warning block.
+
+### Changed
+
+- **`schema_version` 1.1 → 1.2** for `frontend-analysis.json` — adds `design_system.icon_pattern` block. Old JSON files without the field trigger the regenerate path on `update-frontend-docs`. Validators in `create-frontend-docs` and `update-frontend-docs` updated to expect `1.2`.
+- **`skills/analyze-frontend/SKILL.md`** — `design_system` section schema now includes `icon_pattern: { connection, color_change, library_name, path_convention, wrapper_component, examples, notes }`.
+
+### Fixed
+
+- **Stale URL in `plugins/component-creator/docs/reference-sciter-links.md`** — `docs.sciter.com/docs/CSS/vector-images` (404) → `docs.sciter.com/docs/CSS/paths-and-vector-images`. Discovered during A0 research.
+- **`schema_version` validator stale at `1.0`** (pre-existing inconsistency; producer was already at 1.1 per `reference-analyze-frontend-detection.md`). Aligned to `1.2`.
+
+### Companion plugin
+
+- `component-creator` bumped to `0.0.21` — consumes the new `icon_pattern`. Phase 2B of `sciter-create-component` now runs an interactive icon-strategy choice (`Project` / `Sciter`) via `AskUserQuestion`; chosen strategy recorded in registry as `icon_strategy`. See `plugins/component-creator/MILESTONES.md` Phase 3.6 for the full Definition of done.
+
+---
+
 ## [Unreleased] — M5 monorepo restructure (2026-04-28)
 
 ### Breaking changes

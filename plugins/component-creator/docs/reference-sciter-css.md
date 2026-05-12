@@ -62,11 +62,7 @@ description: "Sciter.js CSS quick-reference — properties, values, and patterns
 
 ## Icons + Images
 
-| Use case | Correct | Wrong |
-| ---- | ---- | ---- |
-| Icon is main content | `<img src="..." />` | |
-| Icon decorates interactive element | `foreground-image: url(...)` + `foreground-size: contain` | `background-image` |
-| Many icons from one sprite | `@image-map` | individual files |
+> Icon connection methods, color-change patterns, naming algorithm, and the decision matrix are the single source of truth in **`reference-sciter-icons.md`**. This page only covers layout/positioning concerns specific to icon containers.
 
 ```css
 /* <img> in flow: vertical must have display: block to center */

@@ -141,6 +141,40 @@ Then give 1-2 **examples** of how an existing component actually references toke
 ```
 ````
 
+### `## Icon usage patterns`
+
+> Inline summary — the full project-specific reference (with code snippets and conventions) lives in `@.claude/docs/reference-icon-connection.md`. This section forwards just enough for `sciter-create-component` Phase 2B to know the project default before its interactive strategy prompt.
+
+Required fields (sourced from `design_system.icon_pattern` in `frontend-analysis.json`):
+
+```markdown
+**Connection method:** `<icon_pattern.connection>` — <one-line plain-English explanation>.
+
+**Color change:** `<icon_pattern.color_change>` — <one-line explanation>.
+
+**Library:** `<icon_pattern.library_name>`
+
+**Wrapper component:** `<wrapper_component.name>` at `<wrapper_component.path>` *(omit this line if both null)*
+
+**Example from project:**
+
+```<lang>
+<verbatim copy from icon_pattern.examples[0].path — pick the most representative>
+```
+
+**See full reference:** `@.claude/docs/reference-icon-connection.md`
+```
+
+If `icon_pattern.notes` is populated, append a final block:
+
+```markdown
+> ⚠ **Conflict / non-recommended pattern detected:**
+> <verbatim notes content>
+```
+
+If `icon_pattern.connection == null` (no icons in project), replace the entire section with one line:
+`_No icon connection convention detected in this project — when icons are added, run \`/docs-creator:update-frontend-docs design-system\` to refresh._`
+
 ### `## Framework-specific idioms`
 
 Fed by the `framework-idiom-extractor` subagent. Not generic — specific to the detected framework + its version. Examples:

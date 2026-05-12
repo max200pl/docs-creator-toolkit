@@ -203,28 +203,6 @@ mcp__figma__get_screenshot(nodeId: <iconNodeId>, fileKey)
 
 In Phase 0.5 plan — list icons as `.svg`. Change to `.png` only after actual 404.
 
-## Icon Naming Algorithm
+## Icon Naming + Display
 
-Convert Figma `layerName` to kebab-case SVG filename:
-
-1. Remove section prefix (`"Icon / "`, `"Icons / "`, `"Ic "`)
-2. Replace `/` and spaces with `-`
-3. Lowercase everything
-4. Add `.svg`
-
-```
-"Icon / <Name> / Normal"  → <name>-normal.svg
-"Icon / <Name> / Active"  → <name>-active.svg
-"Ic_<Name>"               → ic-<name>.svg
-"<Name> icon"             → <name>-icon.svg
-```
-
-Icon names must describe **purpose**, not appearance (`close.svg` not `x-shape.svg`).
-
-## Icon Display Pattern
-
-| Use case | Correct |
-| ---- | ---- |
-| Icon is the main content of element | `<img src="__DIR__ + 'img/icon.svg'" />` |
-| Icon decorates an interactive element | `foreground-image: url(img/icon.svg)` + `foreground-size: contain` in CSS |
-| Many small icons from one sprite | `@image-map` |
+> Both topics — naming algorithm and the connection-method decision matrix — are the single source of truth in **`reference-sciter-icons.md`**. This page only handles **detection** of icons inside a composite (Phase 0.5 asset-set check above); choosing how to embed them and naming the assets belong in the icons reference.

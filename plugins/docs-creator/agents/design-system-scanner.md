@@ -52,6 +52,7 @@ Stop at the first signal that yields a coherent token set. Do not merge signals 
 | **Shadow scale** | Number of elevations |
 | **Z-index scale** | Named layers (modal, tooltip, nav) or ad-hoc numbers |
 | **Icon system** | Icon library: `lucide-react`, `react-icons`, `@heroicons/react`, `@tabler/icons-react`, `@mui/icons-material`, framework-native SVGs, none |
+| **Icon pattern** | How icons are connected (`connection` enum) and how their color changes per state (`color_change` enum) — see `plugins/docs-creator/docs/reference-icon-patterns.md` for the full enum + grep signals. Also detect a project wrapper component (`<Icon>`, `<SvgIcon>`, `<ImageSprite>`) if it exists and is used 2+ times. Flag detected conflicts between observed code and project rule docs into `notes`. |
 | **Component skinning** | How do components consume tokens: `className`, `sx` prop, `styled()` wrapper, `@apply` directive, CSS variables directly |
 
 ### What NOT to capture
@@ -62,6 +63,40 @@ Stop at the first signal that yields a coherent token set. Do not merge signals 
 - Responsive utility lists — the orchestrator-ruling is enough without exhaustive class lists
 
 Keep scans light. Read ~5-10 files total, not hundreds.
+
+## Icon Detection Algorithm
+
+When the project contains icons (search for `*.svg` files under `src/`, `res/`, `public/`, `assets/`, `img/`), produce the `icon_pattern` block. The full enum, file extensions, and grep signatures are in **`plugins/docs-creator/docs/reference-icon-patterns.md`** — read it before this step.
+
+Steps:
+
+1. **Locate icon assets.** Glob `**/*.svg` (limit ~50 results) under the frontend root. If zero icon files found AND no `icon-library` import is detected → emit `icon_pattern: { connection: null, color_change: "none", library_name: "none", wrapper_component: { name: null, path: null }, examples: [], notes: "no icons detected" }` and stop. Otherwise continue.
+
+2. **Detect `connection`.** Run the grep set from `reference-icon-patterns.md#connection-signals` matching the stack (Sciter / React / Vue / Angular — taken from `framework_hint`). Count matches per enum value. Pick the dominant value. If two values tie or are within 20% → record the runner-up in `examples` and mention the split in `notes`.
+
+3. **Detect `color_change`.** Run the grep set from `reference-icon-patterns.md#color-change-signals`. If no state-driven color change found in any component → `color_change: "none"`.
+
+4. **Detect `wrapper_component`.** Per the heuristic in `reference-icon-patterns.md#wrapper-component-heuristic`: any default-exported component named `Icon` / `Svg*` / `Image*` / `*Icon` / `*Sprite` that renders `<svg>`/`<img>`/`<use>` AND is used 2+ times elsewhere → record name + path. Otherwise both fields `null`.
+
+5. **Resolve `library_name`.** If an icon library is imported → record exact package name (e.g. `lucide-react`). Else `"none"`.
+
+6. **Resolve `path_convention`.** From the dominant connection signal — copy the literal path template found (e.g. `__DIR__ + 'img/<name>.svg'`, `src/assets/icons/<name>.svg`, `this://app/img/<name>.svg`).
+
+7. **Populate `examples`.** Pick 1-3 files that best demonstrate the dominant pattern; record `{ path, connection, color_change }` per example.
+
+8. **Detect conflicts.** Scan `.claude/rules/**.md`, `.claude/docs/**.md`, `**/checklist*.md`, project `README.md`, `CONTRIBUTING.md`, `*conventions*.md` for icon-related rules (grep `icon`, `foreground-image`, `<img>`, `fill:`). If a doc prescribes method X but observed code uses method Y → append to `notes`:
+
+   ```
+   Code uses <Y>; project rule "<doc path>" mandates <X>. Detector follows code; user should reconcile.
+   ```
+
+   If the project uses a non-canonical URL scheme (e.g. `url(stock:...)` in Sciter — `stock:` is not a documented scheme; see `plugins/component-creator/docs/reference-sciter-icons.md#url-schemes-that-do-not-exist`) → append:
+
+   ```
+   Non-recommended pattern: <description>. Reference: <official-docs-URL>.
+   ```
+
+If `notes` ends up populated, the conflict propagates to both `reference-component-creation-template.md` "Icon usage patterns" inline section and the standalone `.claude/docs/reference-icon-connection.md` (produced by `create-frontend-docs`). The agent does NOT auto-fix the conflict.
 
 ## Output Format
 
@@ -87,6 +122,17 @@ spacing:
   steps: <integer>
 breakpoints: [<names>]
 icon_system: <name or "none">
+icon_pattern:
+  connection: <enum | null>            # see reference-icon-patterns.md#connection-enum
+  color_change: <enum>                 # see reference-icon-patterns.md#color-change-enum (use "none" if no state-driven change)
+  library_name: <string | "none">
+  path_convention: <string | "none">
+  wrapper_component:
+    name: <string | null>
+    path: <relative path | null>
+  examples:                            # max 3 — { path, connection, color_change }
+    - { path: <file>, connection: <enum>, color_change: <enum> }
+  notes: <free-text — conflicts, non-recommended patterns, or "">
 component_skinning: className | sx | styled | apply | mixed
 ```
 

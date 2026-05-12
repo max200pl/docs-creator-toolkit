@@ -101,7 +101,7 @@ This skill is a **two-wave fan-out pipeline** producing a structured JSON result
 | **Orientation** | **this skill** | Single user checkpoint: show detected frontends + existing analysis age + artefacts on disk with ages; ask full rerun / `--only <area>` / skip |
 | **Wave 1 — Stack profile** | `tech-stack-profiler` subagent (per frontend) | Return full `stack_profile`: framework, rendering mode, `styling_model`, `class_naming`, state libs, bundler, etc. Wave 2 depends on this. |
 | **Wave 2 — Deep analysis (parallel)** | 7 specialists (per frontend, concurrent): `framework-idiom-extractor`, `design-system-scanner`, `component-inventory`, `data-flow-mapper`, `architecture-analyzer`, `feature-flow-detector` | Each consumes Wave 1's `stack_profile` for narrower scans. Returns `{summary_row, artefact_body}` or `SKIP` |
-| **Persist analysis** | **this skill** | Merge Wave 1 + Wave 2 results into structured JSON; write to `.claude/state/frontend-analysis.json`. If file exists and `--only` filter was used, preserve sections not in the filter (merge, don't overwrite) |
+| **Persist analysis** | **this skill** | Merge Wave 1 + Wave 2 results into structured JSON; write to `.claude/state/frontend-analysis.json`. If file exists and `--only` filter was used, preserve sections not in the filter (merge, don't overwrite). **MUST set `schema_version: "1.2"` on every persist (current schema as of Phase 3.6 — `design_system.icon_pattern` field). MUST set `generated.plugin_version` to the version from `plugins/docs-creator/.claude-plugin/plugin.json` (current `0.16.0`) — read it at persist time, do not hardcode a stale value from a previous run.** |
 | Report | **this skill** | Persist run report per `rules/report-format.md`; dashboard on-screen points at JSON and suggests `/create-frontend-docs` |
 
 **Why this skill is read-only:** Separating analysis from writing is what enables `/create-frontend-docs` and `/update-frontend-docs` to exist as distinct composable skills. It also makes the JSON directly consumable by downstream component-creation agents who want programmatic access without a parse-MD step.
@@ -137,6 +137,14 @@ typography_file: <relative path or "none">   # NEW — required for component-cr
 mechanism: <enum>
 color_palette: { brand: [], semantic: [], neutral_steps: N }
 dark_mode: <enum>
+icon_pattern:                                 # NEW — required for Phase 3.6 icon flow
+  connection: <enum | null>                   # see plugins/docs-creator/docs/reference-icon-patterns.md#connection-enum
+  color_change: <enum>                        # use "none" if no state-driven change detected
+  library_name: <string | "none">
+  path_convention: <string | "none">
+  wrapper_component: { name: <string | null>, path: <relative path | null> }
+  examples: [ { path, connection, color_change } ]
+  notes: <free-text — flags conflicts and non-recommended patterns>
 ```
 
 **`component_inventory` section** (from `component-inventory` Summary Row):
