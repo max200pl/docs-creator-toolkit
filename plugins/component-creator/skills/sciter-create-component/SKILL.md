@@ -25,7 +25,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 ### ⚙ Version check — OUTPUT THIS AS YOUR VERY FIRST TEXT, before any tool call
 
 ```
-[component-creator v0.0.20 | sciter-create-component]
+[component-creator v0.0.22 | sciter-create-component]
 ```
 
 Do not call any tools before outputting the version line above.
