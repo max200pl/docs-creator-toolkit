@@ -4,6 +4,8 @@ description: "Sciter.js CSS quick-reference — properties, values, and patterns
 
 # Sciter.js CSS — Quick Reference
 
+> This file is a **property-syntax quick lookup**. For layout-strategy recipes (Figma pattern → Sciter recipe, centering decision trees, absolute/overlay positioning, SSIM-layout pitfalls and fixes) see [`reference-sciter-layout-strategy.md`](reference-sciter-layout-strategy.md). For icon-container specifics see [`reference-sciter-icons.md`](reference-sciter-icons.md).
+
 ## Layout (`flow:`)
 
 | Value | Equivalent | Notes |

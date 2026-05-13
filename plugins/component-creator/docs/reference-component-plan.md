@@ -64,6 +64,13 @@ Token delta:
   = --<existing>              — already exists, reused
   (none) if all colors covered by existing tokens
 
+Adapter docs applied during generation:
+  ▸ reference-sciter-layout-strategy.md  — Figma pattern → flow:/stack/* recipe; centering rules; 6 pitfalls
+  ▸ reference-sciter-css.md              — property syntax (flow:, dip, overflow, @mixin)
+  ▸ reference-sciter-icons.md            — icon connection + color-change strategy (per icon_strategy choice in Phase 2B)
+  ▸ feedback_ssim_*.md (agent-memory)    — N seed rules + project-accumulated fixes
+  (skipped if not applicable: e.g. icons reference omitted when component has no icons)
+
 SSIM verification plan:
 
   — COMPONENT_SET (multiple types):

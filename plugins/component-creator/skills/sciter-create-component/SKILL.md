@@ -9,9 +9,10 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 # Sciter Create Component
 
 > **Reference docs** (human reference only — do NOT attempt to Read these as files):
-> `docs/reference-sciter-css.md`, `docs/reference-component-build.md`,
-> `docs/reference-component-decompose.md`, `docs/reference-component-plan.md`,
-> `docs/reference-figma-nodes.md`, `docs/reference-code-connect-sciter.md`
+> `docs/reference-sciter-css.md`, `docs/reference-sciter-layout-strategy.md`,
+> `docs/reference-component-build.md`, `docs/reference-component-decompose.md`,
+> `docs/reference-component-plan.md`, `docs/reference-figma-nodes.md`,
+> `docs/reference-code-connect-sciter.md`
 
 ## Usage
 
@@ -130,6 +131,12 @@ Files to be created:
 Token delta:
   + --<name>: <value>  |  = --<existing> (reused)
 
+Adapter docs applied:
+  ▸ reference-sciter-layout-strategy.md  (Figma pattern → recipe + centering + 6 pitfalls)
+  ▸ reference-sciter-css.md              (property syntax)
+  ▸ reference-sciter-icons.md            (icon strategy — only if component has icons)
+  ▸ feedback_ssim_*.md                   (N agent-memory seeds + project fixes)
+
 SSIM plan:
   ✦ <type>/Default/Default — nodeId: <id> — width: <W>dip [× height: <H>dip for single]
   threshold: 0.92 (SVG icons) | 0.95 default
@@ -177,6 +184,7 @@ Icon naming algorithm: see `@plugins/component-creator/docs/reference-sciter-ico
 ## Phase 2B — Sciter CSS + JS
 
 > Icon rules: read `@plugins/component-creator/docs/reference-sciter-icons.md` AND `@.claude/docs/reference-icon-connection.md` before any icon-related code emission.
+> Layout rules: read `@plugins/component-creator/docs/reference-sciter-layout-strategy.md` before emitting any container CSS — pick the right recipe by Figma pattern, apply centering correctly, avoid the 6 documented SSIM-layout pitfalls.
 
 **CSS rules:**
 
