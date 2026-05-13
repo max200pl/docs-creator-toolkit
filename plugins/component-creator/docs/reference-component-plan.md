@@ -16,9 +16,8 @@ Property axes detected:
   (only "type" becomes a JS prop; state + effect → CSS-only)
 
 ☑ <type> / state:Default / effect:Default  — nodeId: <id> — <description>
-☑ <type> / state:hover   — (CSS :hover)
 ☑ <type> / state:disable — (CSS [disabled])
-☑ <type> / effect:*      — (CSS transitions/shadows — no extra JS prop)
+☑ <type> / effect:*      — (CSS  hover/transitions/shadows — no extra JS prop)
 
 Existing in registry: <none | partial match>
 Layer: <path from Component Placement Rules>   (reference-component-creation-template.md)

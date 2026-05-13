@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "docs-creator + component-creator plugins for Claude Code — documentation authoring and Figma-to-code component creation.",
-    "version": "0.16.0"
+    "version": "0.16.1"
   },
   "plugins": [
     {
@@ -30,7 +30,7 @@
       "name": "component-creator",
       "source": "./plugins/component-creator",
       "description": "Figma-to-code component creation with SSIM visual verification, Code Connect integration, and component registry.",
-      "version": "0.0.23",
+      "version": "0.0.24",
       "author": {
         "name": "Maksym Poskannyi"
       },

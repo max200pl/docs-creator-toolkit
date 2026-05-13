@@ -66,35 +66,31 @@ Keep scans light. Read ~5-10 files total, not hundreds.
 
 ## Icon Detection Algorithm
 
-When the project contains icons (search for `*.svg` files under `src/`, `res/`, `public/`, `assets/`, `img/`), produce the `icon_pattern` block. The full enum, file extensions, and grep signatures are in **`plugins/docs-creator/docs/reference-icon-patterns.md`** — read it before this step.
+When the project contains icons (search for `*.svg` files under `src/`, `res/`, `public/`, `assets/`, `img/`), produce the `icon_pattern` block. The cross-framework enum, file extensions, and universal grep signatures are in **`plugins/docs-creator/docs/reference-icon-patterns.md`** — read it before this step. If `framework_hint` matches a framework with an adapter doc under `plugins/component-creator/docs/reference-<framework>-icons.md`, read that adapter doc as well — it lists framework-specific enum values and supplementary detection signals.
 
 Steps:
 
 1. **Locate icon assets.** Glob `**/*.svg` (limit ~50 results) under the frontend root. If zero icon files found AND no `icon-library` import is detected → emit `icon_pattern: { connection: null, color_change: "none", library_name: "none", wrapper_component: { name: null, path: null }, examples: [], notes: "no icons detected" }` and stop. Otherwise continue.
 
-2. **Detect `connection`.** Run the grep set from `reference-icon-patterns.md#connection-signals` matching the stack (Sciter / React / Vue / Angular — taken from `framework_hint`). Count matches per enum value. Pick the dominant value. If two values tie or are within 20% → record the runner-up in `examples` and mention the split in `notes`.
+2. **Detect `connection`.** Run the universal grep set from `reference-icon-patterns.md#connection-signals--universal`. If a framework adapter doc applies, also run its framework-specific connection signals. Count matches per enum value across both sets. Pick the dominant value. If two values tie or are within 20% → record the runner-up in `examples` and mention the split in `notes`.
 
-3. **Detect `color_change`.** Run the grep set from `reference-icon-patterns.md#color-change-signals`. If no state-driven color change found in any component → `color_change: "none"`.
+3. **Detect `color_change`.** Run the universal grep set from `reference-icon-patterns.md#color-change-signals--universal` plus any framework-specific color-change signals from the adapter doc. If no state-driven color change found in any component → `color_change: "none"`.
 
 4. **Detect `wrapper_component`.** Per the heuristic in `reference-icon-patterns.md#wrapper-component-heuristic`: any default-exported component named `Icon` / `Svg*` / `Image*` / `*Icon` / `*Sprite` that renders `<svg>`/`<img>`/`<use>` AND is used 2+ times elsewhere → record name + path. Otherwise both fields `null`.
 
 5. **Resolve `library_name`.** If an icon library is imported → record exact package name (e.g. `lucide-react`). Else `"none"`.
 
-6. **Resolve `path_convention`.** From the dominant connection signal — copy the literal path template found (e.g. `__DIR__ + 'img/<name>.svg'`, `src/assets/icons/<name>.svg`, `this://app/img/<name>.svg`).
+6. **Resolve `path_convention`.** From the dominant connection signal — copy the literal path template found (e.g. `src/assets/icons/<name>.svg`, or the framework-specific asset-path convention documented in the adapter doc).
 
 7. **Populate `examples`.** Pick 1-3 files that best demonstrate the dominant pattern; record `{ path, connection, color_change }` per example.
 
 8. **Detect conflicts.** Scan `.claude/rules/**.md`, `.claude/docs/**.md`, `**/checklist*.md`, project `README.md`, `CONTRIBUTING.md`, `*conventions*.md` for icon-related rules (grep `icon`, `foreground-image`, `<img>`, `fill:`). If a doc prescribes method X but observed code uses method Y → append to `notes`:
 
-   ```
+   ```text
    Code uses <Y>; project rule "<doc path>" mandates <X>. Detector follows code; user should reconcile.
    ```
 
-   If the project uses a non-canonical URL scheme (e.g. `url(stock:...)` in Sciter — `stock:` is not a documented scheme; see `plugins/component-creator/docs/reference-sciter-icons.md#url-schemes-that-do-not-exist`) → append:
-
-   ```
-   Non-recommended pattern: <description>. Reference: <official-docs-URL>.
-   ```
+   If a framework adapter doc lists framework-specific conflict signals (non-canonical URL schemes, misused properties), run those checks too and append `notes` in the format prescribed by the adapter.
 
 If `notes` ends up populated, the conflict propagates to both `reference-component-creation-template.md` "Icon usage patterns" inline section and the standalone `.claude/docs/reference-icon-connection.md` (produced by `create-frontend-docs`). The agent does NOT auto-fix the conflict.
 

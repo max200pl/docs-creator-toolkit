@@ -25,7 +25,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 ### ⚙ Version check — OUTPUT THIS AS YOUR VERY FIRST TEXT, before any tool call
 
 ```
-[component-creator v0.0.22 | sciter-create-component]
+[component-creator v0.0.23 | sciter-create-component]
 ```
 
 Do not call any tools before outputting the version line above.
@@ -55,6 +55,8 @@ Do not call any tools before outputting the version line above.
 - `feedback_ssim_typography.md`: font shorthand `var()` silently ignored → use `@mixin name;`
 - `feedback_ssim_display_block.md`: `<button>` is inline-block → always add `display: block` first
 - `feedback_ssim_centering.md`: `content-align` ignored when child uses `width:*` → use `vertical-align: middle` on each child
+- `feedback_ssim_icon_in_flow.md`: `<img>` icons inside `flow: vertical` (or any non-inline parent flow) default to inline-block in Sciter — they ignore `content-horizontal-align: center` on parent and `vertical-align: middle` on themselves. **Always set `display: block` on the icon `<img>` AND on its container** when the icon must center within a `flow: vertical` button/menu-item/nav-item. Symmetric to `feedback_ssim_display_block` (which covers `<button>` containers) but for image children. SSIM symptom: icon offset top-left, label below correct — diff highlights icon position, not size.
+- `feedback_ssim_state_render.md`: state-driven swap (any `js-src-swap` / `icon-prop` strategy chosen in interactive step) needs `this.componentUpdate()` after state mutation. Reactor will NOT auto-re-render on field assignment. Symptom: first SSIM pass succeeds (default state correct), but clicking active item doesn't swap — second SSIM run shows DOM unchanged. Verify event handler ends with `componentUpdate()` BEFORE side effects (`navigate()`, etc.). See `reference-sciter-icons.md#sciter-reactor-re-render-rule`.
 
 **0.4** `mcp__figma__whoami` — on 401 stop.
 
@@ -240,6 +242,7 @@ Options (bounded — only these two):
 - `icon_pattern.connection != null` AND `notes` is empty → default = **Project**
 - `icon_pattern.connection == null` (greenfield) → default = **Sciter**
 - `icon_pattern.notes` contains a conflict / non-recommended warning → default = **Project**, but append the warning verbatim to that option's description so the user sees it before choosing
+- `icon_pattern.color_change ∈ { "js-src-swap", "svg-swap-display" }` → keep the default per rules above, but append to the **Project** option's description: `"⚠ Detected swap-based color-change (<value>). Sciter-idiomatic alternatives are CSS-pseudo-driven (css-fill / css-token-fill / css-filter). See reference-sciter-icons.md § Color-Change Methods. Pick 'Sciter' if you want to migrate this component to the recommended path."` This makes the trade-off visible at decision time without overriding the user's project-consistency intent.
 
 > Rationale for no "Custom" option: free-text strategy cannot be applied deterministically by the generator. If the user needs an off-pattern approach for a specific component, they should choose "Sciter" (which uses the official method) or accept the generated code and edit afterwards. A deliberate divergence from project pattern is a manual decision, not a templated one.
 
