@@ -1,5 +1,12 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/version-banner.sh" }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "WebSearch|WebFetch",

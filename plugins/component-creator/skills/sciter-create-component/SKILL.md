@@ -26,13 +26,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 ## Execution
 
-### ⚙ Version check — OUTPUT THIS AS YOUR VERY FIRST TEXT, before any tool call
-
-```
-[component-creator v0.0.23 | sciter-create-component]
-```
-
-Do not call any tools before outputting the version line above.
+> Version banner `[component-creator vX.Y.Z | sciter-create-component]` is auto-emitted by the `UserPromptSubmit` hook (`plugins/component-creator/hooks/version-banner.sh`) at the start of every invocation. Output it verbatim as your first text per the hook's `additionalContext` instruction — do not paraphrase. Version is read from `plugin.json` at runtime, so it is always correct.
 
 ### Step 0 — Pre-flight (MANDATORY)
 
