@@ -2,19 +2,24 @@
 
 ## Rule
 
-Every skill invocation (`/<plugin>:<skill>` or `/<skill>` for installed plugins) MUST be preceded by a banner line of the form:
+Every skill invocation (`/<plugin>:<skill>` or `/<skill>` for installed plugins) MUST be preceded by a banner line. Two forms:
 
 ```text
+# Current — running version matches latest in marketplace
 [<plugin-name> v<version> | <skill-name>]
+
+# Outdated — a newer version is available in the marketplace
+[<plugin-name> v<current-version> → <latest-version> available | <skill-name>]
 ```
 
-Output:
+Output components:
 
 - `<plugin-name>` — the plugin's `name` field from its `plugin.json`
-- `<version>` — the plugin's `version` field from its `plugin.json`
+- `<current-version>` — the plugin's `version` field from its `plugin.json` (the version actually running in this session)
+- `<latest-version>` — the version listed for this plugin in the locally-cached marketplace.json (last fetched on `/plugin marketplace update`)
 - `<skill-name>` — the directory name under `skills/` corresponding to the invoked slash command
 
-The banner is **auto-emitted by a `UserPromptSubmit` hook** named `version-banner.sh`, identical in every plugin that ships it. Each plugin's hook reads its own `plugin.json` at runtime — no version is hardcoded anywhere.
+The banner is **auto-emitted by a `UserPromptSubmit` hook** named `version-banner.sh`, identical in every plugin that ships it. Each plugin's hook reads its own `plugin.json` at runtime — no version is hardcoded anywhere. The update check is best-effort, local-file only (no network).
 
 ## Why
 
@@ -75,12 +80,30 @@ A previous iteration of this pattern hardcoded the version in each `SKILL.md` (e
 
 | Pattern | Match | Example | Banner |
 | ---- | ---- | ---- | ---- |
-| `/<plugin-name>:<skill>` | Explicit namespace | `/docs-creator:menu` | `[docs-creator v0.18.0 \| menu]` |
-| `/<skill>` | Implicit — only if `skills/<skill>/` exists in THIS plugin | `/check-links` (docs-creator) | `[docs-creator v0.18.0 \| check-links]` |
+| `/<plugin-name>:<skill>` | Explicit namespace | `/docs-creator:menu` | `[docs-creator v0.18.1 \| menu]` |
+| `/<skill>` | Implicit — only if `skills/<skill>/` exists in THIS plugin | `/check-links` (docs-creator) | `[docs-creator v0.18.1 \| check-links]` |
 
 If the prompt is not a slash command, or the skill does not exist in THIS plugin, the hook exits silently with code 0 (no output).
 
 Each plugin's hook only emits a banner for its OWN skills. When both plugins are installed, `/docs-creator:menu` triggers docs-creator's hook (emits banner) and component-creator's hook (silent — `menu` is not in component-creator).
+
+### Update detection
+
+After resolving the banner, the hook performs a best-effort check against the locally-cached marketplace catalog:
+
+1. **Marketplace discovery** — two methods, tried in order:
+   - **Path regex** on `CLAUDE_PLUGIN_ROOT`: if it matches `…/plugins/cache/<marketplace>/<plugin>/<version>/`, the marketplace name is extracted directly.
+   - **Fallback scan**: walk `~/.claude/plugins/marketplaces/*/` and find the marketplace whose `marketplace.json` lists THIS plugin's name. This covers dev-mode launches (`--plugin-dir` against a repo checkout).
+2. **Version comparison** — `sort -V` (lexicographic version sort) is used to find the newest of `(running, latest)`.
+3. **Emit** — if `latest > running`, the banner becomes `[plugin v<current> → <latest> available | skill]`.
+
+Edge cases handled:
+
+- **No marketplace registered for this plugin** → no update suffix (clean banner)
+- **Running version newer than marketplace** (dev build or pre-release) → no downgrade suggestion
+- **Marketplace.json malformed or unreachable** → no update suffix; hook never errors out
+
+The check is **best-effort and offline**. It compares against the marketplace's last-cached state, NOT against the upstream git repo. To refresh the marketplace cache, the user must run `/plugin marketplace update <marketplace-name>` followed by `/plugin upgrade <plugin>` or a session restart.
 
 ## What NOT to do
 
