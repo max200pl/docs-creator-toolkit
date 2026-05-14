@@ -4,7 +4,7 @@ description: "Sciter.js CSS quick-reference — properties, values, and patterns
 
 # Sciter.js CSS — Quick Reference
 
-> This file is a **property-syntax quick lookup**. For layout-strategy recipes (Figma pattern → Sciter recipe, centering decision trees, absolute/overlay positioning, SSIM-layout pitfalls and fixes) see [`reference-sciter-layout-strategy.md`](reference-sciter-layout-strategy.md). For icon-container specifics see [`reference-sciter-icons.md`](reference-sciter-icons.md).
+> This file is a **property-syntax quick lookup**. For layout-strategy recipes (Figma pattern → Sciter recipe, centering decision trees, absolute/overlay positioning, SSIM-layout pitfalls and fixes) see [`reference-sciter-layout-strategy.md`](reference-sciter-layout-strategy.md). For styling mechanisms (`@set` / `@mixin` / `@const` / `--var` / BEM / encapsulation rules) see [`reference-sciter-styling.md`](reference-sciter-styling.md). For icon-container specifics see [`reference-sciter-icons.md`](reference-sciter-icons.md).
 
 ## Layout (`flow:`)
 
@@ -87,6 +87,111 @@ description: "Sciter.js CSS quick-reference — properties, values, and patterns
 
 **Cross-engine rendering diff:** Sciter uses CoreText (macOS) / DirectWrite (Windows); Figma uses Skia. Accept ~1-2dip glyph width difference — do NOT compensate with `letter-spacing`.
 
+## Style Organization At-Rules
+
+Four CSS-organization mechanisms in Sciter. Use this section as **syntax reference** — for *when* to use each mechanism in component generation see [`reference-sciter-styling.md`](reference-sciter-styling.md) (4-step stepper). Full upstream provenance in [`research-sciter-stylesets.md`](../../../.claude/docs/research-sciter-stylesets.md).
+
+| Mechanism | Form | Reactive? | Inherited? | Used in | Purpose |
+| ---- | ---- | ---- | ---- | ---- | ---- |
+| `--name: <value>` / `var(name): <value>` | CSS custom property | ✓ runtime | ✓ DOM | Stepper Step 4 | Design tokens, theme switching |
+| `@const name : <value>` | Compile-time constant | ✗ | n/a | (avoid for tokens) | Immutable globals (asset URLs) — rare |
+| `@mixin name { ... }` / `@mixin name(p) { ... }` | Declaration-group injection | n/a | n/a | Stepper Step 4 | Typography stacks; reusable property groups |
+| `@set name { :root {...} child {...} }` | Style module applied via `style-set:` | n/a | n/a | Stepper Step 2 | Multi-variant component skin (`primary`/`secondary`/`ghost`) |
+
+### `@set` — style module
+
+```css
+@set my-button [< parent-set-name] {
+  :root          { background: var(--primary); padding: 8dip 16dip; }
+  :root > .icon  { size: 16dip; }
+  .label         { @font-md-medium; color: var(--color-text); }
+}
+```
+
+Inside `@set`, `:root` is the **host** (the element with `style-set:` applied), NOT the document root. Selectors evaluate relative to the host — they cannot leak globally.
+
+Three application paths:
+
+```css
+.btn { style-set: my-button; }                              /* CSS */
+```
+
+```html
+<div styleset="styles.css#my-button">...</div>              <!-- HTML -->
+```
+
+```jsx
+<div styleset={__DIR__ + "styles.css#my-button"}>...</div>  /* JSX */
+```
+
+**Inheritance:** `@set ghost < primary { ... }` inherits all parent rules; child rules append. More-specific inherited rule may win over less-specific self rule.
+
+**Override mechanism:** external rules require `!important` to override `@set` declarations. `content-isolate: isolate` (default) seals from later same-name redefinition.
+
+### `@mixin` — declaration injection
+
+```css
+/* Basic — no parameters */
+@mixin font-md-medium {
+  font-family: 'Inter';
+  font-size: 14dip;
+  font-weight: 500;
+  line-height: 20dip;
+}
+
+/* Parametric */
+@mixin like-button(color) {
+  background-color: @color;
+  border-radius: 3dip;
+  padding: 0.5em 1em;
+}
+```
+
+Invocation (always semicolon, no parens for basic):
+
+```css
+.label  { @font-md-medium; }
+.button { @like-button(var(--accent)); color: white; }   /* color: white redefines mixin's value */
+```
+
+**Order-aware redefinition:** declarations AFTER `@mixin-name;` in the same rule override the mixin's values. Idiomatic for typography where components want the base stack but tweak color or weight.
+
+### `@const` — compile-time constant
+
+```css
+@const BACKGROUND: no-repeat url(home://app/bg.svg) 50% 50%;
+
+body { background: @BACKGROUND; }
+```
+
+Invoked with `@` prefix (no parens). Resolved at CSS parse time, not at runtime. Use ONLY for genuinely immutable globals — never for design tokens.
+
+### `--var` (CSS custom properties) — preferred token mechanism
+
+Standard W3C form + Sciter ergonomic form (both equivalent):
+
+```css
+/* Standard */
+:root { --color-text: #000; }
+.label { color: var(--color-text); }
+
+/* Sciter ergonomic */
+:root { var(color-text): #000; }
+.label { color: color(color-text); }
+```
+
+Typed accessors: `var(name, default)`, `length(name)`, `color(name)` — all accept fallback as second argument.
+
+**`--var` vs `@const` — pick by reactivity:**
+
+| Property | `--var` (custom property) | `@const` |
+| ---- | ---- | ---- |
+| Resolution | Runtime | Compile-time |
+| Mutable via JS | ✓ `element.style.setProperty()` | ✗ |
+| Inherited through DOM | ✓ | ✗ |
+| Page-scoped override possible | ✓ | ✗ |
+| Use for design tokens | **✓ always** | ✗ never |
+
 ## Miscellaneous
 
 ```css
@@ -96,30 +201,13 @@ flow-rows: 40px 1* 40px;
 flow-columns: 200px 1*;
 ```
 
-## Adapter Override Rules (sciter-create-component)
+## Generator rules
 
-### CSS rules
+Generator override rules (CSS rules + JS rules) are **moved** to dedicated docs to avoid duplication. See:
 
-| Rule | Correct | Wrong |
-| ---- | ---- | ---- |
-| Layout | `flow: horizontal` / `flow: vertical` | `display: flex` |
-| Flex fill | `width: *` / `height: *` | `flex: 1` |
-| Hidden overflow | `overflow: none` | `overflow: hidden` |
-| Dimensions | `dip` (1:1 from Figma px) | `px` |
-| Colors | CSS vars only | hardcoded hex |
-| Typography | `@mixin name;` | `font` shorthand with `var()` |
-| Mixin syntax | no commas inside `@mixin` | comma-separated values |
-| Centering + `width:*` | `vertical-align: middle` on every child | `content-vertical-align` on parent |
-| `<button>` block | `display: block` as first property | default inline-block (adds 2px gap) |
-| Pixel-perfect | Figma value = source of truth; token ≠ Figma → raw `dip` | sacrificing accuracy for token reuse |
+- CSS generation rules per stepper Step → [`reference-sciter-styling.md`](reference-sciter-styling.md) (Steps 1–4 each have a `### Rules` subsection)
+- Layout-specific rules (alignment, centering, `<button>` block) → [`reference-sciter-layout-strategy.md`](reference-sciter-layout-strategy.md) § Pitfalls + § Required Generator Rules
+- Icon-specific rules → [`reference-sciter-icons.md`](reference-sciter-icons.md)
+- JS rules (`class Name extends Element`, `class="..."`, `__DIR__ + "img/..."`, `state-disabled`, etc.) → live with the relevant skill rule files and `feedback_ssim_*.md` agent-memory seeds
 
-### JS rules
-
-| Rule | Correct | Wrong |
-| ---- | ---- | ---- |
-| Base class | `class Name extends Element` | functional component |
-| HTML attr | `class="..."` | `className="..."` |
-| Icon paths | `__DIR__ + "img/..."` | `"./img/..."` |
-| Imports | must include `.js` extension | bare paths |
-| State | native Sciter element methods | React hooks |
-| Disabled | `state-disabled={this.disabled}` | `disabled={this.disabled}` (HTML attr, not Sciter state) |
+This file remains a **pure property-syntax reference** — what each Sciter CSS property accepts and how it maps to standard CSS. For decision-flow (when to use which mechanism) see the styling stepper.

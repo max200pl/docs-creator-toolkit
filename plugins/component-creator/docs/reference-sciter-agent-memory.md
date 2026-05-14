@@ -75,6 +75,19 @@ Symmetric to: feedback_ssim_display_block (covers <button> root); this one cover
 Full recipe: see reference-sciter-layout-strategy.md § Pattern 3 + Pitfall 2
 ```
 
+## Seed: `feedback_ssim_styleset.md`
+
+```markdown
+# SSIM Fix: external rule cannot override @set declarations
+Component: (seed — applies to any component using @set with style-set: applied AND external override rules)
+Symptom: regular CSS rule with higher selector specificity targeting the set-styled element has no effect. Background/color/padding stays at the set's declared value. SSIM diff shows the property from @set, not the override.
+Root cause: Sciter's @set has built-in priority — declarations inside @set rules win against external rules at equal/lower specificity, regardless of declaration order. content-isolate: isolate (the default) further seals the set from re-declaration in other files.
+Fix applied: either (1) add !important to the external override — wins against @set, OR (2) move the override INTO the set as a state-pseudo rule (.button { style-set: primary; } + @set primary { :root { ... } :root:hover { ... } }), OR (3) restructure to use modifier classes instead of @set for variants
+Result: external override takes effect via !important, or component variants achieved via @set inheritance / modifier classes
+Apply to: components using @set with style-set: applied; reconsider @set adoption if frequent overrides are needed
+Reference: research-sciter-stylesets.md § Finding 1 (override mechanism) and reference-sciter-styling.md § Mechanism Cheatsheet
+```
+
 ## Memory File Format
 
 Each file captures one recurring fix pattern:
@@ -98,9 +111,10 @@ Apply to: <pattern — "all components" / "components with icons" / etc.>
   feedback_ssim_display_block.md       ← seeded on first run
   feedback_ssim_centering.md           ← seeded on first run
   feedback_ssim_icon_in_flow.md        ← seeded on first run
+  feedback_ssim_styleset.md            ← seeded on first run (only relevant if project uses @set)
   feedback_ssim_<topic>.md             ← additional fixes written when user explains
 ```
 
 Memory files accumulate over time as the user explains SSIM failures. `sciter-create-component` reads all matching files at Step 0 and applies known fixes proactively in Phase 2, before running preview.
 
-The five seeded files above capture the recurring SSIM-layout failures documented in [`reference-sciter-layout-strategy.md`](reference-sciter-layout-strategy.md) § Pitfalls. The seeds carry the terse cause+fix; the strategy doc carries the full recipe.
+Five of the seeded files above capture the recurring SSIM-layout failures documented in [`reference-sciter-layout-strategy.md`](reference-sciter-layout-strategy.md) § Pitfalls. The sixth (`feedback_ssim_styleset.md`) covers `@set` override pitfalls documented in [`reference-sciter-styling.md`](reference-sciter-styling.md) § Mechanism Cheatsheet. Seeds carry the terse cause+fix; the reference docs carry the full recipe.

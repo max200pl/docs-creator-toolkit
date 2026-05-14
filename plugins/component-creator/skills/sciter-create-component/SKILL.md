@@ -10,9 +10,12 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent]
 
 > **Reference docs** (human reference only — do NOT attempt to Read these as files):
 > `docs/reference-sciter-css.md`, `docs/reference-sciter-layout-strategy.md`,
-> `docs/reference-component-build.md`, `docs/reference-component-decompose.md`,
-> `docs/reference-component-plan.md`, `docs/reference-figma-nodes.md`,
-> `docs/reference-code-connect-sciter.md`
+> `docs/reference-sciter-styling.md` (toolkit fallback), `docs/reference-component-build.md`,
+> `docs/reference-component-decompose.md`, `docs/reference-component-plan.md`,
+> `docs/reference-figma-nodes.md`, `docs/reference-code-connect-sciter.md`
+>
+> **Project-specific docs** (DO read these at Phase 2B Step 1-4):
+> `@.claude/docs/reference-styling-flow.md` — 4-step stepper with detected preprocessor + variable/mixin/import syntax. Wins over toolkit fallback when present.
 
 ## Usage
 
@@ -131,11 +134,13 @@ Files to be created:
 Token delta:
   + --<name>: <value>  |  = --<existing> (reused)
 
-Adapter docs applied:
-  ▸ reference-sciter-layout-strategy.md  (Figma pattern → recipe + centering + 6 pitfalls)
-  ▸ reference-sciter-css.md              (property syntax)
-  ▸ reference-sciter-icons.md            (icon strategy — only if component has icons)
-  ▸ feedback_ssim_*.md                   (N agent-memory seeds + project fixes)
+Adapter docs applied (Phase 2B stepper Step 1→4):
+  ▸ .claude/docs/reference-styling-flow.md   PROJECT-SPECIFIC stepper (preprocessor + variable/mixin/import syntax actually detected)
+  ▸ reference-sciter-styling.md              toolkit fallback (Sciter defaults only when project doc silent)
+  ▸ reference-sciter-layout-strategy.md      Figma pattern → recipe + centering + 6 pitfalls
+  ▸ reference-sciter-css.md                  property syntax + at-rule syntax (§ Style Organization)
+  ▸ reference-sciter-icons.md                icon strategy (only if component has icons)
+  ▸ feedback_ssim_*.md                       N agent-memory seeds + project fixes
 
 SSIM plan:
   ✦ <type>/Default/Default — nodeId: <id> — width: <W>dip [× height: <H>dip for single]
@@ -183,10 +188,93 @@ Icon naming algorithm: see `@plugins/component-creator/docs/reference-sciter-ico
 
 ## Phase 2B — Sciter CSS + JS
 
+> **Styling stepper — read order matters:**
+> 1. **`@.claude/docs/reference-styling-flow.md`** — project-specific 4-step stepper (preprocessor + actual variable/mixin/import syntax detected in THIS project). READ FIRST.
+> 2. **`@plugins/component-creator/docs/reference-sciter-styling.md`** — toolkit fallback (generic Sciter defaults: `@mixin` no parens, `--var`, BEM). USE ONLY WHEN project doc is silent on a specific aspect.
+> 3. **`@plugins/component-creator/docs/reference-sciter-css.md`** — CSS syntax foundation (property tables + `@set`/`@mixin`/`@const`/`--var` syntax in § Style Organization). ALWAYS consult for syntax form.
+>
+> Project doc rules win when the two disagree. Header-comment in generated CSS cites both sources.
+>
+> Execute Steps 1→4 in order; Step 1's `@import` append runs at the END of Phase 2B (after Step 4 writes the file body).
 > Icon rules: read `@plugins/component-creator/docs/reference-sciter-icons.md` AND `@.claude/docs/reference-icon-connection.md` before any icon-related code emission.
 > Layout rules: read `@plugins/component-creator/docs/reference-sciter-layout-strategy.md` before emitting any container CSS — pick the right recipe by Figma pattern, apply centering correctly, avoid the 6 documented SSIM-layout pitfalls.
 
-**CSS rules:**
+### Step 1 — Topology (decide file path; append `@import` last)
+
+**Read project doc first:** `@.claude/docs/reference-styling-flow.md` § Step 1 — Topology. It has the project's actual file extension (`.css` / `.scss` / `.less`), `import_syntax` (`scss-use` / `css-at-import` / `bundler-js` / etc.), and `main_entry` path.
+
+Then read `design_system.styling_patterns` from `frontend-analysis.json` for raw values:
+
+- `css_file_layout == "co-located"` → place style file at `<layer>/<component>/<component>.<ext>`; sub-components at `<parent-layer>/<parent>/ui/<sub>.<ext>`. Use `<ext>` from project doc.
+- `import_strategy == "main-entry-aggregate"` → after Steps 2–4 produce file body, append import statement to `main_entry` using project's `import_syntax`:
+  - `"css-at-import"`: `@import "<rel-path>";`
+  - `"scss-use"`: `@use '<module-path>';` (no `.scss` ext)
+  - `"scss-import"`: `@import '<rel-path>';`
+  - `"bundler-js"`: add `import './<name>.module.scss';` to the component's JS, NOT to main entry
+- `import_strategy == "bundler-js-driven"` → component's JS imports its own style file; do not touch main entry
+
+**Forbidden in component style file (project default; project doc may override):** `@import` of any sibling component (breaks build-order or `@font-face` URL resolution in Sciter), `@font-face` declaration.
+
+### Step 2 — Scope (BEM class vs `@set` wrapper)
+
+| `styleset_usage` | Behaviour |
+| ---- | ---- |
+| `"none"` (reference Sciter default) | Always emit plain BEM class. No `@set`. |
+| `"occasional"` | Emit BEM by default. If component has 2+ variants → interactive prompt for `@set` vs `--modifier`. Record in registry. |
+| `"primary"` | Emit `@set` per variant; use `@set ghost < primary` for shared base. Set `content-isolate: isolate` (default). |
+
+`encapsulation.scope: "prefixed-class"` is universal — BEM applies inside `@set` too.
+
+### Step 3 — Naming (BEM block + sub-component convention)
+
+- Block name = `kebab-case(component-name)`
+- Sub-component block = `<parent>-<sub>` (if `encapsulation.sub_component_naming == "namespaced"`) or `<parent>__<sub>` (if `"chained"`)
+- All selectors prefixed with block class
+- Elements: `.<block>__<element>` — Modifiers: `.<block>--<modifier>` — Pseudo: `.<block>:hover`
+- State compound: `.<block>--<state> .<block>__<element>` (repeat block; don't collapse)
+
+**Forbidden (auto-reject in generated CSS):**
+- Bare generic selectors: `.icon`, `.label`, `.row`, `.title`, `.active`, `.disabled`
+- Bare pseudo-classes: `:hover { ... }`, `:checked { ... }`
+- Selectors without block prefix
+
+### Step 4 — Ingredients (variables + typography — preprocessor-aware)
+
+**Read project doc first:** `@.claude/docs/reference-styling-flow.md` § Step 4 — Ingredients. It has the project's actual `variable_syntax` and `mixin_syntax`.
+
+**Tokens** — emit per `variable_syntax`:
+
+| `variable_syntax` | Token reference in component CSS |
+| ---- | ---- |
+| `"css-custom-properties"` (Sciter / vanilla) | `var(--name)` |
+| `"scss-dollar"` | `$name` (or `tokens.$name` if project uses `@use`) |
+| `"less-at"` | `@name` |
+| `"stylus-equals"` | `name` (Stylus bare reference) |
+
+Each design value → look up in `design_system.token_file`:
+- Match → emit per `variable_syntax` above
+- No match → Phase 1 Token sync appends new declaration to `token_file` (preprocessor-aware form); then reference it
+- Never declare a token inside component CSS (page-scoped overrides are exception — surface to user)
+
+**Typography** — emit per `mixin_syntax`:
+
+| `mixin_syntax` | Invocation |
+| ---- | ---- |
+| `"sciter-at-mixin"` | `@font-md-medium;` (no parens) |
+| `"scss-mixin-include"` | `@include font-md-medium;` |
+| `"less-class-mixin"` | `.font-md-medium();` |
+| `"sass-placeholder"` | `@extend %font-md-medium;` |
+| `"stylus-mixin"` | `font-md-medium()` |
+
+Match each Figma text style to existing mixin in `typography_file` → emit per `mixin_syntax`. No match → prompt user to extend `typography_file`; never auto-add.
+
+**Forbidden:**
+- `@const` for design tokens (compile-time, not reactive — Sciter only; not relevant for SCSS/Less)
+- `font:` shorthand with `var()`/`$var` (silently ignored in Sciter; behaves unexpectedly in some preprocessors)
+- Hardcoded color/spacing when a token exists
+- Token reference in wrong dialect (e.g. emitting `var(--color-primary)` when project uses `scss-dollar`)
+
+### Sciter-specific syntax (cross-cutting all 4 steps)
 
 | Rule | Correct | Wrong |
 | ---- | ---- | ---- |
@@ -194,9 +282,7 @@ Icon naming algorithm: see `@plugins/component-creator/docs/reference-sciter-ico
 | Flex fill | `width: *` / `height: *` | `flex: 1` |
 | Overflow | `overflow: none` | `overflow: hidden` |
 | Units | `dip` (1:1 Figma px) | `px` |
-| Colors | CSS vars only | hardcoded hex |
-| Typography | `@mixin name;` | `font: var()` |
-| Centering | `vertical-align: middle` on each child | `content-vertical-align` on parent |
+| Centering | `vertical-align: middle` on each child | `content-vertical-align` on parent (ignored with `width:*` children) |
 | Button root | `display: block` first | inline-block default (adds 2px gap) |
 | Pixel-perfect | if token ≠ Figma value → raw `dip` | token reuse over accuracy |
 

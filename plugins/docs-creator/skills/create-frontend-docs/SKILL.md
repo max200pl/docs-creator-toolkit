@@ -34,6 +34,8 @@ All artefacts land in the target project's `.claude/` and the root `CLAUDE.md`. 
 - `.claude/rules/frontend-components.md` — component conventions rule with `paths:` scoping
 - `.claude/docs/reference-architecture-frontend.md` — Stack + Architecture sections (merged from `tech_stack` + `architecture` + `framework_idioms` in JSON)
 - `.claude/docs/reference-component-inventory.md` — notable-components reference table
+- `.claude/docs/reference-icon-connection.md` — icon connection method, color-change strategy, naming convention (from `design_system.icon_pattern`)
+- `.claude/docs/reference-styling-flow.md` — project-specific 4-step styling stepper (Topology / Scope / Naming / Ingredients) with detected preprocessor + variable + mixin syntax (from `design_system.styling_patterns`)
 - `.claude/sequences/frontend-data-flow.mmd` — state + API flow Mermaid diagram (top-level, from `data-flow-mapper`)
 - `.claude/sequences/features/<pattern>.mmd` — one diagram per detected feature-flow pattern (from `feature-flow-detector`; omitted if `feature_flows` is null in JSON)
 
@@ -251,6 +253,34 @@ Materialize the icon connection standalone doc — the human-facing record of ho
 
 **File-naming:** same convention as `reference-component-creation-template.md` — plain name for single root, `-<root-slug>` suffix for multi-root.
 
+### Phase: Write reference-styling-flow.md
+
+Materialize the **project-specific styling flow** — the 4-step stepper (Topology / Scope / Naming / Ingredients) instantiated with project values (preprocessor, variable syntax, mixin syntax, etc.). Always written when `design_system.styling_patterns` exists in JSON (required as of Phase 3.9, schema v0.17.0+).
+
+**Source:** `design_system.styling_patterns` block from `frontend-analysis.json`.
+
+**Target:** `<project_root>/.claude/docs/reference-styling-flow.md`
+
+**Format spec:** [plugins/docs-creator/rules/styling-flow-doc-format.md](../../rules/styling-flow-doc-format.md) — follow its section order, headings, and per-preprocessor templating exactly. Each code-example block adapts to `variable_syntax` / `mixin_syntax` / `import_syntax`.
+
+**Conditional behavior:**
+
+- `styling_patterns.preprocessor == "none"` AND `framework_hint == "Sciter"` → use Sciter dialect throughout (Sciter `@mixin name {` no parens, `--var`, `style-set:` if `styleset_usage != "none"`).
+- `styling_patterns.preprocessor == "scss"` / `"sass"` → use SCSS dialect (`@mixin name() {}` + `@include`, `$var`, `@use`/`@import`).
+- `styling_patterns.preprocessor == "less"` → use Less dialect (`.mixin() {}`, `@var`).
+- `styling_patterns.preprocessor == "stylus"` → use Stylus dialect (block mixins, `name = value`).
+- `styling_patterns.preprocessor == "postcss"` → use vanilla CSS dialect (`--var`); note PostCSS-specific plugins in Step 0.
+- `styling_patterns.notes` non-empty → include "Conflicts & Notes" section verbatim from `notes`; otherwise omit that section.
+
+**Cross-references:** the generated doc MUST include a "Cross-References" footer linking to:
+- For Sciter projects: `plugins/component-creator/docs/reference-sciter-styling.md` (toolkit base, fallback)
+- `plugins/component-creator/docs/reference-sciter-css.md` (CSS syntax foundation)
+- `.claude/docs/reference-component-creation-template.md`
+
+**Consumer contract:** this doc is read FIRST by `sciter-create-component` (and any future component-creator adapter) during Phase 2B. Toolkit's `reference-sciter-styling.md` is fallback only when this doc is silent on a specific aspect.
+
+**File-naming:** same convention as `reference-component-creation-template.md` — plain name for single root, `-<root-slug>` suffix for multi-root.
+
 ### Phase: Update root CLAUDE.md Architecture section
 
 Read CLAUDE.md. Locate `## Architecture` heading. Find existing `### Frontend` subsection inside Architecture (if any).
@@ -269,6 +299,8 @@ Content of `### Frontend` subsection:
 - Component conventions: `@.claude/rules/frontend-components.md`
 - Architecture overview: [.claude/docs/reference-architecture-frontend.md](.claude/docs/reference-architecture-frontend.md)
 - Component inventory: [.claude/docs/reference-component-inventory.md](.claude/docs/reference-component-inventory.md)
+- Icon connection: [.claude/docs/reference-icon-connection.md](.claude/docs/reference-icon-connection.md)
+- Styling flow: [.claude/docs/reference-styling-flow.md](.claude/docs/reference-styling-flow.md)
 - Data-flow diagram: [.claude/sequences/frontend-data-flow.mmd](.claude/sequences/frontend-data-flow.mmd)
 ```
 
